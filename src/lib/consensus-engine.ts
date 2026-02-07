@@ -36,7 +36,10 @@ async function callModel(
   const apiKey = process.env[config.apiKeyEnv];
 
   if (!apiKey) {
-    throw new Error(`Missing API key: ${config.apiKeyEnv}`);
+    throw new Error(
+      `Missing API key for ${config.name} (${config.id}). ` +
+      `Please set environment variable: ${config.apiKeyEnv}`
+    );
   }
 
   // Rate limiting
@@ -89,7 +92,8 @@ async function callModel(
       };
 
       if (!response.ok) {
-        throw new Error(geminiData.error?.message || `Gemini API error: ${response.status}`);
+        const errorMsg = geminiData.error?.message || `HTTP ${response.status}`;
+        throw new Error(`${config.name} API error: ${errorMsg} (analyzing ${asset})`);
       }
 
       const text = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || '';
@@ -119,7 +123,8 @@ async function callModel(
       };
 
       if (!response.ok) {
-        throw new Error(anthropicData.error?.message || `API error: ${response.status}`);
+        const errorMsg = anthropicData.error?.message || `HTTP ${response.status}`;
+        throw new Error(`${config.name} API error: ${errorMsg} (analyzing ${asset})`);
       }
 
       const text = anthropicData.content?.[0]?.text || '';
@@ -151,7 +156,8 @@ async function callModel(
       };
 
       if (!response.ok) {
-        throw new Error(openaiData.error?.message || `API error: ${response.status}`);
+        const errorMsg = openaiData.error?.message || `HTTP ${response.status}`;
+        throw new Error(`${config.name} API error: ${errorMsg} (analyzing ${asset})`);
       }
 
       const text = openaiData.choices?.[0]?.message?.content || '';
