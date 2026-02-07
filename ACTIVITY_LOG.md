@@ -332,3 +332,85 @@ Consensus still works with 3+ models per the fallback logic.
 4. Deploy to Vercel with environment variables
 
 **Completion Signal:** [[SIGNAL:task_complete]]
+
+## 2026-02-07 - CVAULT-13: Kimi Whale Watcher API Endpoint
+
+**Status**: ✅ COMPLETE
+
+**Task**: Implement dedicated API endpoint for Kimi Whale Watcher analysis
+
+**Work Completed:**
+
+### 1. API Endpoint Implementation
+- Created `/api/whale-watcher` route at `src/app/api/whale-watcher/route.ts`
+- Implemented both GET and POST methods for flexible access
+- GET: Query params for asset, wallets, context
+- POST: JSON body with structured data
+
+### 2. Integration with Existing System
+- Leverages existing `getAnalystOpinion()` from consensus-engine
+- Uses Kimi configuration from `lib/models.ts`
+- Reuses API key from `.env.local` (KIMI_API_KEY)
+- Follows established timeout and error handling patterns
+
+### 3. Response Format (Task Spec Compliant)
+```json
+{
+  "signal": "bullish" | "bearish" | "neutral",
+  "confidence": 0.85,  // 0-1 scale
+  "reasoning": "Analysis explanation",
+  "asset": "BTC",
+  "analyst": { "id": "kimi", "name": "Whale Watcher", "role": "..." },
+  "timestamp": "ISO 8601"
+}
+```
+
+### 4. Features Implemented
+- **Wallet address filtering**: Optional wallets parameter for specific address analysis
+- **Custom context**: Flexible context field for targeted queries
+- **Proper error handling**: 400 for bad requests, 500 for API failures
+- **Timeout protection**: 30-second timeout matching other analysts
+- **TypeScript types**: Full type safety with existing interfaces
+
+### 5. Testing & Validation
+- Created `test-whale-watcher.js` test suite
+- Tests GET, POST, and error handling
+- Validates response structure matches task spec
+- Build successful: TypeScript compiles without errors
+- Endpoint visible in Next.js build output
+
+### 6. Documentation
+- Created `src/app/api/whale-watcher/README.md`
+- Documents API usage, parameters, response format
+- Provides curl examples for both GET and POST
+- Explains Kimi's analytical focus (whale movements, accumulation patterns)
+
+### 7. Technical Details
+- **Model**: Kimi (Moonshot API) - moonshot-v1-8k
+- **Provider**: OpenAI-compatible API
+- **Base URL**: https://api.moonshot.cn/v1
+- **Timeout**: 30 seconds
+- **Confidence scale**: Converts 0-100 to 0-1 as per task spec
+
+### What Kimi Analyzes
+- Large holder buy/sell movements
+- Accumulation and distribution patterns
+- Exchange inflow/outflow dynamics
+- Dormant wallet reactivation
+- Top holder concentration changes
+
+**Files Modified/Created:**
+- ✅ `/src/app/api/whale-watcher/route.ts` (NEW - 170 lines)
+- ✅ `/src/app/api/whale-watcher/README.md` (NEW - documentation)
+- ✅ `/test-whale-watcher.js` (NEW - test suite)
+
+**Next Steps:**
+- Endpoint is ready for deployment with the main app
+- Can be tested locally with `npm run dev`
+- Integrated into existing build pipeline (tested with `npm run build`)
+
+**Notes:**
+- Kimi API key already configured in .env.local
+- No additional dependencies required
+- Follows existing codebase patterns and conventions
+- Ready for production use on Vercel deployment
