@@ -1,5 +1,92 @@
 # Activity Log - Consensus Vault Dashboard
 
+## 2026-02-07 - CVAULT-23 & CVAULT-38: Wallet Integration + PR
+
+**Status**: ✅ COMPLETE
+
+**Work Completed:**
+
+### Wallet Integration (CVAULT-23)
+- Installed dependencies: @rainbow-me/rainbowkit, wagmi, viem, @tanstack/react-query
+- Created wagmi configuration (`src/lib/wagmi.ts`) for Base network
+- Created Providers component wrapping WagmiProvider, QueryClientProvider, and RainbowKitProvider
+- Updated root layout to wrap app with Providers
+- Added ConnectButton to dashboard header
+- Created .env.example with WalletConnect project ID configuration
+
+### Files Created/Modified
+- ✅ `src/lib/wagmi.ts` - Wagmi configuration for Base network
+- ✅ `src/components/Providers.tsx` - Web3 provider wrapper
+- ✅ `src/app/layout.tsx` - Added Providers wrapper
+- ✅ `src/app/page.tsx` - Added ConnectButton to header
+- ✅ `.env.example` - Documented required environment variables
+- ✅ `package.json` - Added wallet dependencies (503 new packages)
+
+### Build Verification
+```
+✓ TypeScript: 0 errors
+✓ Next.js build: Success
+✓ Route size: 41.1 kB (330 kB First Load JS)
+⚠ Normal warnings for React Native async-storage (not used in web)
+```
+
+### Features Implemented
+- ✅ RainbowKit wallet connection UI
+- ✅ Support for MetaMask, WalletConnect, Coinbase Wallet, etc.
+- ✅ Base network configuration (Layer 2 for low fees)
+- ✅ Persistent connection state via wagmi
+- ✅ Server-side rendering (SSR) support
+- ✅ Dark mode compatible UI
+
+### Testing Instructions
+```bash
+# Install dependencies
+npm install
+
+# Set WalletConnect Project ID (get from https://cloud.walletconnect.com)
+echo "NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_id" >> .env.local
+
+# Run development server
+npm run dev
+
+# Test wallet connection at http://localhost:3000
+# Click "Connect Wallet" button in header
+# Choose wallet (MetaMask, WalletConnect, etc.)
+# Approve connection
+# Verify address displayed in header
+```
+
+### Next Steps
+- CVAULT-24: Display token balance for connected wallet
+- CVAULT-25: Implement deposit UI flow
+- CVAULT-26: Implement withdraw UI flow
+
+**Session**: Autonomous Mode (CVAULT-38)
+**Completed by**: Claude Sonnet 4.5 (Lead Engineer)
+
+---
+
+## 2026-02-07 - CVAULT-11: Plane Status Update
+
+**Status**: ✅ COMPLETE
+
+**Work Completed:**
+- Verified CVAULT-11 implementation exists and meets all requirements
+- Updated Plane status from "In Progress" to "Done"
+- Confirmed POST endpoint at `/api/consensus` with all features:
+  - ✅ Accepts POST with `{ query: string }`
+  - ✅ Calls all 5 AI models in parallel (DeepSeek, Kimi, MiniMax, GLM, Gemini)
+  - ✅ 30-second timeout per model using AbortController
+  - ✅ Promise.allSettled for graceful partial failure handling
+  - ✅ Returns structured response with consensus, individual_responses, and metadata
+- Git commit afa7a9e already deployed
+- Task completion documentation already created
+
+**Session**: Autonomous Mode
+**Completed by**: Claude Sonnet 4.5 (Lead Engineer)
+
+---
+
 ## 2026-02-07 - CVAULT-12: DeepSeek Momentum Hunter API
 
 **Status**: ✅ COMPLETE
