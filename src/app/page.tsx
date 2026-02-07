@@ -8,6 +8,7 @@ import ConsensusMeter from '@/components/ConsensusMeter';
 import TradeSignal from '@/components/TradeSignal';
 import TradingPerformance from '@/components/TradingPerformance';
 import DepositModal from '@/components/DepositModal';
+import WithdrawModal from '@/components/WithdrawModal';
 import ToastContainer, { ToastData } from '@/components/ToastContainer';
 import { motion } from 'framer-motion';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
@@ -17,8 +18,9 @@ import { useVault } from '@/contexts/VaultContext';
 export default function Dashboard() {
   const consensusData = useConsensusStream();
   const { address, isConnected } = useAccount();
-  const { addDeposit, totalValueLocked, getDepositsByAddress } = useVault();
+  const { addDeposit, removeDeposit, totalValueLocked, getDepositsByAddress } = useVault();
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
+  const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
   const [toasts, setToasts] = useState<ToastData[]>([]);
   const [autoTradingEnabled, setAutoTradingEnabled] = useState(true);
 
@@ -65,6 +67,29 @@ export default function Dashboard() {
     addToast(`Successfully deposited ${amount} ETH`, 'success');
   }, [address, addDeposit, addToast]);
 
+  const handleWithdraw = useCallback(async (amount: string) => {
+    if (!address) {
+      throw new Error('Wallet not connected');
+    }
+
+    // Simulate withdrawal transaction with 2-second delay
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    // 90% success rate for demo purposes
+    const shouldSucceed = Math.random() < 0.9;
+
+    if (!shouldSucceed) {
+      addToast('Withdrawal failed. Please try again.', 'error');
+      throw new Error('Transaction failed');
+    }
+
+    // Remove deposit from vault state
+    removeDeposit(amount, address);
+
+    // Show success toast
+    addToast(`Successfully withdrew ${amount} ETH`, 'success');
+  }, [address, removeDeposit, addToast]);
+
   const userDeposits = address ? getDepositsByAddress(address) : [];
   const userTotalDeposited = userDeposits.reduce((sum, d) => sum + parseFloat(d.amount), 0).toFixed(6);
 
@@ -78,6 +103,14 @@ export default function Dashboard() {
         isOpen={isDepositModalOpen}
         onClose={() => setIsDepositModalOpen(false)}
         onDeposit={handleDeposit}
+      />
+
+      {/* Withdraw Modal */}
+      <WithdrawModal
+        isOpen={isWithdrawModalOpen}
+        onClose={() => setIsWithdrawModalOpen(false)}
+        onWithdraw={handleWithdraw}
+        depositedBalance={userTotalDeposited}
       />
 
       {/* Header */}
@@ -126,14 +159,24 @@ export default function Dashboard() {
                 </div>
               )}
             </div>
-            <button
-              onClick={() => setIsDepositModalOpen(true)}
-              disabled={!isConnected}
-              className="px-6 py-3 bg-bullish text-white rounded-lg font-semibold hover:bg-bullish/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 touch-manipulation min-h-[44px]"
-            >
-              <span className="text-lg">+</span>
-              <span>Deposit</span>
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setIsDepositModalOpen(true)}
+                disabled={!isConnected}
+                className="px-6 py-3 bg-bullish text-white rounded-lg font-semibold hover:bg-bullish/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 touch-manipulation min-h-[44px]"
+              >
+                <span className="text-lg">+</span>
+                <span>Deposit</span>
+              </button>
+              <button
+                onClick={() => setIsWithdrawModalOpen(true)}
+                disabled={!isConnected || parseFloat(userTotalDeposited) <= 0}
+                className="px-6 py-3 bg-bearish text-white rounded-lg font-semibold hover:bg-bearish/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 touch-manipulation min-h-[44px]"
+              >
+                <span className="text-lg">−</span>
+                <span>Withdraw</span>
+              </button>
+            </div>
           </div>
         </motion.div>
 
