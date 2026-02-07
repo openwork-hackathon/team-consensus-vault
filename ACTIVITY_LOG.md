@@ -1,5 +1,47 @@
 # Activity Log - Consensus Vault Dashboard
 
+## 2026-02-07 - CVAULT-9: Hackathon Planning and Sub-task Creation
+
+**Status**: ✅ COMPLETE (planning phase)
+
+**Summary:**
+Created comprehensive day-by-day hackathon execution plan and added 30+ granular sub-tasks to Plane for the 7-day build period.
+
+**Deliverables:**
+1. **HACKATHON_DAY_BY_DAY_PLAN.md** - Complete 7-day execution schedule with:
+   - Day-by-day task breakdown (Day 1-7)
+   - Scoring weight reference (24% Completeness, 19% Code/Design/Token, 14% Team, 5% Pilot)
+   - Critical path identification
+   - Demo script outline
+   - Team persona git commit instructions
+
+2. **Plane Sub-tasks Created** (CVAULT-61 through CVAULT-91):
+   - DAY 1: Vercel fix, environment check, API endpoint verification
+   - DAY 2: Token creation, deposit/withdraw flows
+   - DAY 3: Git PRs with multiple personas for team collaboration score
+   - DAY 4: Mobile responsiveness, loading states, error handling
+   - DAY 5: Documentation, screenshots, security review
+   - DAY 6: Demo video recording and editing
+   - DAY 7: Final testing and Openwork submission
+
+3. **VERCEL_DEPLOYMENT_BLOCKER.md** - Documented critical deployment issue:
+   - Site returning 404 / DEPLOYMENT_NOT_FOUND
+   - Local build passes
+   - Code pushed to GitHub
+   - Requires investigation/manual intervention
+
+**Blocking Issue Identified:**
+- Vercel deployment is not working (404)
+- All 33+ commits pushed to origin/main
+- May require Openwork support or alternative hosting
+
+**Next Actions:**
+1. Resolve Vercel 404 (highest priority)
+2. Continue with Day 1 tasks once deployment works
+3. If Vercel can't be fixed, deploy to Netlify as backup
+
+---
+
 ## 2026-02-07 - CVAULT-31: README.md Polish for Hackathon Judges
 
 **Status**: ✅ COMPLETE
