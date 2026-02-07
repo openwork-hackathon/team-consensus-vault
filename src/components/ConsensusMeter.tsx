@@ -33,10 +33,10 @@ export default function ConsensusMeter({ level, threshold }: ConsensusMeterProps
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Consensus Level</h2>
+        <h2 className="text-xl sm:text-2xl font-bold">Consensus Level</h2>
         <div className="text-right">
-          <div className="text-3xl font-bold">{displayLevel}%</div>
-          <div className="text-sm text-muted-foreground">{getStatusText()}</div>
+          <div className="text-2xl sm:text-3xl font-bold">{displayLevel}%</div>
+          <div className="text-xs sm:text-sm text-muted-foreground">{getStatusText()}</div>
         </div>
       </div>
 
@@ -63,25 +63,25 @@ export default function ConsensusMeter({ level, threshold }: ConsensusMeterProps
           style={{ left: `${threshold}%` }}
         >
           <div className="absolute -top-1 -left-2 w-4 h-4 border-2 border-white rounded-full bg-background" />
-          <div className="absolute -bottom-6 -left-6 text-xs text-muted-foreground whitespace-nowrap">
-            Threshold {threshold}%
+          <div className="absolute -bottom-6 -left-3 sm:-left-6 text-xs text-muted-foreground whitespace-nowrap">
+            <span className="hidden sm:inline">Threshold </span>{threshold}%
           </div>
         </div>
       </div>
 
       {/* Legend */}
-      <div className="flex items-center justify-between text-xs text-muted-foreground pt-2">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-bearish rounded" />
-          <span>Disagreement</span>
+      <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 flex-wrap gap-2 sm:gap-0">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <div className="w-3 h-3 bg-bearish rounded flex-shrink-0" />
+          <span className="text-xs">Disagreement</span>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-yellow-500 rounded" />
-          <span>Partial</span>
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <div className="w-3 h-3 bg-yellow-500 rounded flex-shrink-0" />
+          <span className="text-xs">Partial</span>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-bullish rounded" />
-          <span>Consensus</span>
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <div className="w-3 h-3 bg-bullish rounded flex-shrink-0" />
+          <span className="text-xs">Consensus</span>
         </div>
       </div>
     </div>

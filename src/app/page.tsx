@@ -88,7 +88,7 @@ export default function Dashboard() {
               <span className="text-2xl sm:text-3xl">🦞</span>
               <div>
                 <h1 className="text-lg sm:text-2xl font-bold">Consensus Vault</h1>
-                <p className="text-xs sm:text-sm text-muted-foreground hidden xs:block">AI Multi-Model Trading Intelligence</p>
+                <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">AI Multi-Model Trading Intelligence</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
@@ -129,7 +129,7 @@ export default function Dashboard() {
             <button
               onClick={() => setIsDepositModalOpen(true)}
               disabled={!isConnected}
-              className="px-6 py-3 bg-bullish text-white rounded-lg font-semibold hover:bg-bullish/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+              className="px-6 py-3 bg-bullish text-white rounded-lg font-semibold hover:bg-bullish/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 touch-manipulation min-h-[44px]"
             >
               <span className="text-lg">+</span>
               <span>Deposit</span>
