@@ -6,39 +6,89 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import type { ConsensusResult, AnalystResponse, Signal } from "@/lib/models";
 
 // Mock vault data
 const mockVault = {
   id: "1",
-  name: "Product Strategy Vault",
-  description: "Strategic insights and market research for product development",
-  tokenSymbol: "PSTRAT",
-  tvl: "1,234",
-  itemCount: 15,
+  name: "Consensus Vault",
+  description: "Multi-model AI consensus for trading decisions. 5 analysts, 4/5 required for signal.",
+  tokenSymbol: "CONSENSUS",
+  tvl: "2,873,453",
+  signalCount: 0,
 };
 
-// Mock agent responses
-const mockAgents = [
-  { name: "Claude", status: "completed", confidence: 0.92 },
-  { name: "DeepSeek", status: "completed", confidence: 0.88 },
-  { name: "Kimi", status: "completed", confidence: 0.90 },
-  { name: "MiniMax", status: "completed", confidence: 0.85 },
-  { name: "GLM", status: "completed", confidence: 0.87 },
-  { name: "Gemini", status: "completed", confidence: 0.91 },
+// Initial agent status (before any query)
+const initialAgents = [
+  { id: "deepseek", name: "DeepSeek", role: "Momentum Hunter", status: "idle" as const },
+  { id: "kimi", name: "Kimi", role: "Whale Watcher", status: "idle" as const },
+  { id: "minimax", name: "MiniMax", role: "Sentiment Scout", status: "idle" as const },
+  { id: "glm", name: "GLM", role: "On-Chain Oracle", status: "idle" as const },
+  { id: "gemini", name: "Gemini", role: "Risk Manager", status: "idle" as const },
 ];
 
-export default function VaultConsensusView({ params }: { params: { id: string } }) {
+function getSignalColor(signal: Signal | undefined): string {
+  switch (signal) {
+    case "BUY": return "bg-green-500";
+    case "SELL": return "bg-red-500";
+    case "HOLD": return "bg-yellow-500";
+    default: return "bg-zinc-400";
+  }
+}
+
+type BadgeVariant = "default" | "destructive" | "secondary" | "outline";
+
+function getSignalBadge(signal: Signal | undefined): BadgeVariant {
+  switch (signal) {
+    case "BUY": return "default";
+    case "SELL": return "destructive";
+    case "HOLD": return "secondary";
+    default: return "outline";
+  }
+}
+
+export default function VaultConsensusView({ params }: { params: Promise<{ id: string }> }) {
   const [query, setQuery] = useState("");
   const [isQuerying, setIsQuerying] = useState(false);
+  const [result, setResult] = useState<ConsensusResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleQuery = async () => {
     if (!query.trim()) return;
+
     setIsQuerying(true);
-    // TODO: Implement actual API call
-    setTimeout(() => {
+    setError(null);
+    setResult(null);
+
+    try {
+      const response = await fetch("/api/consensus", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Query failed: ${response.statusText}`);
+      }
+
+      const data: ConsensusResult = await response.json();
+      setResult(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Query failed");
+    } finally {
       setIsQuerying(false);
-    }, 2000);
+    }
   };
+
+  // Merge initial agents with result signals
+  const agents = initialAgents.map(agent => {
+    const signal = result?.signals.find(s => s.agentId === agent.id);
+    return {
+      ...agent,
+      status: isQuerying ? "querying" as const : signal ? "completed" as const : "idle" as const,
+      signal: signal,
+    };
+  });
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
@@ -49,7 +99,9 @@ export default function VaultConsensusView({ params }: { params: { id: string } 
             ← Back to Vaults
           </Link>
           <div className="flex-1" />
-          <Button variant="outline">Manage Vault</Button>
+          <Badge variant="secondary" className="text-base">
+            {mockVault.tokenSymbol}
+          </Badge>
         </div>
       </header>
 
@@ -59,36 +111,33 @@ export default function VaultConsensusView({ params }: { params: { id: string } 
         <div className="mb-8">
           <div className="mb-4 flex items-center gap-3">
             <h1 className="text-4xl font-bold">{mockVault.name}</h1>
-            <Badge variant="secondary" className="text-base">
-              {mockVault.tokenSymbol}
-            </Badge>
           </div>
           <p className="mb-4 text-zinc-600 dark:text-zinc-400">{mockVault.description}</p>
           <div className="flex gap-6 text-sm">
             <div>
               <span className="text-zinc-500 dark:text-zinc-400">TVL: </span>
-              <span className="font-semibold">{mockVault.tvl} OPENWORK</span>
+              <span className="font-semibold">{mockVault.tvl} $OPENWORK</span>
             </div>
             <div>
-              <span className="text-zinc-500 dark:text-zinc-400">Items: </span>
-              <span className="font-semibold">{mockVault.itemCount}</span>
+              <span className="text-zinc-500 dark:text-zinc-400">Signals: </span>
+              <span className="font-semibold">{result ? result.totalResponses : 0}</span>
             </div>
           </div>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Query Panel */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Query Your Vault</CardTitle>
+                <CardTitle>Query the Analysts</CardTitle>
                 <CardDescription>
-                  Ask a question and receive consensus from multiple AI agents
+                  Ask about a trade and get consensus from 5 AI analysts
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <Textarea
-                  placeholder="What insights can you provide about launching a new feature in Q2?"
+                  placeholder="Should I buy ETH here? Is this a good entry for BTC? What&apos;s the risk/reward on this trade?"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   rows={4}
@@ -99,47 +148,141 @@ export default function VaultConsensusView({ params }: { params: { id: string } 
                   disabled={!query.trim() || isQuerying}
                   className="w-full"
                 >
-                  {isQuerying ? "Querying Agents..." : "Get Consensus"}
+                  {isQuerying ? "Querying 5 Analysts..." : "Get Consensus"}
                 </Button>
 
-                {/* Response Area */}
-                {isQuerying && (
-                  <div className="rounded-lg border bg-zinc-50 p-6 dark:bg-zinc-800">
-                    <p className="text-center text-zinc-600 dark:text-zinc-400">
-                      Consulting {mockAgents.length} AI agents...
-                    </p>
+                {/* Error Display */}
+                {error && (
+                  <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950">
+                    <p className="text-red-600 dark:text-red-400">{error}</p>
                   </div>
                 )}
               </CardContent>
             </Card>
+
+            {/* Consensus Result */}
+            {result && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-3">
+                    Consensus Result
+                    {result.hasConsensus ? (
+                      <Badge variant={getSignalBadge(result.consensus ?? undefined)} className="text-lg px-3 py-1">
+                        {result.consensus}
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-lg px-3 py-1">
+                        No Consensus
+                      </Badge>
+                    )}
+                  </CardTitle>
+                  <CardDescription>
+                    {result.consensusCount}/{result.totalResponses} analysts agree
+                    {" • "}
+                    Average confidence: {result.confidenceAverage}%
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {result.signals.map((signal) => (
+                      <div
+                        key={signal.agentId}
+                        className={`rounded-lg border p-4 ${
+                          signal.error ? "border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950" : ""
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <div className={`w-3 h-3 rounded-full ${getSignalColor(signal.signal)}`} />
+                            <span className="font-semibold">{signal.agentName}</span>
+                            <span className="text-sm text-zinc-500">({signal.role})</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant={getSignalBadge(signal.signal)}>
+                              {signal.signal}
+                            </Badge>
+                            <span className="text-sm font-medium">{signal.confidence}%</span>
+                          </div>
+                        </div>
+                        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                          {signal.reasoning}
+                        </p>
+                        {signal.error && (
+                          <p className="text-xs text-red-500 mt-1">Error: {signal.error}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* Agent Status Panel */}
           <div>
             <Card>
               <CardHeader>
-                <CardTitle>Agent Status</CardTitle>
-                <CardDescription>{mockAgents.length} agents ready</CardDescription>
+                <CardTitle>AI Analysts</CardTitle>
+                <CardDescription>
+                  {agents.filter(a => a.status === "completed").length}/{agents.length} responded
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {mockAgents.map((agent) => (
+                  {agents.map((agent) => (
                     <div
-                      key={agent.name}
-                      className="flex items-center justify-between rounded-lg border p-3"
+                      key={agent.id}
+                      className={`flex items-center justify-between rounded-lg border p-3 transition-all ${
+                        agent.status === "querying" ? "animate-pulse bg-zinc-100 dark:bg-zinc-800" : ""
+                      }`}
                     >
                       <div>
                         <p className="font-medium">{agent.name}</p>
                         <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                          {agent.status === "completed" ? "Ready" : "Querying..."}
+                          {agent.role}
                         </p>
                       </div>
-                      <Badge variant={agent.status === "completed" ? "default" : "secondary"}>
-                        {Math.round(agent.confidence * 100)}%
-                      </Badge>
+                      {agent.status === "querying" && (
+                        <Badge variant="outline">Analyzing...</Badge>
+                      )}
+                      {agent.status === "completed" && agent.signal && (
+                        <Badge variant={getSignalBadge(agent.signal.signal)}>
+                          {agent.signal.signal}
+                        </Badge>
+                      )}
+                      {agent.status === "idle" && (
+                        <Badge variant="outline">Ready</Badge>
+                      )}
                     </div>
                   ))}
                 </div>
+
+                {/* Consensus Gauge */}
+                {result && (
+                  <div className="mt-6 pt-4 border-t">
+                    <p className="text-sm font-medium mb-2">Consensus Level</p>
+                    <div className="flex gap-1">
+                      {[1, 2, 3, 4, 5].map((n) => (
+                        <div
+                          key={n}
+                          className={`h-4 flex-1 rounded ${
+                            n <= result.consensusCount
+                              ? result.hasConsensus
+                                ? "bg-green-500"
+                                : "bg-yellow-500"
+                              : "bg-zinc-200 dark:bg-zinc-700"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <p className="text-xs text-zinc-500 mt-1 text-center">
+                      {result.hasConsensus
+                        ? `✓ Consensus reached (${result.consensusCount}/5)`
+                        : `✗ Need ${4 - result.consensusCount} more (${result.consensusCount}/5)`
+                      }
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
