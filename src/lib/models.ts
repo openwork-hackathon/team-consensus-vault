@@ -204,6 +204,29 @@ export function signalToSentiment(signal: Signal): 'bullish' | 'bearish' | 'neut
   }
 }
 
+export type ConsensusStatus = 'CONSENSUS_REACHED' | 'NO_CONSENSUS' | 'INSUFFICIENT_RESPONSES';
+
+export interface IndividualVote {
+  model_name: string;
+  signal: Signal | null;
+  response_time_ms: number;
+  confidence: number;
+  status: 'success' | 'timeout' | 'error';
+  error?: string;
+}
+
+export interface ConsensusResponse {
+  consensus_status: ConsensusStatus;
+  consensus_signal: Signal | null;
+  individual_votes: IndividualVote[];
+  vote_counts: {
+    BUY: number;
+    SELL: number;
+    HOLD: number;
+  };
+  timestamp: string;
+}
+
 /**
  * Calculate consensus from multiple analyst results
  * Requires 4/5 agreement for a strong signal
@@ -254,6 +277,91 @@ export function calculateConsensus(results: AnalystResult[]): {
   }
 
   return { signal: majoritySignal, consensusLevel, recommendation };
+}
+
+/**
+ * Calculate 4/5 consensus with detailed response structure
+ * Implements strict 4-out-of-5 agreement threshold
+ */
+export function calculateConsensusDetailed(
+  results: AnalystResult[],
+  responseTimes: Map<string, number>
+): ConsensusResponse {
+  const timestamp = new Date().toISOString();
+
+  // Build individual votes array
+  const individual_votes: IndividualVote[] = results.map((result) => {
+    const signal = result.error ? null : sentimentToSignal(result.sentiment);
+    let status: 'success' | 'timeout' | 'error' = 'success';
+
+    if (result.error) {
+      // Determine if it was a timeout or other error
+      if (result.error.toLowerCase().includes('timeout') ||
+          result.error.toLowerCase().includes('aborted')) {
+        status = 'timeout';
+      } else {
+        status = 'error';
+      }
+    }
+
+    return {
+      model_name: result.id,
+      signal,
+      response_time_ms: responseTimes.get(result.id) || 0,
+      confidence: result.confidence,
+      status,
+      error: result.error,
+    };
+  });
+
+  // Count valid votes (exclude timeouts and errors)
+  const validVotes = individual_votes.filter((v) => v.status === 'success');
+
+  // Check for insufficient responses (less than 3 valid responses)
+  if (validVotes.length < 3) {
+    return {
+      consensus_status: 'INSUFFICIENT_RESPONSES',
+      consensus_signal: null,
+      individual_votes,
+      vote_counts: {
+        BUY: 0,
+        SELL: 0,
+        HOLD: 0,
+      },
+      timestamp,
+    };
+  }
+
+  // Count votes for each signal
+  const vote_counts = {
+    BUY: validVotes.filter((v) => v.signal === 'buy').length,
+    SELL: validVotes.filter((v) => v.signal === 'sell').length,
+    HOLD: validVotes.filter((v) => v.signal === 'hold').length,
+  };
+
+  // Determine consensus: need at least 4 votes for the same signal
+  const CONSENSUS_THRESHOLD = 4;
+  let consensus_signal: Signal | null = null;
+  let consensus_status: ConsensusStatus = 'NO_CONSENSUS';
+
+  if (vote_counts.BUY >= CONSENSUS_THRESHOLD) {
+    consensus_signal = 'buy';
+    consensus_status = 'CONSENSUS_REACHED';
+  } else if (vote_counts.SELL >= CONSENSUS_THRESHOLD) {
+    consensus_signal = 'sell';
+    consensus_status = 'CONSENSUS_REACHED';
+  } else if (vote_counts.HOLD >= CONSENSUS_THRESHOLD) {
+    consensus_signal = 'hold';
+    consensus_status = 'CONSENSUS_REACHED';
+  }
+
+  return {
+    consensus_status,
+    consensus_signal,
+    individual_votes,
+    vote_counts,
+    timestamp,
+  };
 }
 
 function sentimentToSignal(sentiment: 'bullish' | 'bearish' | 'neutral'): Signal {
