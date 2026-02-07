@@ -41,12 +41,37 @@ export default function DepositModal({ isOpen, onClose, onDeposit }: DepositModa
   };
 
   const validateAmount = (): boolean => {
-    if (!amount || parseFloat(amount) <= 0) {
-      setError('Please enter a valid amount');
+    if (!amount || amount.trim() === '') {
+      setError('Please enter an amount');
       return false;
     }
 
-    if (balance && parseFloat(amount) > parseFloat(formatEther(balance.value))) {
+    const numAmount = parseFloat(amount);
+
+    if (isNaN(numAmount)) {
+      setError('Invalid number format');
+      return false;
+    }
+
+    if (numAmount <= 0) {
+      setError('Amount must be greater than zero');
+      return false;
+    }
+
+    // Check for minimum deposit (0.0001 ETH)
+    if (numAmount < 0.0001) {
+      setError('Minimum deposit is 0.0001 ETH');
+      return false;
+    }
+
+    // Check for maximum precision (6 decimal places)
+    const decimalPlaces = (amount.split('.')[1] || '').length;
+    if (decimalPlaces > 6) {
+      setError('Maximum 6 decimal places allowed');
+      return false;
+    }
+
+    if (balance && numAmount > parseFloat(formatEther(balance.value))) {
       setError('Insufficient balance');
       return false;
     }
