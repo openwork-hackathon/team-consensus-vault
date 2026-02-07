@@ -20,7 +20,8 @@ export async function GET() {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: 'Unable to load trading history. Please try again later.',
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

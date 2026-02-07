@@ -7,7 +7,12 @@ import { ConsensusData } from './types';
  * Auto-trading hook
  * Monitors consensus and executes paper trades when 4/5 or 5/5 agreement is reached
  */
-export function useAutoTrading(consensusData: ConsensusData, enabled: boolean = true) {
+export function useAutoTrading(
+  consensusData: ConsensusData,
+  enabled: boolean = true,
+  onTradeSuccess?: (trade: any) => void,
+  onTradeError?: (error: string) => void
+) {
   const [lastExecutedRecommendation, setLastExecutedRecommendation] = useState<string | null>(null);
   const [isExecuting, setIsExecuting] = useState(false);
   const [lastTradeId, setLastTradeId] = useState<string | null>(null);
@@ -52,11 +57,16 @@ export function useAutoTrading(consensusData: ConsensusData, enabled: boolean = 
           console.log('Paper trade executed:', data.trade);
           setLastExecutedRecommendation(currentRecommendation);
           setLastTradeId(data.trade.id);
+          onTradeSuccess?.(data.trade);
         } else {
-          console.warn('Trade execution failed:', data.message || data.error);
+          const errorMsg = data.message || data.error || 'Unknown error';
+          console.warn('Trade execution failed:', errorMsg);
+          onTradeError?.(errorMsg);
         }
       } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : 'Network error';
         console.error('Error executing paper trade:', error);
+        onTradeError?.(errorMsg);
       } finally {
         setIsExecuting(false);
       }
@@ -70,6 +80,8 @@ export function useAutoTrading(consensusData: ConsensusData, enabled: boolean = 
     enabled,
     lastExecutedRecommendation,
     isExecuting,
+    onTradeSuccess,
+    onTradeError,
   ]);
 
   return {

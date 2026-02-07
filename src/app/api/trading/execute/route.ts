@@ -38,10 +38,22 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error executing paper trade:', error);
+
+    // Provide user-friendly error messages
+    let userMessage = 'Unable to execute trade. Please try again.';
+    if (error instanceof Error) {
+      if (error.message.includes('fetch') || error.message.includes('network')) {
+        userMessage = 'Network error. Please check your connection and try again.';
+      } else if (error.message.includes('API') || error.message.includes('key')) {
+        userMessage = 'Service temporarily unavailable. Please try again later.';
+      }
+    }
+
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: userMessage,
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

@@ -42,7 +42,7 @@ Consensus Vault solves this by:
 | **Whale Watcher** | Kimi | Institutional Activity | Large holder movements, whale alerts | ✅ Active |
 | **Sentiment Scout** | MiniMax | Social Sentiment | Community buzz, social media trends | 🔨 In Progress |
 | **On-Chain Oracle** | GLM | On-Chain Metrics | TVL, network activity, transaction volume | ✅ Active |
-| **Risk Manager** | Gemini | Risk Assessment | Volatility, exposure, risk-adjusted returns | 🔨 In Progress |
+| **Risk Manager** | Gemini | Risk Assessment | Volatility, exposure, risk-adjusted returns | ✅ Active |
 
 Each analyst operates independently, analyzing the same asset from their specialized perspective. They don't communicate or influence each other — they simply vote.
 

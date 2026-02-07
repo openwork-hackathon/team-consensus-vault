@@ -22,13 +22,29 @@ export default function Dashboard() {
   const [toasts, setToasts] = useState<ToastData[]>([]);
   const [autoTradingEnabled, setAutoTradingEnabled] = useState(true);
 
-  // Auto-trading hook
-  const { isExecutingTrade } = useAutoTrading(consensusData, autoTradingEnabled);
-
   const addToast = useCallback((message: string, type: ToastData['type']) => {
     const id = `${Date.now()}-${Math.random()}`;
     setToasts((prev) => [...prev, { id, message, type }]);
   }, []);
+
+  // Auto-trading hook with callbacks
+  const handleTradeSuccess = useCallback((trade: any) => {
+    addToast(
+      `Auto-trade executed: ${trade.direction.toUpperCase()} BTC/USD at $${trade.entryPrice.toLocaleString()}`,
+      'success'
+    );
+  }, [addToast]);
+
+  const handleTradeError = useCallback((error: string) => {
+    addToast(`Auto-trade failed: ${error}`, 'error');
+  }, [addToast]);
+
+  const { isExecutingTrade } = useAutoTrading(
+    consensusData,
+    autoTradingEnabled,
+    handleTradeSuccess,
+    handleTradeError
+  );
 
   const removeToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
