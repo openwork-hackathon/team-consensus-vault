@@ -470,3 +470,176 @@ Consensus still works with 3+ models per the fallback logic.
 - No additional dependencies required
 - Follows existing codebase patterns and conventions
 - Ready for production use on Vercel deployment
+
+## CVAULT-12 Task Completion Summary
+
+**Completion Time**: 2026-02-07
+**Git Commit**: a00042f
+**Plane Status**: Done
+
+### What Was Delivered
+
+1. **API Endpoint**: `/api/momentum-hunter` (GET/POST methods)
+2. **Response Format**: Structured JSON with signal (bullish/bearish/neutral), confidence (0-1), reasoning
+3. **Technical Focus**: Price momentum, trend signals, RSI, MACD, Bollinger Bands, chart patterns
+4. **Error Handling**: Comprehensive validation, timeout handling, graceful fallbacks
+5. **Documentation**: Complete API documentation + implementation summary
+6. **Testing**: 5-scenario test suite + build verification (0 errors)
+7. **Integration**: Reuses consensus-engine infrastructure, follows Whale Watcher pattern
+
+### Build Verification
+
+```
+✓ TypeScript: 0 errors
+✓ Build: Production ready
+✓ Route: /api/momentum-hunter recognized
+✓ Size: 0 B (server-side only)
+```
+
+### Files Added (927 lines)
+
+- `src/app/api/momentum-hunter/route.ts` (163 lines)
+- `src/app/api/momentum-hunter/README.md` (API docs)
+- `test-momentum-hunter.js` (test suite)
+- `CVAULT-12_IMPLEMENTATION.md` (summary)
+- `TASK_COMPLETE_CVAULT-12.md` (completion report)
+
+### Configuration
+
+DeepSeek API credentials already configured in `.env.local`:
+- API Key: ✓ Present
+- Base URL: https://api.deepseek.com/v1
+- Model: deepseek-chat
+- Timeout: 30 seconds
+
+### Next Steps
+
+1. Push to GitHub (12 commits ahead of origin/main)
+2. Vercel will auto-deploy
+3. Test endpoint at `https://team-consensus-vault.vercel.app/api/momentum-hunter?asset=BTC`
+
+**Status**: ✅ Ready for deployment
+
+
+## 2026-02-07 - CVAULT-11: Generic /api/consensus Endpoint
+
+**Status**: ✅ COMPLETE
+
+**Work Completed:**
+
+### API Refactoring
+- Modified existing `/api/consensus` POST endpoint to accept generic queries
+- Changed from `{ asset, context }` to `{ query: string }` parameter
+- Implemented generic query handling across all 5 AI models
+- Maintained backward compatibility with GET endpoint (SSE streaming)
+
+### Core Features Implemented
+1. **Accepts generic queries**: Any question, not just crypto-specific
+2. **Parallel model execution**: All 5 models called simultaneously via Promise.allSettled
+3. **Per-model timeout**: 30 seconds per model using AbortController
+4. **Graceful partial failures**: Returns results from successful models even if others fail
+5. **Structured response**: Exact format matching specification
+
+### Response Structure
+```json
+{
+  "consensus": "Combined summary from all models",
+  "individual_responses": [
+    {
+      "model": "deepseek" | "kimi" | "minimax" | "glm" | "gemini",
+      "response": "Model analysis or error message",
+      "status": "success" | "timeout" | "error"
+    }
+  ],
+  "metadata": {
+    "total_time_ms": 2847,
+    "models_succeeded": 3
+  }
+}
+```
+
+### Error Handling
+- **400 Bad Request**: Missing or invalid query parameter
+- **500 Internal Server Error**: Unexpected errors with detailed messages
+- **Individual timeouts**: Each model tracked separately, doesn't block others
+- **API errors**: Caught per-model, reported with status: "error"
+- **Partial failures**: Works with 3+ successful models, graceful message if fewer
+
+### Model Integration
+All 5 models properly integrated with correct API formats:
+- **DeepSeek, Kimi, MiniMax**: OpenAI-compatible API (`/chat/completions`)
+- **GLM**: Anthropic-compatible API (`/messages`)
+- **Gemini**: Google Generative AI API (`:generateContent`)
+
+### New Functions Added
+- `callModelWithQuery()`: Generic model caller with timeout handling
+- `parseModelResponse()`: Robust JSON extraction with fallback
+- `generateConsensus()`: Simple consensus aggregation (MVP version)
+
+### Technical Decisions
+
+**Generic vs Crypto-Specific:**
+- Chose generic query handling for maximum flexibility
+- Each model analyzes from its specialty area (technical, sentiment, risk, etc.)
+- Better for hackathon demo versatility
+- Can handle crypto questions AND general tech/business questions
+
+**Consensus Algorithm:**
+- Simple text concatenation for MVP (as per task note)
+- Returns all responses + basic merged summary
+- Can be enhanced later with sentiment analysis, theme extraction, weighted scoring
+
+**Resilience Pattern:**
+- Promise.allSettled ensures all models complete (success or failure)
+- No cascading failures
+- Returns maximum available information
+- Graceful degradation
+
+### Documentation & Testing
+- Updated `/api/consensus/README.md` with complete API documentation
+- Created `test-consensus-generic.js` test suite (5 test scenarios)
+- Created `CVAULT-11_IMPLEMENTATION.md` implementation summary
+- Build verification: 0 TypeScript errors, endpoint recognized
+
+### Build Verification
+```
+✓ TypeScript: 0 errors
+✓ Next.js build: Success
+✓ Route: /api/consensus recognized
+✓ Size: 0 B (server-side only)
+```
+
+### Testing Instructions
+```bash
+# Local testing
+npm run dev
+node test-consensus-generic.js
+
+# Manual test
+curl -X POST http://localhost:3000/api/consensus \
+  -H "Content-Type: application/json" \
+  -d '{"query": "Should I invest in Bitcoin?"}'
+```
+
+### Files Modified/Created
+- ✅ `src/app/api/consensus/route.ts` (refactored POST, +150 lines)
+- ✅ `src/app/api/consensus/README.md` (API documentation)
+- ✅ `test-consensus-generic.js` (test suite)
+- ✅ `CVAULT-11_IMPLEMENTATION.md` (implementation summary)
+- ✅ `ACTIVITY_LOG.md` (this log entry)
+
+### API Keys Configuration
+All API keys already configured in `.env.local`:
+- DeepSeek: ✅
+- Kimi: ✅
+- MiniMax: ✅
+- GLM: ✅
+- Gemini: ✅
+
+### Next Steps for Enhancement
+1. **Enhanced consensus algorithm** - sentiment analysis, theme extraction
+2. **Streaming support** - SSE for real-time results
+3. **Caching** - reduce API costs for repeated queries
+4. **Analytics** - track model performance and timeout rates
+
+**Status**: ✅ Ready for deployment to Vercel
