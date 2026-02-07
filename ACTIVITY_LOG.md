@@ -239,4 +239,96 @@ TASK_SUMMARY.md
 **Demo URL (after deploy):** https://team-consensus-vault.vercel.app
 **Dev Server:** http://localhost:3000 (running)
 
+---
+
+## 2026-02-07 - CVAULT-2: Consensus Engine Backend
+
+**Status**: ✅ COMPLETE
+
+**Work Completed:**
+
+### 1. Environment Configuration
+- Created `.env.local` with all 5 API keys
+- Configured base URLs for each provider
+- Added to `.gitignore` (already covered)
+
+### 2. Model Configuration (`src/lib/models.ts`)
+Created comprehensive analyst model configuration:
+- **Momentum Hunter** (DeepSeek): Technical analysis, price action, trend detection
+- **Whale Watcher** (Kimi/Moonshot): Large holder movements, accumulation patterns
+- **Sentiment Scout** (MiniMax): Social sentiment, community buzz
+- **On-Chain Oracle** (GLM): On-chain metrics, TVL, transaction analysis
+- **Risk Manager** (Gemini): Risk assessment, volatility, portfolio exposure
+
+Each model has:
+- Specialized system prompt for its analyst role
+- API configuration (base URL, model name, provider type)
+- 30-second timeout
+- JSON response format requirement
+
+### 3. Consensus Engine (`src/lib/consensus-engine.ts`)
+- **Parallel API calls** using `Promise.allSettled` for resilience
+- **Multi-provider support**: OpenAI-compatible (DeepSeek, MiniMax), Anthropic (GLM), Google (Gemini)
+- **Rate limiting**: 1-second minimum interval per model
+- **Timeout handling**: AbortController with configurable timeout
+- **Error handling**: Graceful degradation for failed API calls
+- **Response parsing**: JSON extraction from model responses
+
+### 4. API Routes (`src/app/api/consensus/route.ts`)
+- **GET /api/consensus**: SSE streaming endpoint
+  - Streams analyst results as they arrive
+  - Sends consensus when all models complete
+  - Keepalive mechanism for long connections
+  - Mock mode fallback for development
+- **POST /api/consensus**: Batch endpoint
+  - Returns all results at once
+  - Query params: `asset`, `context`
+
+### 5. Consensus Calculation
+- Minimum 3 working models required
+- Signal types: buy, sell, hold
+- Confidence-weighted consensus level
+- 80% agreement threshold for strong recommendation
+- Maps signals to sentiment (buy→bullish, sell→bearish, hold→neutral)
+
+### 6. API Testing Results
+Working models (3/5):
+- ✅ DeepSeek - Working perfectly (technical analysis)
+- ❌ Kimi - Auth error (coding-only API key, needs general API key)
+- ✅ MiniMax - Working (low confidence due to lack of real-time data)
+- ✅ GLM - Working well (on-chain analysis)
+- ❌ Gemini - Quota exceeded (free tier limit hit)
+
+Consensus still works with 3+ models per the fallback logic.
+
+### 7. Files Created
+- `src/lib/models.ts` - Model configuration and consensus logic
+- `src/lib/consensus-engine.ts` - API orchestration engine
+- `.env.local` - API keys (not committed)
+- `test-consensus.js` - API test script
+
+### 8. Files Modified
+- `src/app/api/consensus/route.ts` - Upgraded from mock to real API
+
+**Build Status:**
+- ✅ TypeScript: 0 errors
+- ✅ Production build: Successful
+- ✅ API tested with real calls
+
+**Known Issues:**
+1. Kimi API key is for coding agents only - need general Moonshot API key
+2. Gemini free tier quota exhausted - need quota reset or paid plan
+3. MiniMax returns low confidence without real-time sentiment data
+
+**Integration:**
+- Frontend SSE hooks already configured correctly
+- Event format matches backend output
+- Ready for end-to-end testing
+
+**Next Actions:**
+1. Obtain general Moonshot API key for Kimi
+2. Reset/upgrade Gemini quota
+3. Consider adding real-time data feeds to MiniMax prompts
+4. Deploy to Vercel with environment variables
+
 **Completion Signal:** [[SIGNAL:task_complete]]
