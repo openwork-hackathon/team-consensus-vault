@@ -23,6 +23,16 @@ const MAX_RETRIES = 3;
 const INITIAL_RETRY_DELAY = 1000; // 1 second
 const RETRY_BACKOFF_MULTIPLIER = 2;
 
+// Performance tracking
+interface RequestMetrics {
+  totalRequests: number;
+  successfulRequests: number;
+  failedRequests: number;
+  averageResponseTime: number;
+}
+
+const metricsPerModel: Record<string, RequestMetrics> = {};
+
 /**
  * Call a single AI model with the analysis prompt
  * Includes automatic retry with exponential backoff
@@ -216,6 +226,42 @@ function parseModelResponse(text: string): ModelResponse {
 }
 
 /**
+ * Update performance metrics for a model
+ */
+function updateMetrics(modelId: string, success: boolean, responseTime: number) {
+  if (!metricsPerModel[modelId]) {
+    metricsPerModel[modelId] = {
+      totalRequests: 0,
+      successfulRequests: 0,
+      failedRequests: 0,
+      averageResponseTime: 0,
+    };
+  }
+
+  const metrics = metricsPerModel[modelId];
+  metrics.totalRequests++;
+
+  if (success) {
+    metrics.successfulRequests++;
+  } else {
+    metrics.failedRequests++;
+  }
+
+  // Update rolling average
+  const totalSuccessTime = metrics.averageResponseTime * (metrics.successfulRequests - (success ? 1 : 0));
+  metrics.averageResponseTime = success
+    ? (totalSuccessTime + responseTime) / metrics.successfulRequests
+    : metrics.averageResponseTime;
+}
+
+/**
+ * Get performance metrics for all models
+ */
+export function getPerformanceMetrics(): Record<string, RequestMetrics> {
+  return { ...metricsPerModel };
+}
+
+/**
  * Get analysis from a single model, with error handling and timing
  */
 export async function getAnalystOpinion(
@@ -243,6 +289,10 @@ export async function getAnalystOpinion(
   try {
     const response = await callModel(config, asset, context);
     const responseTime = Date.now() - startTime;
+
+    // Track successful request
+    updateMetrics(config.id, true, responseTime);
+
     return {
       result: {
         id: config.id,
@@ -256,6 +306,10 @@ export async function getAnalystOpinion(
   } catch (error) {
     const responseTime = Date.now() - startTime;
     const message = error instanceof Error ? error.message : 'Unknown error';
+
+    // Track failed request
+    updateMetrics(config.id, false, responseTime);
+
     console.error(`[${config.id}] Error:`, message);
     return {
       result: {
