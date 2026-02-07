@@ -2,9 +2,11 @@
 
 import { useState, useCallback } from 'react';
 import { useConsensusStream } from '@/lib/useConsensusStream';
+import { useAutoTrading } from '@/lib/useAutoTrading';
 import AnalystCard from '@/components/AnalystCard';
 import ConsensusMeter from '@/components/ConsensusMeter';
 import TradeSignal from '@/components/TradeSignal';
+import TradingPerformance from '@/components/TradingPerformance';
 import DepositModal from '@/components/DepositModal';
 import ToastContainer, { ToastData } from '@/components/ToastContainer';
 import { motion } from 'framer-motion';
@@ -18,6 +20,10 @@ export default function Dashboard() {
   const { addDeposit, totalValueLocked, getDepositsByAddress } = useVault();
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
   const [toasts, setToasts] = useState<ToastData[]>([]);
+  const [autoTradingEnabled, setAutoTradingEnabled] = useState(true);
+
+  // Auto-trading hook
+  const { isExecutingTrade } = useAutoTrading(consensusData, autoTradingEnabled);
 
   const addToast = useCallback((message: string, type: ToastData['type']) => {
     const id = `${Date.now()}-${Math.random()}`;
@@ -150,11 +156,14 @@ export default function Dashboard() {
         </div>
 
         {/* Analyst Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4 mb-6">
           {consensusData.analysts.map((analyst, index) => (
             <AnalystCard key={analyst.id} analyst={analyst} index={index} />
           ))}
         </div>
+
+        {/* Trading Performance Section */}
+        <TradingPerformance className="mb-6" />
 
         {/* Footer Info */}
         <motion.div

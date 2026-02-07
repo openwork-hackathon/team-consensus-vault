@@ -1,5 +1,54 @@
 # Activity Log - Consensus Vault Dashboard
 
+## 2026-02-07 - CVAULT-5: Paper Trading Engine with P&L Tracking
+
+**Status**: ✅ COMPLETE
+
+**Summary:**
+Implemented a comprehensive paper trading engine that automatically executes simulated trades when AI consensus reaches 4/5 or 5/5 agreement. Includes real-time P&L tracking, performance metrics, and historical trade visualization.
+
+**Components Delivered:**
+
+### Trading Engine Core
+- ✅ **Trading Types** (`src/lib/trading-types.ts`) - Complete type definitions for trades, metrics, and history
+- ✅ **Price Service** (`src/lib/price-service.ts`) - CoinGecko API integration with 30s caching
+- ✅ **Storage Adapter** (`src/lib/storage.ts`) - Unified KV/in-memory storage with automatic fallback
+- ✅ **Paper Trading Engine** (`src/lib/paper-trading-engine.ts`) - Core logic for trade execution and P&L calculation
+
+### API Endpoints
+- ✅ `/api/trading/execute` - Execute trade based on consensus
+- ✅ `/api/trading/history` - Retrieve complete trading history
+- ✅ `/api/trading/close` - Manually close open positions
+- ✅ `/api/price` - Fetch current asset prices
+
+### Frontend Integration
+- ✅ **TradingPerformance Component** - Comprehensive performance dashboard with:
+  - 8 key metrics (total P&L, win rate, avg win/loss, etc.)
+  - Trade history table (last 20 trades)
+  - Auto-refresh every 30 seconds
+- ✅ **useAutoTrading Hook** - Automatic trade execution on consensus signals
+- ✅ **Dashboard Integration** - Added to main page below analyst cards
+
+### Key Features
+1. **Automatic Execution**: Trades trigger when 4/5 or 5/5 AI models agree
+2. **Position Management**: Auto-closes on opposite signals (long closes on SELL, short on BUY)
+3. **Real-time P&L**: Calculates profit/loss for both long and short positions
+4. **Performance Tracking**: Win rate, average gains/losses, largest trades
+5. **Consensus Strength**: Tracks whether trade was 4/5 or 5/5 agreement
+
+**Technical Highlights:**
+- Storage works both locally (in-memory) and on Vercel (KV)
+- CoinGecko free API for real-time BTC/USD pricing
+- TypeScript type-safe throughout
+- Graceful error handling and fallbacks
+- Build passes successfully
+
+**Files Created:** 10 new files
+**Files Modified:** 2 existing files
+**Dependencies Added:** @vercel/kv
+
+---
+
 ## 2026-02-07 - CVAULT-22: CONSENSUS Token Creation
 
 **Status**: 🔶 BLOCKED - Requires human with browser access
