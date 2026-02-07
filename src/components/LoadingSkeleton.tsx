@@ -1,0 +1,105 @@
+'use client';
+
+import { motion } from 'framer-motion';
+
+interface LoadingSkeletonProps {
+  className?: string;
+  count?: number;
+  height?: string;
+}
+
+export function SkeletonBox({ className = '', height = 'h-4' }: { className?: string; height?: string }) {
+  return (
+    <motion.div
+      className={`${height} bg-muted/30 rounded animate-pulse ${className}`}
+      initial={{ opacity: 0.5 }}
+      animate={{ opacity: [0.5, 0.8, 0.5] }}
+      transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+    />
+  );
+}
+
+export function MetricSkeleton() {
+  return (
+    <div className="bg-background/50 rounded-lg p-4">
+      <SkeletonBox height="h-3" className="w-20 mb-2" />
+      <SkeletonBox height="h-6" className="w-24" />
+    </div>
+  );
+}
+
+export function TableRowSkeleton() {
+  return (
+    <tr className="border-b border-border/50">
+      <td className="py-2 px-2"><SkeletonBox className="w-16" /></td>
+      <td className="py-2 px-2"><SkeletonBox className="w-20" /></td>
+      <td className="py-2 px-2"><SkeletonBox className="w-12" /></td>
+      <td className="py-2 px-2"><SkeletonBox className="w-16" /></td>
+      <td className="py-2 px-2"><SkeletonBox className="w-16" /></td>
+      <td className="py-2 px-2"><SkeletonBox className="w-20" /></td>
+      <td className="py-2 px-2"><SkeletonBox className="w-12" /></td>
+      <td className="py-2 px-2"><SkeletonBox className="w-12" /></td>
+    </tr>
+  );
+}
+
+export function TradingPerformanceSkeleton({ className = '' }: { className?: string }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={`bg-card rounded-xl p-6 border border-border ${className}`}
+    >
+      {/* Header */}
+      <div className="mb-6">
+        <SkeletonBox height="h-6" className="w-48 mb-2" />
+        <SkeletonBox height="h-4" className="w-64" />
+      </div>
+
+      {/* Metrics Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+        {[...Array(8)].map((_, i) => (
+          <MetricSkeleton key={i} />
+        ))}
+      </div>
+
+      {/* Table Header */}
+      <div className="mb-3">
+        <SkeletonBox height="h-5" className="w-32" />
+      </div>
+
+      {/* Table */}
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border">
+              <th className="text-left py-2 px-2"><SkeletonBox className="w-12" /></th>
+              <th className="text-left py-2 px-2"><SkeletonBox className="w-16" /></th>
+              <th className="text-left py-2 px-2"><SkeletonBox className="w-16" /></th>
+              <th className="text-right py-2 px-2"><SkeletonBox className="w-12" /></th>
+              <th className="text-right py-2 px-2"><SkeletonBox className="w-12" /></th>
+              <th className="text-right py-2 px-2"><SkeletonBox className="w-12" /></th>
+              <th className="text-center py-2 px-2"><SkeletonBox className="w-16" /></th>
+              <th className="text-center py-2 px-2"><SkeletonBox className="w-12" /></th>
+            </tr>
+          </thead>
+          <tbody>
+            {[...Array(5)].map((_, i) => (
+              <TableRowSkeleton key={i} />
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </motion.div>
+  );
+}
+
+export default function LoadingSkeleton({ className = '', count = 1, height = 'h-4' }: LoadingSkeletonProps) {
+  return (
+    <>
+      {[...Array(count)].map((_, i) => (
+        <SkeletonBox key={i} className={className} height={height} />
+      ))}
+    </>
+  );
+}

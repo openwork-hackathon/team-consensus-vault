@@ -75,6 +75,9 @@ export function useConsensusStream(apiEndpoint: string = '/api/consensus') {
     analysts: MOCK_ANALYSTS,
   });
   const [useSSE, setUseSSE] = useState(false);
+  const [sseError, setSSEError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const maxRetries = 3;
 
   const calculateConsensus = useCallback((analysts: Analyst[]) => {
     const completedAnalysts = analysts.filter(a => !a.isTyping);
@@ -117,48 +120,82 @@ export function useConsensusStream(apiEndpoint: string = '/api/consensus') {
   useEffect(() => {
     if (!useSSE) return;
 
-    const eventSource = new EventSource(apiEndpoint);
+    let eventSource: EventSource | null = null;
+    let reconnectTimeout: NodeJS.Timeout | null = null;
 
-    eventSource.onmessage = (event) => {
+    const connectSSE = () => {
       try {
-        const data = JSON.parse(event.data);
+        eventSource = new EventSource(apiEndpoint);
+        setSSEError(null);
 
-        setConsensusData(prev => {
-          const updatedAnalysts = prev.analysts.map(analyst =>
-            analyst.id === data.id
-              ? {
-                  ...analyst,
-                  sentiment: data.sentiment,
-                  confidence: data.confidence,
-                  reasoning: data.reasoning,
-                  isTyping: false,
-                }
-              : analyst
-          );
+        eventSource.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            setRetryCount(0); // Reset retry count on successful message
 
-          const consensusLevel = calculateConsensus(updatedAnalysts);
-          const recommendation = getRecommendation(updatedAnalysts, consensusLevel, prev.threshold);
+            setConsensusData(prev => {
+              const updatedAnalysts = prev.analysts.map(analyst =>
+                analyst.id === data.id
+                  ? {
+                      ...analyst,
+                      sentiment: data.sentiment,
+                      confidence: data.confidence,
+                      reasoning: data.reasoning,
+                      isTyping: false,
+                    }
+                  : analyst
+              );
 
-          return {
-            ...prev,
-            analysts: updatedAnalysts,
-            consensusLevel,
-            recommendation,
-          };
-        });
+              const consensusLevel = calculateConsensus(updatedAnalysts);
+              const recommendation = getRecommendation(updatedAnalysts, consensusLevel, prev.threshold);
+
+              return {
+                ...prev,
+                analysts: updatedAnalysts,
+                consensusLevel,
+                recommendation,
+              };
+            });
+          } catch (error) {
+            console.error('Failed to parse SSE data:', error);
+            setSSEError('Failed to parse server data');
+          }
+        };
+
+        eventSource.onerror = () => {
+          console.error('SSE connection error');
+          eventSource?.close();
+
+          if (retryCount < maxRetries) {
+            setSSEError(`Connection lost. Retrying... (${retryCount + 1}/${maxRetries})`);
+            setRetryCount(prev => prev + 1);
+
+            // Exponential backoff: 2s, 4s, 8s
+            const delay = Math.min(2000 * Math.pow(2, retryCount), 8000);
+            reconnectTimeout = setTimeout(connectSSE, delay);
+          } else {
+            setSSEError('Connection failed. Using simulated data.');
+            setUseSSE(false);
+          }
+        };
       } catch (error) {
-        console.error('Failed to parse SSE data:', error);
+        console.error('Failed to create SSE connection:', error);
+        setSSEError('Failed to connect to server');
+        setUseSSE(false);
       }
     };
 
-    eventSource.onerror = () => {
-      console.error('SSE connection error, falling back to mock data');
-      eventSource.close();
-      setUseSSE(false);
-    };
+    connectSSE();
 
-    return () => eventSource.close();
-  }, [apiEndpoint, useSSE, calculateConsensus, getRecommendation]);
+    return () => {
+      if (eventSource) {
+        eventSource.close();
+      }
+      if (reconnectTimeout) {
+        clearTimeout(reconnectTimeout);
+      }
+    };
+  }, [apiEndpoint, useSSE, retryCount, calculateConsensus, getRecommendation]);
 
   // Mock Streaming Effect (fallback when SSE is not available)
   useEffect(() => {
@@ -251,5 +288,5 @@ export function useConsensusStream(apiEndpoint: string = '/api/consensus') {
       });
   }, [apiEndpoint]);
 
-  return consensusData;
+  return { ...consensusData, sseError };
 }

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Trade, PortfolioMetrics } from '@/lib/trading-types';
+import { TradingPerformanceSkeleton } from './LoadingSkeleton';
 
 interface TradingPerformanceProps {
   className?: string;
@@ -55,18 +56,38 @@ export default function TradingPerformance({ className = '' }: TradingPerformanc
   };
 
   if (loading) {
-    return (
-      <div className={`bg-card rounded-xl p-6 border border-border ${className}`}>
-        <div className="text-center text-muted-foreground">Loading trading history...</div>
-      </div>
-    );
+    return <TradingPerformanceSkeleton className={className} />;
   }
 
   if (error) {
     return (
-      <div className={`bg-card rounded-xl p-6 border border-border ${className}`}>
-        <div className="text-center text-red-500">Error: {error}</div>
-      </div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className={`bg-card rounded-xl p-6 border border-border ${className}`}
+      >
+        <div className="text-center">
+          <div className="w-16 h-16 bg-bearish/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-3xl">⚠️</span>
+          </div>
+          <h3 className="text-lg font-semibold mb-2">Failed to load trading data</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            {error.includes('fetch') || error.includes('Network')
+              ? 'Unable to connect to the server. Please check your connection.'
+              : 'An error occurred while loading your trading history.'}
+          </p>
+          <button
+            onClick={() => {
+              setError(null);
+              setLoading(true);
+              fetchTradingHistory();
+            }}
+            className="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </motion.div>
     );
   }
 
