@@ -5,6 +5,7 @@ import AnalystCard from '@/components/AnalystCard';
 import ConsensusMeter from '@/components/ConsensusMeter';
 import TradeSignal from '@/components/TradeSignal';
 import { motion } from 'framer-motion';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 export default function Dashboard() {
   const consensusData = useConsensusStream();
@@ -31,6 +32,7 @@ export default function Dashboard() {
                 <div className="text-xs text-muted-foreground">Price</div>
                 <div className="font-semibold text-bullish">$45,234</div>
               </div>
+              <ConnectButton />
             </div>
           </div>
         </div>
