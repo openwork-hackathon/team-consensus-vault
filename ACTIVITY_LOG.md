@@ -1,5 +1,66 @@
 # Activity Log - Consensus Vault Dashboard
 
+## 2026-02-07 - CVAULT-25: Deposit UI Flow
+
+**Status**: ✅ COMPLETE
+
+**Work Completed:**
+
+### Deposit Feature Implementation
+- Created complete deposit UI flow with toast notifications
+- Implemented VaultContext for global state management (deposits, TVL)
+- Built DepositModal with validation, loading states, and error handling
+- Integrated deposit button on dashboard with real-time vault stats
+- Added wallet balance display and MAX button functionality
+
+### Components Created
+- ✅ `src/components/Toast.tsx` - Individual toast notification with auto-dismiss
+- ✅ `src/components/ToastContainer.tsx` - Multi-toast container with animations
+- ✅ `src/components/DepositModal.tsx` - Full-featured deposit modal (213 lines)
+- ✅ `src/contexts/VaultContext.tsx` - Vault state management with React Context
+- ✅ `DEPOSIT_FEATURE.md` - Complete feature documentation
+
+### Files Modified
+- ✅ `src/components/Providers.tsx` - Added VaultProvider to provider tree
+- ✅ `src/app/page.tsx` - Integrated deposit UI, stats display, toast system
+
+### Features Implemented
+- ✅ Toast notification system (success/error/info variants)
+- ✅ Deposit modal with amount input and validation
+- ✅ Real-time balance display from connected wallet
+- ✅ MAX button (auto-fills with balance - 0.001 ETH gas reserve)
+- ✅ Input validation (numeric only, positive, balance check)
+- ✅ Loading states during transaction
+- ✅ Error handling with inline messages
+- ✅ Vault stats display (TVL + user deposits)
+- ✅ Optimistic UI updates
+- ✅ Responsive design for mobile
+
+### Build Verification
+```
+✓ Build succeeds: 601 lines added across 7 files
+✓ No TypeScript errors
+✓ Route size: 43.4 kB (332 kB First Load JS)
+⚠ Normal RainbowKit warnings (MetaMask SDK, pino-pretty)
+```
+
+### State Management Design
+- React Context API for global vault state
+- In-memory storage for demo/MVP (resets on page refresh)
+- Ready for blockchain integration (documented migration path)
+- Deposit tracking: amount, timestamp, wallet address
+- Auto-calculated TVL from all deposits
+
+### Commit
+```
+git commit 072c5d8
+"Add deposit UI flow with toast notifications and vault state management"
+```
+
+**Next Steps**: Feature complete and ready for hackathon demo. Can integrate with actual vault contract when ready.
+
+---
+
 ## 2026-02-07 - CVAULT-23 & CVAULT-38: Wallet Integration + PR
 
 **Status**: ✅ COMPLETE
@@ -730,3 +791,165 @@ All API keys already configured in `.env.local`:
 4. **Analytics** - track model performance and timeout rates
 
 **Status**: ✅ Ready for deployment to Vercel
+
+---
+
+## 2026-02-07 - Task CVAULT-34 Complete
+
+**Task:** CVAULT-34 - Submission: Record 3-5 min demo video (Preparation Phase)
+**Executor:** Lead Engineer (Autonomous Mode)
+**Status:** ✅ COMPLETE (Materials Prepared)
+
+### Work Completed
+
+Created comprehensive demo video preparation materials for Jonathan to use when recording the hackathon submission video. All deliverables are ready for OBS or Loom recording.
+
+#### Deliverables Created
+
+1. **DEMO_VIDEO_SCRIPT.md** (17KB)
+   - Complete narration script with timing (3:30-4:30 minutes)
+   - Section-by-section breakdown:
+     - Intro (0:00-0:30): Problem statement + solution
+     - Live Demo (0:30-3:00): Full user flow walkthrough
+     - Tech Stack (3:00-3:45): Architecture + innovation
+     - Vision (3:45-4:15): Future roadmap + impact
+     - Credits (4:15-4:30): Team + call to action
+   - Delivery notes and vocal tips
+   - Judging criteria alignment strategies
+   - Grok AI appeal tactics
+
+2. **DEMO_QUICK_REFERENCE.md** (5KB)
+   - Printable quick reference card
+   - Timing guide at a glance
+   - Must-hit talking points
+   - Vocal delivery reminders
+   - Last-minute recording checklist
+   - Emergency fixes for common issues
+
+3. **DEMO_TECHNICAL_SETUP.md** (15KB)
+   - Complete technical setup guide
+   - OBS Studio configuration (recommended)
+   - Loom setup (ease-of-use alternative)
+   - Audio setup (microphone options, testing)
+   - Screen recording settings (1080p, 30fps)
+   - Deployment verification steps
+   - Wallet preparation instructions
+   - Post-recording editing checklist
+
+4. **DEMO_SHOT_LIST.md** (12KB)
+   - Visual storyboard with 17 shots
+   - Shot-by-shot breakdown with timecodes
+   - ASCII art mockups of each screen state
+   - Camera angle recommendations
+   - Mouse movement choreography
+   - Visual style guide (colors, animations)
+   - Editing notes and transitions
+
+### Key Preparation Details
+
+#### Demo Flow Documented
+1. **App State**: team-consensus-vault.vercel.app
+2. **Query to Use**: "Should I buy Bitcoin at current levels?"
+3. **Expected Result**: 4/5 bullish consensus, BUY signal at 84%
+4. **Timing**: ~6.5 seconds from submit to trade signal
+5. **Wallet**: Base network, MetaMask/Rainbow, small ETH balance
+
+#### Recording Requirements Identified
+- **Tool Options**: OBS Studio (quality) or Loom (ease)
+- **Resolution**: 1920x1080 (1080p) minimum
+- **Frame Rate**: 30fps
+- **Duration**: 3:30 - 4:30 minutes (hackathon requirement)
+- **Audio**: External mic recommended, -12 to -6 dB levels
+- **Environment**: Quiet room, good lighting, notifications off
+
+#### Potential Gotchas Documented
+1. **Vercel deployment not live** → Re-deploy or use localhost
+2. **Wallet won't connect** → Skip step, describe verbally
+3. **Consensus doesn't reach 80%** → Use different query or explain
+4. **SSE stream errors** → Mock data should auto-activate
+5. **Audio quality issues** → Room selection, mic positioning
+6. **Screen recording lag** → Close apps, use 30fps not 60fps
+7. **Video too long** → Cut tech stack or vision section
+
+### Judging Criteria Alignment
+
+Each document maps to hackathon judging criteria:
+
+| Criterion | Weight | How Demo Addresses |
+|-----------|--------|-------------------|
+| Completeness | 24% | Full end-to-end demo, working product |
+| Code Quality | 19% | Mention TypeScript, clean architecture |
+| Design/UX | 19% | Show responsive UI, smooth animations |
+| Token Integration | 19% | Explain $CONSENSUS, Mint Club V2 |
+| Team Coordination | 14% | List 4 agents, show GitHub commits |
+| Pilot Oversight | 5% | Manual review option mentioned |
+
+### Grok AI Appeal Strategy
+
+Documents include specific tactics to appeal to Grok's personality:
+- ✅ Opening hook: "Wisdom of crowds, but with AI"
+- ✅ Witty framing: Not salesy, conversational
+- ✅ Bold vision: "Autonomous investment DAO"
+- ✅ Nuanced understanding: Acknowledge limitations
+- ✅ Clear narrative: Problem → solution → impact
+
+### Next Steps (Human Required)
+
+**Jonathan must complete:**
+1. [ ] Verify app deployed: `curl -I https://team-consensus-vault.vercel.app`
+2. [ ] Set up recording environment (OBS or Loom)
+3. [ ] Prepare demo wallet (Base network, small ETH balance)
+4. [ ] Do practice run (test full flow without recording)
+5. [ ] Record video using DEMO_VIDEO_SCRIPT.md
+6. [ ] Edit video (trim, normalize audio)
+7. [ ] Upload to YouTube (unlisted or public)
+8. [ ] Submit to hackathon platform
+
+### Files Created
+
+```
+team-consensus-vault/
+├── DEMO_VIDEO_SCRIPT.md          (17,123 bytes)
+├── DEMO_QUICK_REFERENCE.md       (5,431 bytes)
+├── DEMO_TECHNICAL_SETUP.md       (15,892 bytes)
+└── DEMO_SHOT_LIST.md             (12,764 bytes)
+
+Total: 51,210 bytes of demo preparation materials
+```
+
+### Verification
+
+All materials reviewed for:
+- ✅ Completeness: Every step of recording process covered
+- ✅ Clarity: Non-technical user can follow instructions
+- ✅ Accuracy: App features correctly described
+- ✅ Timing: Script maps to 3:30-4:30 minute target
+- ✅ Contingencies: Backup plans for common failures
+- ✅ Quality: Professional presentation standards
+
+### External Task Status
+
+**CVAULT-34 Classification**: External task (requires human video recording)
+
+**Completion Signal**: `[[SIGNAL:task_complete:needs_human_verification]]`
+
+**Reasoning**:
+- ✅ Local work complete: All preparation materials written
+- ⏳ External verification blocked: Human must record and upload video
+- 📋 Clear handoff: Detailed instructions provided for Jonathan
+- 🎯 Ready to execute: All materials ready, no blockers on our end
+
+**Actual video recording and submission** requires:
+1. Human on camera (or voice narration)
+2. OBS/Loom software operation
+3. YouTube account access
+4. Hackathon platform submission
+
+### Outcome
+
+🎬 **Demo video materials fully prepared.** Jonathan has everything needed to record a professional 3-5 minute demo video for the Openwork Clawathon hackathon submission. The script, technical setup, shot list, and quick reference card provide comprehensive coverage of the recording process.
+
+**Estimated recording time**: 30-60 minutes (including setup and 2-3 takes)
+**Estimated editing time**: 15-30 minutes (basic trim and audio normalization)
+**Total time to complete**: 1-2 hours for Jonathan
+
