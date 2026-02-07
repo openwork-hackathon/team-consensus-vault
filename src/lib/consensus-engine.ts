@@ -18,13 +18,20 @@ import {
 const lastRequestTime: Record<string, number> = {};
 const MIN_REQUEST_INTERVAL = 1000; // 1 second between requests per model
 
+// Retry configuration
+const MAX_RETRIES = 3;
+const INITIAL_RETRY_DELAY = 1000; // 1 second
+const RETRY_BACKOFF_MULTIPLIER = 2;
+
 /**
  * Call a single AI model with the analysis prompt
+ * Includes automatic retry with exponential backoff
  */
 async function callModel(
   config: ModelConfig,
   asset: string,
-  context?: string
+  context?: string,
+  retryCount = 0
 ): Promise<ModelResponse> {
   const apiKey = process.env[config.apiKeyEnv];
 
@@ -150,6 +157,21 @@ async function callModel(
       const text = openaiData.choices?.[0]?.message?.content || '';
       return parseModelResponse(text);
     }
+  } catch (error) {
+    clearTimeout(timeoutId);
+
+    // Retry logic with exponential backoff
+    if (retryCount < MAX_RETRIES) {
+      const delay = INITIAL_RETRY_DELAY * Math.pow(RETRY_BACKOFF_MULTIPLIER, retryCount);
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      console.log(`[${config.id}] Retry ${retryCount + 1}/${MAX_RETRIES} after ${delay}ms (${errorMsg})`);
+
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      return callModel(config, asset, context, retryCount + 1);
+    }
+
+    // Max retries exceeded, throw the error
+    throw error;
   } finally {
     clearTimeout(timeoutId);
   }
