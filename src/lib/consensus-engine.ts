@@ -10,6 +10,8 @@ import {
   AnalystResult,
   signalToSentiment,
   calculateConsensus,
+  calculateConsensusDetailed,
+  ConsensusResponse,
 } from './models';
 
 // Rate limiting - track last request time per model
@@ -186,44 +188,57 @@ function parseModelResponse(text: string): ModelResponse {
 }
 
 /**
- * Get analysis from a single model, with error handling
+ * Get analysis from a single model, with error handling and timing
  */
 export async function getAnalystOpinion(
   modelId: string,
   asset: string,
   context?: string
-): Promise<AnalystResult> {
+): Promise<{ result: AnalystResult; responseTime: number }> {
+  const startTime = Date.now();
   const config = ANALYST_MODELS.find((m) => m.id === modelId);
+
   if (!config) {
     return {
-      id: modelId,
-      name: 'Unknown',
-      sentiment: 'neutral',
-      confidence: 0,
-      reasoning: '',
-      error: `Unknown model: ${modelId}`,
+      result: {
+        id: modelId,
+        name: 'Unknown',
+        sentiment: 'neutral',
+        confidence: 0,
+        reasoning: '',
+        error: `Unknown model: ${modelId}`,
+      },
+      responseTime: 0,
     };
   }
 
   try {
     const response = await callModel(config, asset, context);
+    const responseTime = Date.now() - startTime;
     return {
-      id: config.id,
-      name: config.name,
-      sentiment: signalToSentiment(response.signal),
-      confidence: response.confidence,
-      reasoning: response.reasoning,
+      result: {
+        id: config.id,
+        name: config.name,
+        sentiment: signalToSentiment(response.signal),
+        confidence: response.confidence,
+        reasoning: response.reasoning,
+      },
+      responseTime,
     };
   } catch (error) {
+    const responseTime = Date.now() - startTime;
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error(`[${config.id}] Error:`, message);
     return {
-      id: config.id,
-      name: config.name,
-      sentiment: 'neutral',
-      confidence: 0,
-      reasoning: '',
-      error: message,
+      result: {
+        id: config.id,
+        name: config.name,
+        sentiment: 'neutral',
+        confidence: 0,
+        reasoning: '',
+        error: message,
+      },
+      responseTime,
     };
   }
 }
@@ -238,10 +253,14 @@ export async function runConsensusAnalysis(
 ): Promise<{
   analysts: AnalystResult[];
   consensus: ReturnType<typeof calculateConsensus>;
+  responseTimes: Map<string, number>;
 }> {
+  const responseTimes = new Map<string, number>();
+
   // Run all models in parallel using Promise.allSettled for resilience
   const promises = ANALYST_MODELS.map(async (config) => {
-    const result = await getAnalystOpinion(config.id, asset, context);
+    const { result, responseTime } = await getAnalystOpinion(config.id, asset, context);
+    responseTimes.set(config.id, responseTime);
 
     // Report progress if callback provided
     if (onProgress) {
@@ -273,7 +292,47 @@ export async function runConsensusAnalysis(
   // Calculate consensus from all results
   const consensus = calculateConsensus(analysts);
 
-  return { analysts, consensus };
+  return { analysts, consensus, responseTimes };
+}
+
+/**
+ * Run all 5 analysts and return detailed consensus response
+ * Implements strict 4/5 consensus logic with full tracking
+ */
+export async function runDetailedConsensusAnalysis(
+  asset: string,
+  context?: string
+): Promise<ConsensusResponse> {
+  const responseTimes = new Map<string, number>();
+
+  // Run all models in parallel using Promise.allSettled for resilience
+  const promises = ANALYST_MODELS.map(async (config) => {
+    const { result, responseTime } = await getAnalystOpinion(config.id, asset, context);
+    responseTimes.set(config.id, responseTime);
+    return result;
+  });
+
+  const results = await Promise.allSettled(promises);
+
+  // Extract results, handling any rejections
+  const analysts: AnalystResult[] = results.map((result, index) => {
+    if (result.status === 'fulfilled') {
+      return result.value;
+    } else {
+      const config = ANALYST_MODELS[index];
+      return {
+        id: config.id,
+        name: config.name,
+        sentiment: 'neutral' as const,
+        confidence: 0,
+        reasoning: '',
+        error: result.reason?.message || 'Promise rejected',
+      };
+    }
+  });
+
+  // Calculate detailed consensus with 4/5 threshold
+  return calculateConsensusDetailed(analysts, responseTimes);
 }
 
 /**
@@ -287,7 +346,7 @@ export async function* streamConsensusAnalysis(
 
   // Create promises that yield as they complete
   const promises = ANALYST_MODELS.map(async (config) => {
-    const result = await getAnalystOpinion(config.id, asset, context);
+    const { result } = await getAnalystOpinion(config.id, asset, context);
     return result;
   });
 

@@ -36,12 +36,14 @@ export async function GET(request: NextRequest) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), DEEPSEEK_TIMEOUT);
 
-    let result;
+    let analysisResult;
     try {
-      result = await getAnalystOpinion('deepseek', asset, fullContext);
+      analysisResult = await getAnalystOpinion('deepseek', asset, fullContext);
     } finally {
       clearTimeout(timeoutId);
     }
+
+    const { result, responseTime } = analysisResult;
 
     // Check for errors
     if (result.error) {
@@ -66,6 +68,7 @@ export async function GET(request: NextRequest) {
       signal: result.sentiment === 'bullish' ? 'bullish' : result.sentiment === 'bearish' ? 'bearish' : 'neutral',
       confidence: result.confidence / 100, // Convert to 0-1 scale as per task spec
       reasoning: result.reasoning,
+      response_time_ms: responseTime,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
@@ -103,12 +106,14 @@ export async function POST(request: NextRequest) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), DEEPSEEK_TIMEOUT);
 
-    let result;
+    let analysisResult;
     try {
-      result = await getAnalystOpinion('deepseek', asset, fullContext);
+      analysisResult = await getAnalystOpinion('deepseek', asset, fullContext);
     } finally {
       clearTimeout(timeoutId);
     }
+
+    const { result, responseTime } = analysisResult;
 
     // Check for errors
     if (result.error) {
@@ -133,6 +138,7 @@ export async function POST(request: NextRequest) {
       signal: result.sentiment === 'bullish' ? 'bullish' : result.sentiment === 'bearish' ? 'bearish' : 'neutral',
       confidence: result.confidence / 100, // Convert to 0-1 scale as per task spec
       reasoning: result.reasoning,
+      response_time_ms: responseTime,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {

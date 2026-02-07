@@ -79,7 +79,7 @@ async function streamRealAnalysis(
   const results: AnalystResult[] = [];
 
   // Use the consensus engine with progress callback
-  const { analysts, consensus } = await runConsensusAnalysis(
+  const { analysts, consensus, responseTimes } = await runConsensusAnalysis(
     asset,
     context,
     (result) => {
