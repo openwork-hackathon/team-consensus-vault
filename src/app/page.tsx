@@ -72,7 +72,7 @@ export default function Dashboard() {
         </div>
 
         {/* Analyst Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
           {consensusData.analysts.map((analyst, index) => (
             <AnalystCard key={analyst.id} analyst={analyst} index={index} />
           ))}

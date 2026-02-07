@@ -31,31 +31,31 @@ export default function AnalystCard({ analyst, index }: AnalystCardProps) {
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <div
-            className="w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold"
+            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-base sm:text-lg font-bold flex-shrink-0"
             style={{ backgroundColor: analyst.color, color: '#fff' }}
           >
             {analyst.avatar}
           </div>
-          <div>
-            <h3 className="font-semibold text-sm">{analyst.name}</h3>
-            <div className="flex items-center gap-2 text-xs">
-              <span className="text-lg">{sentimentIcons[analyst.sentiment]}</span>
+          <div className="min-w-0">
+            <h3 className="font-semibold text-xs sm:text-sm truncate">{analyst.name}</h3>
+            <div className="flex items-center gap-1 sm:gap-2 text-xs">
+              <span className="text-base sm:text-lg">{sentimentIcons[analyst.sentiment]}</span>
               <span className="capitalize">{analyst.sentiment}</span>
             </div>
           </div>
         </div>
-        
+
         {/* Confidence */}
-        <div className="text-right">
-          <div className="text-2xl font-bold">{analyst.confidence}%</div>
-          <div className="text-xs text-muted-foreground">confidence</div>
+        <div className="text-right flex-shrink-0">
+          <div className="text-xl sm:text-2xl font-bold">{analyst.confidence}%</div>
+          <div className="text-xs text-muted-foreground hidden sm:block">confidence</div>
         </div>
       </div>
 
       {/* Reasoning */}
-      <div className="min-h-[60px]">
+      <div className="min-h-[60px] sm:min-h-[80px]">
         {analyst.isTyping ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span>Analyzing</span>
@@ -67,7 +67,14 @@ export default function AnalystCard({ analyst, index }: AnalystCardProps) {
             </motion.span>
           </div>
         ) : (
-          <p className="text-sm leading-relaxed">{analyst.reasoning}</p>
+          <motion.p
+            className="text-xs sm:text-sm leading-relaxed"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            {analyst.reasoning}
+          </motion.p>
         )}
       </div>
 
