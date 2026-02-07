@@ -47,30 +47,30 @@ export default function TradeSignal({ recommendation, consensusLevel, threshold 
           />
 
           <div className="relative z-10">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3 sm:gap-0">
               <div className="flex items-center gap-3">
                 <motion.span
-                  className="text-5xl"
+                  className="text-4xl sm:text-5xl"
                   animate={{ scale: [1, 1.2, 1] }}
                   transition={{ duration: 1.5, repeat: Infinity }}
                 >
                   {signalIcons[recommendation]}
                 </motion.span>
                 <div>
-                  <h3 className="text-3xl font-bold text-white">
+                  <h3 className="text-2xl sm:text-3xl font-bold text-white">
                     {recommendation}
                   </h3>
-                  <p className="text-sm text-white/80">Trade Signal Active</p>
+                  <p className="text-xs sm:text-sm text-white/80">Trade Signal Active</p>
                 </div>
               </div>
-              
-              <div className="text-right">
-                <div className="text-4xl font-bold text-white">{consensusLevel}%</div>
+
+              <div className="text-left sm:text-right">
+                <div className="text-3xl sm:text-4xl font-bold text-white">{consensusLevel}%</div>
                 <div className="text-xs text-white/80">Agreement</div>
               </div>
             </div>
 
-            <p className="text-white/90 text-sm leading-relaxed">
+            <p className="text-white/90 text-sm leading-relaxed mb-4">
               {signalMessages[recommendation]}
             </p>
 
@@ -78,7 +78,7 @@ export default function TradeSignal({ recommendation, consensusLevel, threshold 
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="mt-4 w-full bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+              className="w-full bg-white/20 hover:bg-white/30 active:bg-white/40 backdrop-blur-sm text-white font-semibold py-3 px-6 rounded-lg transition-colors touch-manipulation"
             >
               Execute Trade
             </motion.button>
