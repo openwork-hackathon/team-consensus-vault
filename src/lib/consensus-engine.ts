@@ -1,6 +1,16 @@
 /**
  * Consensus Vault - Consensus Engine
  * Orchestrates 5 AI models in parallel for crypto analysis
+ *
+ * Features:
+ * - Parallel execution of 5 AI models (DeepSeek, Kimi, MiniMax, Gemini, GLM)
+ * - Automatic retry with exponential backoff (up to 3 retries)
+ * - Rate limiting to prevent API throttling (1 req/sec per model)
+ * - Timeout handling with configurable timeouts per model
+ * - Performance metrics tracking (success rate, avg response time)
+ * - Detailed error messages with context
+ * - Robust JSON parsing with validation
+ * - Resilient Promise.allSettled for parallel execution
  */
 
 import {
@@ -64,8 +74,12 @@ async function callModel(
   const userPrompt = `Analyze ${asset} for a trading signal. ${context || 'Provide your expert analysis based on current market conditions.'}`;
 
   // Create abort controller for timeout
+  // Each model has its own timeout configured in models.ts
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), config.timeout);
+  const timeoutId = setTimeout(() => {
+    console.warn(`[${config.id}] Request timeout after ${config.timeout}ms`);
+    controller.abort();
+  }, config.timeout);
 
   try {
     let response: Response;
