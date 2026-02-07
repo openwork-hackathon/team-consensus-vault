@@ -1,17 +1,63 @@
 'use client';
 
+import { useState, useCallback } from 'react';
 import { useConsensusStream } from '@/lib/useConsensusStream';
 import AnalystCard from '@/components/AnalystCard';
 import ConsensusMeter from '@/components/ConsensusMeter';
 import TradeSignal from '@/components/TradeSignal';
+import DepositModal from '@/components/DepositModal';
+import ToastContainer, { ToastData } from '@/components/ToastContainer';
 import { motion } from 'framer-motion';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { useAccount } from 'wagmi';
+import { useVault } from '@/contexts/VaultContext';
 
 export default function Dashboard() {
   const consensusData = useConsensusStream();
+  const { address, isConnected } = useAccount();
+  const { addDeposit, totalValueLocked, getDepositsByAddress } = useVault();
+  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
+  const [toasts, setToasts] = useState<ToastData[]>([]);
+
+  const addToast = useCallback((message: string, type: ToastData['type']) => {
+    const id = `${Date.now()}-${Math.random()}`;
+    setToasts((prev) => [...prev, { id, message, type }]);
+  }, []);
+
+  const removeToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+  }, []);
+
+  const handleDeposit = useCallback(async (amount: string) => {
+    if (!address) {
+      throw new Error('Wallet not connected');
+    }
+
+    // Simulate deposit transaction (in real implementation, this would interact with smart contract)
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
+    // Add deposit to vault state
+    addDeposit(amount, address);
+
+    // Show success toast
+    addToast(`Successfully deposited ${amount} ETH`, 'success');
+  }, [address, addDeposit, addToast]);
+
+  const userDeposits = address ? getDepositsByAddress(address) : [];
+  const userTotalDeposited = userDeposits.reduce((sum, d) => sum + parseFloat(d.amount), 0).toFixed(6);
 
   return (
     <main className="min-h-screen bg-background">
+      {/* Toast Notifications */}
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
+
+      {/* Deposit Modal */}
+      <DepositModal
+        isOpen={isDepositModalOpen}
+        onClose={() => setIsDepositModalOpen(false)}
+        onDeposit={handleDeposit}
+      />
+
       {/* Header */}
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40">
         <div className="container mx-auto px-4 py-4">
@@ -39,6 +85,36 @@ export default function Dashboard() {
       </header>
 
       <div className="container mx-auto px-4 py-6 lg:py-8 max-w-7xl">
+        {/* Vault Stats + Deposit Button */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6 bg-card rounded-xl p-6 border border-border"
+        >
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex flex-wrap gap-6">
+              <div>
+                <div className="text-xs text-muted-foreground mb-1">Total Value Locked</div>
+                <div className="text-2xl font-bold">{totalValueLocked} ETH</div>
+              </div>
+              {isConnected && (
+                <div>
+                  <div className="text-xs text-muted-foreground mb-1">Your Deposits</div>
+                  <div className="text-2xl font-bold text-bullish">{userTotalDeposited} ETH</div>
+                </div>
+              )}
+            </div>
+            <button
+              onClick={() => setIsDepositModalOpen(true)}
+              disabled={!isConnected}
+              className="px-6 py-3 bg-bullish text-white rounded-lg font-semibold hover:bg-bullish/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+            >
+              <span className="text-lg">+</span>
+              <span>Deposit</span>
+            </button>
+          </div>
+        </motion.div>
+
         {/* Trade Signal */}
         <motion.div
           initial={{ opacity: 0 }}
