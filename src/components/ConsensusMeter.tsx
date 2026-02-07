@@ -48,6 +48,17 @@ export default function ConsensusMeter({ level, threshold }: ConsensusMeterProps
           animate={{ width: `${displayLevel}%` }}
           transition={{ duration: 0.8, ease: 'easeOut' }}
         >
+          {/* Shimmer effect during progress */}
+          {displayLevel > 0 && displayLevel < 100 && (
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+              initial={{ x: '-100%' }}
+              animate={{ x: '200%' }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+            />
+          )}
+
+          {/* Pulse effect when threshold reached */}
           {displayLevel >= threshold && (
             <motion.div
               className="absolute inset-0 bg-white/20"
