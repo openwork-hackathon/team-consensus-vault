@@ -66,6 +66,13 @@ export default function AnalystCard({ analyst, index }: AnalystCardProps) {
               ●●●
             </motion.span>
           </div>
+        ) : analyst.error ? (
+          <div className="flex items-center gap-2">
+            <span className="text-red-500 text-lg">⚠</span>
+            <p className="text-xs sm:text-sm text-red-600 dark:text-red-400">
+              {analyst.error}
+            </p>
+          </div>
         ) : (
           <motion.p
             className="text-xs sm:text-sm leading-relaxed"
