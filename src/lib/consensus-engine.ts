@@ -197,23 +197,48 @@ async function callModel(
  * Parse the model's text response into structured format
  */
 function parseModelResponse(text: string): ModelResponse {
-  // Try to extract JSON from the response
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) {
-    throw new Error('No JSON found in response');
+  if (!text || text.trim().length === 0) {
+    throw new Error('Empty response from model');
   }
 
-  try {
-    const parsed = JSON.parse(jsonMatch[0]);
+  // Try to extract JSON from the response (supports both direct JSON and markdown code blocks)
+  const jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```/) || text.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    throw new Error('No JSON found in response. Expected format: {"signal": "buy|sell|hold", "confidence": 0-100, "reasoning": "..."}');
+  }
 
-    // Validate and normalize the response
-    const signal = String(parsed.signal || 'hold').toLowerCase();
-    if (!['buy', 'sell', 'hold'].includes(signal)) {
-      throw new Error(`Invalid signal: ${signal}`);
+  const jsonText = jsonMatch[1] || jsonMatch[0];
+
+  try {
+    const parsed = JSON.parse(jsonText);
+
+    // Validate required fields
+    if (!parsed.signal) {
+      throw new Error('Missing required field: signal');
     }
 
-    const confidence = Math.min(100, Math.max(0, Number(parsed.confidence) || 50));
-    const reasoning = String(parsed.reasoning || 'No reasoning provided');
+    // Validate and normalize the signal
+    const signal = String(parsed.signal).toLowerCase().trim();
+    if (!['buy', 'sell', 'hold'].includes(signal)) {
+      throw new Error(`Invalid signal: "${signal}". Must be one of: buy, sell, hold`);
+    }
+
+    // Validate and normalize confidence
+    const rawConfidence = parsed.confidence;
+    if (rawConfidence === undefined || rawConfidence === null) {
+      throw new Error('Missing required field: confidence');
+    }
+
+    const confidence = Math.min(100, Math.max(0, Number(rawConfidence)));
+    if (isNaN(confidence)) {
+      throw new Error(`Invalid confidence value: ${rawConfidence}. Must be a number between 0-100`);
+    }
+
+    // Normalize reasoning
+    const reasoning = parsed.reasoning ? String(parsed.reasoning).trim() : 'No reasoning provided';
+    if (reasoning === 'No reasoning provided') {
+      console.warn('Warning: Model did not provide reasoning');
+    }
 
     return {
       signal: signal as 'buy' | 'sell' | 'hold',
@@ -221,7 +246,8 @@ function parseModelResponse(text: string): ModelResponse {
       reasoning,
     };
   } catch (e) {
-    throw new Error(`Failed to parse response: ${e}`);
+    const errorMsg = e instanceof Error ? e.message : 'Unknown parsing error';
+    throw new Error(`Failed to parse model response: ${errorMsg}`);
   }
 }
 
