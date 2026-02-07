@@ -116,7 +116,7 @@ export default function DepositModal({ isOpen, onClose, onDeposit }: DepositModa
               <button
                 onClick={onClose}
                 disabled={isLoading}
-                className="text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+                className="text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 touch-manipulation p-2 -m-2"
                 aria-label="Close modal"
               >
                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -153,7 +153,7 @@ export default function DepositModal({ isOpen, onClose, onDeposit }: DepositModa
                     type="button"
                     onClick={handleMaxClick}
                     disabled={isLoading || !balance}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 px-3 py-1 text-xs font-semibold bg-primary text-primary-foreground rounded hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 px-3 py-1.5 text-xs font-semibold bg-primary text-primary-foreground rounded hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation"
                   >
                     MAX
                   </button>
@@ -182,14 +182,14 @@ export default function DepositModal({ isOpen, onClose, onDeposit }: DepositModa
                   type="button"
                   onClick={onClose}
                   disabled={isLoading}
-                  className="flex-1 px-4 py-3 bg-secondary text-secondary-foreground rounded-lg font-semibold hover:bg-secondary/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="flex-1 px-4 py-3 bg-secondary text-secondary-foreground rounded-lg font-semibold hover:bg-secondary/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation min-h-[44px]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isLoading || !amount}
-                  className="flex-1 px-4 py-3 bg-bullish text-white rounded-lg font-semibold hover:bg-bullish/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 px-4 py-3 bg-bullish text-white rounded-lg font-semibold hover:bg-bullish/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 touch-manipulation min-h-[44px]"
                 >
                   {isLoading ? (
                     <>

@@ -82,7 +82,7 @@ export default function TradingPerformance({ className = '' }: TradingPerformanc
               setLoading(true);
               fetchTradingHistory();
             }}
-            className="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors"
+            className="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors touch-manipulation min-h-[44px]"
           >
             Try Again
           </button>
@@ -107,52 +107,52 @@ export default function TradingPerformance({ className = '' }: TradingPerformanc
 
       {/* Metrics Grid */}
       {metrics && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-          <div className="bg-background/50 rounded-lg p-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
+          <div className="bg-background/50 rounded-lg p-3 sm:p-4">
             <div className="text-xs text-muted-foreground mb-1">Total P&L</div>
-            <div className={`text-xl font-bold ${metrics.totalPnL >= 0 ? 'text-bullish' : 'text-bearish'}`}>
+            <div className={`text-lg sm:text-xl font-bold ${metrics.totalPnL >= 0 ? 'text-bullish' : 'text-bearish'}`}>
               {formatPnL(metrics.totalPnL)}
             </div>
           </div>
 
-          <div className="bg-background/50 rounded-lg p-4">
+          <div className="bg-background/50 rounded-lg p-3 sm:p-4">
             <div className="text-xs text-muted-foreground mb-1">Win Rate</div>
-            <div className="text-xl font-bold">{metrics.winRate.toFixed(1)}%</div>
+            <div className="text-lg sm:text-xl font-bold">{metrics.winRate.toFixed(1)}%</div>
           </div>
 
-          <div className="bg-background/50 rounded-lg p-4">
+          <div className="bg-background/50 rounded-lg p-3 sm:p-4">
             <div className="text-xs text-muted-foreground mb-1">Total Trades</div>
-            <div className="text-xl font-bold">{metrics.totalTrades}</div>
+            <div className="text-lg sm:text-xl font-bold">{metrics.totalTrades}</div>
           </div>
 
-          <div className="bg-background/50 rounded-lg p-4">
+          <div className="bg-background/50 rounded-lg p-3 sm:p-4">
             <div className="text-xs text-muted-foreground mb-1">Open Positions</div>
-            <div className="text-xl font-bold text-primary">{metrics.openTrades}</div>
+            <div className="text-lg sm:text-xl font-bold text-primary">{metrics.openTrades}</div>
           </div>
 
-          <div className="bg-background/50 rounded-lg p-4">
+          <div className="bg-background/50 rounded-lg p-3 sm:p-4">
             <div className="text-xs text-muted-foreground mb-1">Avg Win</div>
             <div className="text-sm font-bold text-bullish">{formatPnL(metrics.avgWin)}</div>
           </div>
 
-          <div className="bg-background/50 rounded-lg p-4">
+          <div className="bg-background/50 rounded-lg p-3 sm:p-4">
             <div className="text-xs text-muted-foreground mb-1">Avg Loss</div>
             <div className="text-sm font-bold text-bearish">{formatPnL(metrics.avgLoss)}</div>
           </div>
 
-          <div className="bg-background/50 rounded-lg p-4">
+          <div className="bg-background/50 rounded-lg p-3 sm:p-4">
             <div className="text-xs text-muted-foreground mb-1">Largest Win</div>
             <div className="text-sm font-bold text-bullish">{formatPnL(metrics.largestWin)}</div>
           </div>
 
-          <div className="bg-background/50 rounded-lg p-4">
+          <div className="bg-background/50 rounded-lg p-3 sm:p-4">
             <div className="text-xs text-muted-foreground mb-1">Largest Loss</div>
             <div className="text-sm font-bold text-bearish">{formatPnL(metrics.largestLoss)}</div>
           </div>
         </div>
       )}
 
-      {/* Trade History Table */}
+      {/* Trade History */}
       <div>
         <h3 className="text-lg font-bold mb-3">Recent Trades</h3>
 
@@ -161,67 +161,120 @@ export default function TradingPerformance({ className = '' }: TradingPerformanc
             No trades yet. Trades will execute automatically when 4/5 or 5/5 AI models reach consensus.
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left py-2 px-2">Time</th>
-                  <th className="text-left py-2 px-2">Asset</th>
-                  <th className="text-left py-2 px-2">Direction</th>
-                  <th className="text-right py-2 px-2">Entry</th>
-                  <th className="text-right py-2 px-2">Exit</th>
-                  <th className="text-right py-2 px-2">P&L</th>
-                  <th className="text-center py-2 px-2">Consensus</th>
-                  <th className="text-center py-2 px-2">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {trades.slice().reverse().slice(0, 20).map((trade) => (
-                  <tr key={trade.id} className="border-b border-border/50 hover:bg-background/30">
-                    <td className="py-2 px-2 text-muted-foreground">
-                      {new Date(trade.timestamp).toLocaleTimeString()}
-                    </td>
-                    <td className="py-2 px-2 font-medium">{trade.asset}</td>
-                    <td className="py-2 px-2">
-                      <span className={`${trade.direction === 'long' ? 'text-bullish' : 'text-bearish'}`}>
+          <>
+            {/* Mobile Card Layout */}
+            <div className="sm:hidden space-y-3">
+              {trades.slice().reverse().slice(0, 20).map((trade) => (
+                <div key={trade.id} className="bg-background/50 rounded-lg p-3 border border-border/50">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{trade.asset}</span>
+                      <span className={`text-sm font-semibold ${trade.direction === 'long' ? 'text-bullish' : 'text-bearish'}`}>
                         {trade.direction.toUpperCase()}
                       </span>
-                    </td>
-                    <td className="py-2 px-2 text-right">{formatPrice(trade.entryPrice)}</td>
-                    <td className="py-2 px-2 text-right">
-                      {trade.exitPrice ? formatPrice(trade.exitPrice) : '-'}
-                    </td>
-                    <td className="py-2 px-2 text-right font-medium">
-                      {trade.pnl !== undefined ? (
-                        <span className={trade.pnl >= 0 ? 'text-bullish' : 'text-bearish'}>
-                          {formatPnL(trade.pnl)}
-                          <span className="text-xs ml-1">
-                            ({formatPercentage(trade.pnlPercentage || 0)})
+                    </div>
+                    <span className={`text-xs px-2 py-0.5 rounded ${
+                      trade.status === 'open'
+                        ? 'bg-primary/20 text-primary'
+                        : 'bg-muted text-muted-foreground'
+                    }`}>
+                      {trade.status}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <div className="text-muted-foreground">Entry</div>
+                      <div className="font-medium">{formatPrice(trade.entryPrice)}</div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">Exit</div>
+                      <div className="font-medium">{trade.exitPrice ? formatPrice(trade.exitPrice) : '-'}</div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">P&L</div>
+                      <div className="font-semibold">
+                        {trade.pnl !== undefined ? (
+                          <span className={trade.pnl >= 0 ? 'text-bullish' : 'text-bearish'}>
+                            {formatPnL(trade.pnl)} ({formatPercentage(trade.pnlPercentage || 0)})
                           </span>
-                        </span>
-                      ) : (
-                        '-'
-                      )}
-                    </td>
-                    <td className="py-2 px-2 text-center">
-                      <span className="text-xs bg-primary/20 px-2 py-1 rounded">
-                        {trade.consensusStrength}
-                      </span>
-                    </td>
-                    <td className="py-2 px-2 text-center">
-                      <span className={`text-xs px-2 py-1 rounded ${
-                        trade.status === 'open'
-                          ? 'bg-primary/20 text-primary'
-                          : 'bg-muted text-muted-foreground'
-                      }`}>
-                        {trade.status}
-                      </span>
-                    </td>
+                        ) : '-'}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">Consensus</div>
+                      <div className="font-medium">{trade.consensusStrength}</div>
+                    </div>
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-2">
+                    {new Date(trade.timestamp).toLocaleString()}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Table Layout */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left py-2 px-2">Time</th>
+                    <th className="text-left py-2 px-2">Asset</th>
+                    <th className="text-left py-2 px-2">Direction</th>
+                    <th className="text-right py-2 px-2">Entry</th>
+                    <th className="text-right py-2 px-2">Exit</th>
+                    <th className="text-right py-2 px-2">P&L</th>
+                    <th className="text-center py-2 px-2">Consensus</th>
+                    <th className="text-center py-2 px-2">Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {trades.slice().reverse().slice(0, 20).map((trade) => (
+                    <tr key={trade.id} className="border-b border-border/50 hover:bg-background/30">
+                      <td className="py-2 px-2 text-muted-foreground whitespace-nowrap">
+                        {new Date(trade.timestamp).toLocaleTimeString()}
+                      </td>
+                      <td className="py-2 px-2 font-medium">{trade.asset}</td>
+                      <td className="py-2 px-2">
+                        <span className={`${trade.direction === 'long' ? 'text-bullish' : 'text-bearish'}`}>
+                          {trade.direction.toUpperCase()}
+                        </span>
+                      </td>
+                      <td className="py-2 px-2 text-right whitespace-nowrap">{formatPrice(trade.entryPrice)}</td>
+                      <td className="py-2 px-2 text-right whitespace-nowrap">
+                        {trade.exitPrice ? formatPrice(trade.exitPrice) : '-'}
+                      </td>
+                      <td className="py-2 px-2 text-right font-medium whitespace-nowrap">
+                        {trade.pnl !== undefined ? (
+                          <span className={trade.pnl >= 0 ? 'text-bullish' : 'text-bearish'}>
+                            {formatPnL(trade.pnl)}
+                            <span className="text-xs ml-1">
+                              ({formatPercentage(trade.pnlPercentage || 0)})
+                            </span>
+                          </span>
+                        ) : (
+                          '-'
+                        )}
+                      </td>
+                      <td className="py-2 px-2 text-center">
+                        <span className="text-xs bg-primary/20 px-2 py-1 rounded">
+                          {trade.consensusStrength}
+                        </span>
+                      </td>
+                      <td className="py-2 px-2 text-center">
+                        <span className={`text-xs px-2 py-1 rounded ${
+                          trade.status === 'open'
+                            ? 'bg-primary/20 text-primary'
+                            : 'bg-muted text-muted-foreground'
+                        }`}>
+                          {trade.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 
@@ -229,7 +282,7 @@ export default function TradingPerformance({ className = '' }: TradingPerformanc
       <div className="mt-4 text-center">
         <button
           onClick={fetchTradingHistory}
-          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors touch-manipulation px-4 py-2"
         >
           Refresh
         </button>
