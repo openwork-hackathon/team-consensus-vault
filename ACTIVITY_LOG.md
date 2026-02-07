@@ -1,5 +1,37 @@
 # Activity Log - Consensus Vault Dashboard
 
+## 2026-02-07 - CVAULT-15: GLM On-Chain Oracle Verification
+
+**Status**: ✅ VERIFIED COMPLETE (Previously Implemented)
+
+**Summary:**
+Verified that the GLM On-Chain Oracle API implementation (CVAULT-15) was already completed in commit da050f6. The implementation is fully functional, properly integrated, and meets all requirements.
+
+**Verification Results:**
+- ✅ API endpoint exists at `/api/on-chain-oracle` with GET and POST methods
+- ✅ GLM config properly read from `~/agents/glm/config.json`
+- ✅ Analyzes on-chain metrics, TVL changes, protocol activity
+- ✅ Returns structured response: `{signal: 'bullish'|'bearish'|'neutral', confidence: 0-1, reasoning: string}`
+- ✅ Follows existing API patterns (matches whale-watcher, momentum-hunter)
+- ✅ Proper error handling with 30-second timeout protection
+- ✅ Integrated into consensus engine via `getAnalystOpinion('glm', ...)`
+
+**Testing:**
+- Manual API testing via curl: ✅ Both GET and POST working correctly
+- Average response time: ~2 seconds
+- Response format validation: ✅ Matches specification
+
+**Artifacts Created:**
+1. `test-glm-oracle.sh` - Comprehensive test script
+2. `docs/GLM_ORACLE_IMPLEMENTATION.md` - Detailed implementation documentation
+3. `CVAULT-15_VERIFICATION.md` - Verification report
+
+**Original Implementation:** Commit da050f6 (as part of CVAULT-5)
+
+**Conclusion:** Task was already complete. Marked as verified and ready to close in Plane.
+
+---
+
 ## 2026-02-07 - CVAULT-5: Paper Trading Engine with P&L Tracking
 
 **Status**: ✅ COMPLETE
@@ -1296,3 +1328,42 @@ Total: 1,600 lines of professional documentation
 2. Push to GitHub to trigger Vercel deployment
 3. Verify files render correctly on GitHub
 4. Cross-reference with hackathon submission requirements
+
+---
+
+## 2026-02-07 05:55 - CVAULT-16: Gemini Risk Manager API - VERIFICATION COMPLETE
+
+**Status**: ✅ VERIFIED COMPLETE (Task already implemented)
+
+**Verification Steps**:
+1. ✅ Implementation file exists: `CVAULT-16_IMPLEMENTATION.md` (199 lines)
+2. ✅ API route implemented: `src/app/api/risk-manager/route.ts` (163 lines)
+3. ✅ Gemini model configured in `src/lib/models.ts` (lines 159-191)
+4. ✅ API key configured in `.env.local`: `GEMINI_API_KEY`
+5. ✅ Build successful - route registered in manifest
+6. ✅ Consensus engine integration verified
+
+**Implementation Details**:
+- **Endpoint**: `/api/risk-manager` (GET and POST)
+- **Model**: Gemini 2.0 Flash Lite via Google Generative Language API
+- **Role**: Risk assessment, volatility analysis, funding rates, portfolio exposure
+- **Response Format**: `{signal, confidence, reasoning, analyst, response_time_ms, timestamp}`
+- **Integration**: Full integration with 5-model consensus system
+
+**Files Verified**:
+- `src/app/api/risk-manager/route.ts` - API endpoint implementation
+- `src/lib/models.ts` - Gemini model configuration (ANALYST_MODELS[4])
+- `src/lib/consensus-engine.ts` - getAnalystOpinion integration
+- `.env.local` - GEMINI_API_KEY configured
+- `CVAULT-16_IMPLEMENTATION.md` - Complete implementation documentation
+
+**Task Conclusion**:
+The Gemini Risk Manager was previously implemented and is fully functional. All requirements from CVAULT-16 have been met:
+1. ✅ Reads API key from correct location
+2. ✅ Risk Manager module calls Gemini API
+3. ✅ Implements Risk Manager persona/system prompt
+4. ✅ Returns structured response format matching spec
+5. ✅ Graceful error handling
+
+**Next Steps**: None - task complete and production-ready.
+
