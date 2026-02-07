@@ -28,6 +28,9 @@ export default function AnalystCard({ analyst, index }: AnalystCardProps) {
       transition={{ delay: index * 0.1, duration: 0.3 }}
       className={`relative rounded-lg border-2 p-4 transition-all duration-300 ${sentimentColors[analyst.sentiment]}`}
       style={{ borderColor: analyst.borderColor }}
+      role="article"
+      aria-label={`${analyst.name} analysis`}
+      aria-busy={analyst.isTyping}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
