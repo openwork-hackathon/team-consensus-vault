@@ -64,10 +64,10 @@ All 5 AI model API keys required for Consensus Vault have been validated with li
 **Status:** ✅ All 5 keys properly configured
 
 ```bash
-DEEPSEEK_API_KEY=sk-28e5f377d8ea494fb22d71bcc294c605
-KIMI_API_KEY=sk-kimi-UVaAt0Is0ffY9haAmNNBv5ABAsPjLoaRH7eD2k37FoLlyWrCyPABXN2bJfxM7xh5
+DEEPSEEK_API_KEY=sk-[REDACTED]
+KIMI_API_KEY=sk-kimi-[REDACTED]
 MINIMAX_API_KEY=eyJhbGci... (JWT token)
-GLM_API_KEY=b25b9cab5ce04d7b952bf287356b2901.TJBp4DsqOzyZvRFs
+GLM_API_KEY=[REDACTED]
 GEMINI_API_KEY=AIzaSyAjVNavgFw54Dq8slhDCBgDRYPai9spp0I
 ```
 

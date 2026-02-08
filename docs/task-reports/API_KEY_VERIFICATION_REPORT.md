@@ -26,7 +26,7 @@
 ### 2. Kimi ❌
 - **Agent config key:** `sk-kimi-RCzRQDdiNBOyaj2Sug8r5R6quo3jH81yAJWQUZEsWH0h3nIMlv1BlUkyfbYdBbIc`
 - **Test result:** HTTP 401 "Invalid Authentication"
-- **.env.local key:** `sk-kimi-UVaAt0Is0ffY9haAmNNBv5ABAsPjLoaRH7eD2k37FoLlyWrCyPABXN2bJfxM7xh5`
+- **.env.local key:** `sk-kimi-[REDACTED]`
 - **Test result:** HTTP 401 "Invalid Authentication"
 - **Endpoint tested:** https://api.moonshot.cn/v1/chat/completions
 - **Action needed:** Obtain new valid Kimi API key from https://platform.moonshot.cn/
@@ -42,7 +42,7 @@
 ### 4. GLM ⚠️
 - **Agent config key:** `c9a1301c667d4a24882d0b534028df85.jOf5QQSX5FThVQCS`
 - **Test result:** HTTP 400 "模型不存在，请检查模型代码" (Model doesn't exist)
-- **.env.local key:** `b25b9cab5ce04d7b952bf287356b2901.TJBp4DsqOzyZvRFs`
+- **.env.local key:** `[REDACTED]`
 - **Test result:** HTTP 401 "身份验证失败" (Auth failed)
 - **Endpoint:** https://open.bigmodel.cn/api/paas/v4/chat/completions
 - **Issue:** Agent config key authenticates, but model "glm-4.6" not found. App expects "glm-4.6" but available models unknown.
