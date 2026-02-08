@@ -132,18 +132,19 @@ export default function RoundsPage() {
             {round.consensusSnapshot && round.consensusSnapshot.votes.length > 0 && (
               <section className="mb-6">
                 <CouncilVotes
-                  snapshot={{
-                    timestamp: round.consensusSnapshot.timestamp,
-                    signal: round.consensusSnapshot.signal,
-                    consensusLevel: round.consensusSnapshot.consensusLevel,
-                    votes: round.consensusSnapshot.votes.map(v => ({
-                      model: v.agentId,
-                      signal: v.signal,
+                  consensusSnapshot={{
+                    models: round.consensusSnapshot.votes.map(v => ({
+                      modelId: v.agentId,
+                      modelName: v.agentName || v.agentId,
+                      icon: '🤖',
+                      color: '#6b7280',
+                      vote: v.signal === 'buy' ? 'BUY' : v.signal === 'sell' ? 'SELL' : 'HOLD',
                       confidence: v.confidence,
-                      reasoning: v.reasoning,
-                      timestamp: round.consensusSnapshot.timestamp,
+                      isLoading: false,
                     })),
+                    timestamp: new Date(round.consensusSnapshot.timestamp).getTime(),
                   }}
+                  entrySignal={round.consensusSnapshot.signal === 'buy' ? 'BUY' : round.consensusSnapshot.signal === 'sell' ? 'SELL' : null}
                 />
               </section>
             )}
