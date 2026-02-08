@@ -8,7 +8,7 @@
 
 // In production (Vercel), use the proxy since API keys aren't available there.
 // In local dev, keys are in .env.local so call models directly.
-const DEFAULT_PROXY_URL = 'https://haywood-mitigable-kinsley.ngrok-free.dev';
+const DEFAULT_PROXY_URL = 'https://satisfactory-yeast-stockholm-offered.trycloudflare.com';
 const PROXY_URL = process.env.AI_PROXY_URL !== undefined
   ? process.env.AI_PROXY_URL  // Explicitly set (can be empty string to disable)
   : (process.env.DEEPSEEK_API_KEY ? '' : DEFAULT_PROXY_URL);  // Auto-detect: if local keys exist, skip proxy
