@@ -31,23 +31,42 @@ export default function ConsensusMeter({ level, threshold }: ConsensusMeterProps
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" role="region" aria-label="Consensus meter">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl sm:text-2xl font-bold">Consensus Level</h2>
+        <h2 className="text-xl sm:text-2xl font-bold" id="consensus-label">Consensus Level</h2>
         <div className="text-right">
-          <div className="text-2xl sm:text-3xl font-bold">{displayLevel}%</div>
-          <div className="text-xs sm:text-sm text-muted-foreground">{getStatusText()}</div>
+          <div className="text-2xl sm:text-3xl font-bold" aria-live="polite">{displayLevel}%</div>
+          <div className="text-xs sm:text-sm text-muted-foreground" aria-live="polite">{getStatusText()}</div>
         </div>
       </div>
 
       {/* Progress Bar */}
-      <div className="relative h-8 bg-secondary rounded-full overflow-hidden">
+      <div
+        className="relative h-8 bg-secondary rounded-full overflow-hidden"
+        role="progressbar"
+        aria-labelledby="consensus-label"
+        aria-valuenow={displayLevel}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuetext={`${displayLevel}% - ${getStatusText()}`}
+      >
         <motion.div
           className={`h-full bg-gradient-to-r ${getColor()} relative`}
           initial={{ width: '0%' }}
           animate={{ width: `${displayLevel}%` }}
           transition={{ duration: 0.8, ease: 'easeOut' }}
         >
+          {/* Shimmer effect during progress */}
+          {displayLevel > 0 && displayLevel < 100 && (
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+              initial={{ x: '-100%' }}
+              animate={{ x: '200%' }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+            />
+          )}
+
+          {/* Pulse effect when threshold reached */}
           {displayLevel >= threshold && (
             <motion.div
               className="absolute inset-0 bg-white/20"

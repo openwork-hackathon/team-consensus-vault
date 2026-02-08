@@ -26,8 +26,11 @@ export default function AnalystCard({ analyst, index }: AnalystCardProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1, duration: 0.3 }}
-      className={`relative rounded-lg border-2 p-4 transition-all duration-300 ${sentimentColors[analyst.sentiment]}`}
+      className={`relative rounded-lg border-2 p-3 sm:p-4 transition-all duration-300 ${sentimentColors[analyst.sentiment]}`}
       style={{ borderColor: analyst.borderColor }}
+      role="article"
+      aria-label={`${analyst.name} analysis`}
+      aria-busy={analyst.isTyping}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
@@ -48,9 +51,12 @@ export default function AnalystCard({ analyst, index }: AnalystCardProps) {
         </div>
 
         {/* Confidence */}
-        <div className="text-right flex-shrink-0">
-          <div className="text-xl sm:text-2xl font-bold">{analyst.confidence}%</div>
-          <div className="text-xs text-muted-foreground hidden sm:block">confidence</div>
+        <div className="text-right flex-shrink-0 ml-2">
+          <div className="text-xl sm:text-2xl font-bold tabular-nums">{analyst.confidence}%</div>
+          <div className="text-xs text-muted-foreground">
+            <span className="hidden sm:inline">confidence</span>
+            <span className="sm:hidden">conf.</span>
+          </div>
         </div>
       </div>
 
@@ -65,6 +71,13 @@ export default function AnalystCard({ analyst, index }: AnalystCardProps) {
             >
               ●●●
             </motion.span>
+          </div>
+        ) : analyst.error ? (
+          <div className="flex items-center gap-2">
+            <span className="text-red-500 text-lg">⚠</span>
+            <p className="text-xs sm:text-sm text-red-600 dark:text-red-400">
+              {analyst.error}
+            </p>
           </div>
         ) : (
           <motion.p
