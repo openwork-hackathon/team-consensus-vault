@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { usePredictionMarket } from '@/hooks/usePredictionMarket';
 import { RoundPhase } from '@/lib/prediction-market/types';
 import RoundPhaseIndicator from '@/components/prediction-market/RoundPhaseIndicator';
@@ -11,7 +11,7 @@ import LoadingSkeleton from '@/components/LoadingSkeleton';
 import ToastContainer, { ToastData } from '@/components/ToastContainer';
 
 export default function RoundsPage() {
-  const { round, isConnected, error, demoMode } = usePredictionMarket();
+  const { round, isConnected } = usePredictionMarket();
   const [toasts, setToasts] = useState<ToastData[]>([]);
 
   const addToast = (message: string, type: ToastData['type']) => {
@@ -22,13 +22,6 @@ export default function RoundsPage() {
   const removeToast = (id: string) => {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
   };
-
-  // Show toast on errors
-  useEffect(() => {
-    if (error) {
-      addToast(error, 'error');
-    }
-  }, [error]);
 
   return (
     <main className="min-h-screen bg-background" role="main" aria-label="Prediction Market Rounds">
@@ -46,12 +39,6 @@ export default function RoundsPage() {
               </p>
             </div>
             <div className="flex gap-4 flex-wrap">
-              {demoMode && (
-                <div className="px-4 py-2 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-                  <div className="text-xs text-yellow-500 font-semibold">DEMO MODE</div>
-                  <div className="text-xs text-muted-foreground">Accelerated phases</div>
-                </div>
-              )}
               <div className={`px-4 py-2 rounded-lg ${isConnected ? 'bg-green-500/10 border border-green-500/30' : 'bg-yellow-500/10 border border-yellow-500/30'}`}>
                 <div className="text-xs font-semibold" style={{ color: isConnected ? 'rgb(34 197 94)' : 'rgb(234 179 8)' }}>
                   {isConnected ? '● LIVE' : '○ CONNECTING...'}
@@ -65,28 +52,13 @@ export default function RoundsPage() {
         </section>
 
         {/* Loading State */}
-        {!round && !error && (
+        {!round && (
           <div className="space-y-6">
             <LoadingSkeleton count={1} height="h-24" className="w-full" />
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <LoadingSkeleton count={1} height="h-64" className="w-full" />
               <LoadingSkeleton count={1} height="h-64" className="w-full" />
             </div>
-          </div>
-        )}
-
-        {/* Error State */}
-        {error && !round && (
-          <div className="bg-bearish/10 border border-bearish/30 rounded-xl p-6 text-center">
-            <div className="text-4xl mb-3">⚠️</div>
-            <div className="text-lg font-semibold mb-2">Connection Error</div>
-            <div className="text-muted-foreground">{error}</div>
-            <button
-              onClick={() => window.location.reload()}
-              className="mt-4 px-6 py-2 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors"
-            >
-              Reload Page
-            </button>
           </div>
         )}
 
@@ -212,11 +184,6 @@ export default function RoundsPage() {
         {/* Footer */}
         <footer className="mt-8 text-center text-sm text-muted-foreground">
           <p>Real-time prediction market powered by AI consensus engine</p>
-          <p className="mt-1">
-            {demoMode
-              ? 'Demo mode: Accelerated phases for fast testing (scanning: 15s, betting: 30s, position: 2min max)'
-              : 'Production mode: Full-length phases (scanning: 60s, betting: 5min, position: up to 24h)'}
-          </p>
         </footer>
       </div>
     </main>

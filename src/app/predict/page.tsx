@@ -160,24 +160,26 @@ export default function PredictPage() {
             className="space-y-6"
           >
             {/* Live P&L Tracker */}
-            <LivePnL
-              round={{
-                id: round.id,
-                asset: round.asset,
-                direction: round.direction,
-                entryPrice: round.entryPrice,
-                positionSize: pool.totalPool,
-                openedAt: round.positionOpenedAt || round.createdAt,
-                phase: round.phase,
-              }}
-              currentPrice={currentPrice || round.entryPrice}
-              pool={{
-                bullish: pool.totalLong,
-                bearish: pool.totalShort,
-              }}
-              exitVotes={round.phase === RoundPhase.EXIT_SIGNAL ? 4 : 0}
-              councilStatus={round.phase === RoundPhase.EXIT_SIGNAL ? 'deliberating' : 'monitoring'}
-            />
+            {pool && (
+              <LivePnL
+                round={{
+                  id: round.id,
+                  asset: round.asset,
+                  direction: round.direction,
+                  entryPrice: round.entryPrice,
+                  positionSize: pool.totalPool,
+                  openedAt: round.positionOpenedAt || round.createdAt,
+                  phase: round.phase,
+                }}
+                currentPrice={currentPrice || round.entryPrice}
+                pool={{
+                  bullish: pool.totalLong,
+                  bearish: pool.totalShort,
+                }}
+                exitVotes={round.phase === RoundPhase.EXIT_SIGNAL ? 4 : 0}
+                councilStatus={round.phase === RoundPhase.EXIT_SIGNAL ? 'deliberating' : 'monitoring'}
+              />
+            )}
 
             {/* AI Council Votes Display */}
             {latestConsensus && (
@@ -204,7 +206,7 @@ export default function PredictPage() {
         );
 
       case RoundPhase.SETTLEMENT:
-        if (settlement) {
+        if (settlement && pool) {
           return (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
