@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
             await streamMockAnalysis(sendEvent, request.signal);
           } else {
             // Real API calls
-            await streamRealAnalysis(asset, context, sendEvent, request.signal, logger);
+            await streamRealAnalysis(asset, context, sendEvent, request.signal);
           }
         } catch (error) {
           logger.logError(error instanceof Error ? error : new Error(String(error)), {

@@ -307,6 +307,45 @@ export class ApiLogger {
   getDuration(): number {
     return Date.now() - this.startTime;
   }
+
+  /**
+   * Log informational message
+   */
+  info(message: string, data?: Record<string, any>): void {
+    writeLog({
+      timestamp: new Date().toISOString(),
+      requestId: this.requestId,
+      level: 'info',
+      message: `[${this.request.method} ${this.url.pathname}] ${message}`,
+      data,
+    });
+  }
+
+  /**
+   * Log warning message
+   */
+  warn(message: string, data?: Record<string, any>): void {
+    writeLog({
+      timestamp: new Date().toISOString(),
+      requestId: this.requestId,
+      level: 'warn',
+      message: `[${this.request.method} ${this.url.pathname}] ${message}`,
+      data,
+    });
+  }
+
+  /**
+   * Log debug message
+   */
+  debug(message: string, data?: Record<string, any>): void {
+    writeLog({
+      timestamp: new Date().toISOString(),
+      requestId: this.requestId,
+      level: 'debug',
+      message: `[${this.request.method} ${this.url.pathname}] ${message}`,
+      data,
+    });
+  }
 }
 
 /**
