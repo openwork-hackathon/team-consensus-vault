@@ -1,0 +1,46 @@
+CVAULT-94: Update README with Token Contract Address
+
+STATUS: BLOCKED - Cannot proceed
+
+BLOCKER:
+The CONSENSUS token has not been deployed yet. Token deployment requires human browser interaction with Mint Club V2, which is a prerequisite task (CVAULT-22 or CVAULT-45) that has not been completed.
+
+INVESTIGATION COMPLETED:
+✓ Searched entire codebase for contract addresses
+✓ Checked all environment files (.env.local, .env.example)
+✓ Reviewed TOKEN_INFO.md status (shows "PENDING CREATION")
+✓ Checked git history for deployment commits
+✓ Verified inbox for deployment notifications
+
+FINDINGS:
+- No CONSENSUS token contract address exists in the system
+- TOKEN_INFO.md line 18: "Contract Address: TBD (pending deployment)"
+- Only existing addresses:
+  * $OPENWORK backing token: 0x299c30DD5974BF4D5bFE42C340CA40462816AB07
+  * Team wallet: 0x676a8720a302Ad5C17A7632BF48C48e71C41B79C
+
+PREPARATION COMPLETED:
+✓ Created CVAULT-94_STATUS.md with full investigation report
+✓ Prepared file update templates for 5 files (README, .env files, TOKEN_INFO, wagmi.ts)
+✓ Documented verification steps for post-deployment
+✓ Updated ACTIVITY_LOG.md with investigation results
+
+NEXT STEPS (requires human):
+1. Deploy CONSENSUS token via Mint Club V2 (see TOKEN_DEPLOYMENT_READY.md)
+2. Obtain contract address from successful deployment
+3. Run ./scripts/post-token-deployment.sh [ADDRESS]
+4. Resume CVAULT-94 to update all documentation
+
+ESTIMATED TIME TO COMPLETE (once unblocked): 15-20 minutes
+
+DELIVERABLES:
+- CVAULT-94_STATUS.md (2.3 KB) - Complete investigation and blocker documentation
+- CVAULT-94_SUMMARY.txt (this file) - Executive summary
+- ACTIVITY_LOG.md - Updated with findings
+- File update templates ready for immediate use
+
+RESOLUTION:
+Task cannot proceed until prerequisite task (token deployment) is completed by human with browser access.
+
+Documented by: Lead Engineer (Claude Sonnet 4.5)
+Date: 2026-02-08T11:35:00Z

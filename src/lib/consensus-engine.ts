@@ -1,6 +1,16 @@
 /**
  * Consensus Vault - Consensus Engine
  * Orchestrates 5 AI models in parallel for crypto analysis
+ *
+ * Features:
+ * - Parallel execution of 5 AI models (DeepSeek, Kimi, MiniMax, Gemini, GLM)
+ * - Automatic retry with exponential backoff (up to 3 retries)
+ * - Rate limiting to prevent API throttling (1 req/sec per model)
+ * - Timeout handling with configurable timeouts per model
+ * - Performance metrics tracking (success rate, avg response time)
+ * - Detailed error messages with context
+ * - Robust JSON parsing with validation
+ * - Resilient Promise.allSettled for parallel execution
  */
 
 import {
@@ -27,6 +37,11 @@ export const TIMEOUT_CONFIG = {
   RETRY_DELAY: 1000, // Delay between retries in ms
 };
 
+// Retry configuration with exponential backoff
+const MAX_RETRIES = 3;
+const INITIAL_RETRY_DELAY = 1000; // 1 second
+const RETRY_BACKOFF_MULTIPLIER = 2;
+
 // Error types for better error handling
 export enum ConsensusErrorType {
   TIMEOUT = 'TIMEOUT',
@@ -50,9 +65,87 @@ export class ConsensusError extends Error {
   }
 }
 
+// Performance tracking
+interface RequestMetrics {
+  totalRequests: number;
+  successfulRequests: number;
+  failedRequests: number;
+  averageResponseTime: number;
+}
+
+const metricsPerModel: Record<string, RequestMetrics> = {};
+
+/**
+ * Update performance metrics for a model
+ */
+function updateMetrics(modelId: string, success: boolean, responseTime: number) {
+  if (!metricsPerModel[modelId]) {
+    metricsPerModel[modelId] = {
+      totalRequests: 0,
+      successfulRequests: 0,
+      failedRequests: 0,
+      averageResponseTime: 0,
+    };
+  }
+
+  const metrics = metricsPerModel[modelId];
+  metrics.totalRequests++;
+
+  if (success) {
+    metrics.successfulRequests++;
+  } else {
+    metrics.failedRequests++;
+  }
+
+  // Update rolling average
+  const totalSuccessTime = metrics.averageResponseTime * (metrics.successfulRequests - (success ? 1 : 0));
+  metrics.averageResponseTime = success
+    ? (totalSuccessTime + responseTime) / metrics.successfulRequests
+    : metrics.averageResponseTime;
+}
+
+/**
+ * Get performance metrics for all models
+ */
+export function getPerformanceMetrics(): Record<string, RequestMetrics> {
+  return { ...metricsPerModel };
+}
+
+/**
+ * Build enhanced prompt with better structure and context
+ */
+function buildEnhancedPrompt(asset: string, context?: string): string {
+  const basePrompt = `Analyze ${asset.toUpperCase()} for a trading signal.`;
+
+  if (context && context.trim()) {
+    return `${basePrompt}
+
+Additional Context: ${context}
+
+Instructions:
+1. Consider the provided context alongside your specialized expertise
+2. Focus on actionable insights relevant to current market conditions
+3. Be specific about key levels, metrics, or indicators
+4. Provide a clear, concise reasoning for your signal
+
+Remember: Respond ONLY with valid JSON in the exact format specified.`;
+  }
+
+  return `${basePrompt}
+
+Instructions:
+1. Analyze current market conditions for ${asset.toUpperCase()}
+2. Apply your specialized analytical framework
+3. Identify the most significant factors influencing the market
+4. Provide clear, specific reasoning for your signal
+5. Base confidence on the strength and alignment of your signals
+
+Remember: Respond ONLY with valid JSON in the exact format specified.`;
+}
+
 /**
  * Call a single AI model with the analysis prompt
- * Enhanced with better error handling and retry logic
+ * Enhanced with retry logic, better error handling, and performance tracking
  */
 async function callModel(
   config: ModelConfig,
@@ -90,7 +183,10 @@ async function callModel(
 
   // Create abort controller for timeout
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
+  const timeoutId = setTimeout(() => {
+    console.warn(`[${config.id}] Request timeout after ${timeout}ms`);
+    controller.abort();
+  }, timeout);
 
   try {
     let response: Response;
@@ -309,18 +405,20 @@ async function callModel(
       );
     }
 
-    // Re-throw ConsensusErrors
+    // Re-throw ConsensusErrors with retry logic
     if (error instanceof ConsensusError) {
       // Retry logic for transient errors
       if (
-        retryCount < TIMEOUT_CONFIG.RETRY_ATTEMPTS &&
+        retryCount < MAX_RETRIES &&
         (error.type === ConsensusErrorType.NETWORK_ERROR ||
-          error.type === ConsensusErrorType.TIMEOUT)
+          error.type === ConsensusErrorType.TIMEOUT ||
+          error.type === ConsensusErrorType.RATE_LIMIT)
       ) {
+        const delay = INITIAL_RETRY_DELAY * Math.pow(RETRY_BACKOFF_MULTIPLIER, retryCount);
         console.warn(
-          `[${config.id}] Retrying after ${error.type} (attempt ${retryCount + 1}/${TIMEOUT_CONFIG.RETRY_ATTEMPTS})`
+          `[${config.id}] Retrying after ${error.type} (attempt ${retryCount + 1}/${MAX_RETRIES}, delay: ${delay}ms)`
         );
-        await new Promise((resolve) => setTimeout(resolve, TIMEOUT_CONFIG.RETRY_DELAY));
+        await new Promise((resolve) => setTimeout(resolve, delay));
         return callModel(config, asset, context, retryCount + 1);
       }
       throw error;
@@ -339,54 +437,32 @@ async function callModel(
 }
 
 /**
- * Build enhanced prompt with better structure and context
- */
-function buildEnhancedPrompt(asset: string, context?: string): string {
-  const basePrompt = `Analyze ${asset.toUpperCase()} for a trading signal.`;
-
-  if (context && context.trim()) {
-    return `${basePrompt}
-
-Additional Context: ${context}
-
-Instructions:
-1. Consider the provided context alongside your specialized expertise
-2. Focus on actionable insights relevant to current market conditions
-3. Be specific about key levels, metrics, or indicators
-4. Provide a clear, concise reasoning for your signal
-
-Remember: Respond ONLY with valid JSON in the exact format specified.`;
-  }
-
-  return `${basePrompt}
-
-Instructions:
-1. Analyze current market conditions for ${asset.toUpperCase()}
-2. Apply your specialized analytical framework
-3. Identify the most significant factors influencing the market
-4. Provide clear, specific reasoning for your signal
-5. Base confidence on the strength and alignment of your signals
-
-Remember: Respond ONLY with valid JSON in the exact format specified.`;
-}
-
-/**
  * Parse the model's text response into structured format
  * Enhanced with better error handling and validation
  */
 function parseModelResponse(text: string, modelId: string): ModelResponse {
-  // Try to extract JSON from the response
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) {
+  if (!text || text.trim().length === 0) {
     throw new ConsensusError(
-      'No JSON found in response',
+      'Empty response from model',
       ConsensusErrorType.PARSE_ERROR,
       modelId
     );
   }
 
+  // Try to extract JSON from the response (supports both direct JSON and markdown code blocks)
+  const jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```/) || text.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    throw new ConsensusError(
+      'No JSON found in response. Expected format: {"signal": "buy|sell|hold", "confidence": 0-100, "reasoning": "..."}',
+      ConsensusErrorType.PARSE_ERROR,
+      modelId
+    );
+  }
+
+  const jsonText = jsonMatch[1] || jsonMatch[0];
+
   try {
-    const parsed = JSON.parse(jsonMatch[0]);
+    const parsed = JSON.parse(jsonText);
 
     // Validate required fields
     if (!parsed.signal) {
@@ -485,6 +561,10 @@ export async function getAnalystOpinion(
   try {
     const response = await callModel(config, asset, context);
     const responseTime = Date.now() - startTime;
+
+    // Track successful request
+    updateMetrics(config.id, true, responseTime);
+
     return {
       result: {
         id: config.id,
@@ -506,6 +586,9 @@ export async function getAnalystOpinion(
         error.originalError ? `(Original: ${error.originalError})` : ''
       );
 
+      // Track failed request
+      updateMetrics(config.id, false, responseTime);
+
       return {
         result: {
           id: config.id,
@@ -521,6 +604,10 @@ export async function getAnalystOpinion(
 
     // Fallback for non-ConsensusError exceptions
     const message = error instanceof Error ? error.message : 'Unknown error';
+
+    // Track failed request
+    updateMetrics(config.id, false, responseTime);
+
     console.error(`[${config.id}] Unexpected error:`, message, error);
 
     return {

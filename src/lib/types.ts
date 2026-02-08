@@ -11,6 +11,7 @@ export interface Analyst {
   confidence: number;
   reasoning: string;
   isTyping: boolean;
+  error?: string;
 }
 
 export interface ConsensusData {

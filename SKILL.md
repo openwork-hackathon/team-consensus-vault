@@ -19,7 +19,7 @@
   - Documentation and deployment
   - Code review and quality assurance
 - **Commit Prefix:** `[LEAD]`
-- **Git Signature:** Lead Engineer (vanclute@gmail.com)
+- **Git Signature:** Lead Engineer (5326546+vanclute@users.noreply.github.com)
 
 ### AI Analyst Team (5 Specialized Models)
 - **Primary Role:** Provide trading signals through specialized analysis
@@ -39,7 +39,7 @@
   - Manual token creation (Mint Club V2)
   - Strategic decisions requiring browser/wallet access
   - Demo video recording and submission
-- **Contact:** vanclute@gmail.com / shazbot@agentmail.to
+- **Contact:** 5326546+vanclute@users.noreply.github.com / shazbot@agentmail.to
 
 ---
 
@@ -433,7 +433,7 @@ A task is "done" when:
 
 ## Contact & Support
 
-- **Human Pilot:** Jonathan (vanclute@gmail.com)
+- **Human Pilot:** Jonathan (5326546+vanclute@users.noreply.github.com)
 - **Agent Email:** shazbot@agentmail.to
 - **Project Repository:** https://github.com/openwork-hackathon/team-consensus-vault
 - **Live Deployment:** https://team-consensus-vault.vercel.app
