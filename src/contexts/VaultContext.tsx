@@ -7,30 +7,36 @@ export interface Deposit {
   amount: string;
   timestamp: number;
   address: string;
+  txHash?: string; // Optional transaction hash for on-chain verification
 }
 
 interface VaultContextType {
   deposits: Deposit[];
   totalValueLocked: string;
-  addDeposit: (amount: string, address: string) => void;
+  addDeposit: (amount: string, address: string, txHash?: string) => void;
   removeDeposit: (amount: string, address: string) => void;
   getDepositsByAddress: (address: string) => Deposit[];
+  getDepositHistory: (address: string) => Deposit[];
+  getTotalDepositors: () => number;
 }
 
 const VaultContext = createContext<VaultContextType | undefined>(undefined);
 
 export function VaultProvider({ children }: { children: ReactNode }) {
   const [deposits, setDeposits] = useState<Deposit[]>([]);
+  const [depositHistory, setDepositHistory] = useState<Deposit[]>([]);
 
-  const addDeposit = useCallback((amount: string, address: string) => {
+  const addDeposit = useCallback((amount: string, address: string, txHash?: string) => {
     const newDeposit: Deposit = {
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       amount,
       timestamp: Date.now(),
       address: address.toLowerCase(),
+      txHash,
     };
 
     setDeposits((prev) => [...prev, newDeposit]);
+    setDepositHistory((prev) => [...prev, newDeposit]);
   }, []);
 
   const removeDeposit = useCallback((amount: string, address: string) => {
@@ -71,13 +77,34 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     return deposits.filter((d) => d.address === address.toLowerCase());
   }, [deposits]);
 
+  const getDepositHistory = useCallback((address: string) => {
+    return depositHistory
+      .filter((d) => d.address === address.toLowerCase())
+      .sort((a, b) => b.timestamp - a.timestamp); // Most recent first
+  }, [depositHistory]);
+
+  const getTotalDepositors = useCallback(() => {
+    const uniqueAddresses = new Set(deposits.map((d) => d.address));
+    return uniqueAddresses.size;
+  }, [deposits]);
+
   // Calculate total value locked from all deposits
   const totalValueLocked = deposits.reduce((sum, deposit) => {
     return sum + parseFloat(deposit.amount);
   }, 0).toFixed(6);
 
   return (
-    <VaultContext.Provider value={{ deposits, totalValueLocked, addDeposit, removeDeposit, getDepositsByAddress }}>
+    <VaultContext.Provider
+      value={{
+        deposits,
+        totalValueLocked,
+        addDeposit,
+        removeDeposit,
+        getDepositsByAddress,
+        getDepositHistory,
+        getTotalDepositors,
+      }}
+    >
       {children}
     </VaultContext.Provider>
   );

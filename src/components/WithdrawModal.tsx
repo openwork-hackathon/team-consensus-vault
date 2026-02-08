@@ -11,10 +11,14 @@ interface WithdrawModalProps {
   depositedBalance: string;
 }
 
+const WITHDRAWAL_COOLDOWN_SECONDS = 5;
+
 export default function WithdrawModal({ isOpen, onClose, onWithdraw, depositedBalance }: WithdrawModalProps) {
   const [amount, setAmount] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [cooldownRemaining, setCooldownRemaining] = useState(0);
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
   const { isConnected } = useAccount();
 
@@ -24,8 +28,20 @@ export default function WithdrawModal({ isOpen, onClose, onWithdraw, depositedBa
       setAmount('');
       setError('');
       setIsLoading(false);
+      setShowConfirmation(false);
+      setCooldownRemaining(0);
     }
   }, [isOpen]);
+
+  // Cooldown timer
+  useEffect(() => {
+    if (cooldownRemaining > 0) {
+      const timer = setTimeout(() => {
+        setCooldownRemaining((prev) => prev - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [cooldownRemaining]);
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -38,14 +54,32 @@ export default function WithdrawModal({ isOpen, onClose, onWithdraw, depositedBa
   };
 
   const validateAmount = (): boolean => {
-    if (!amount || parseFloat(amount) <= 0) {
-      setError('Please enter a valid amount');
+    if (!amount || amount.trim() === '') {
+      setError('Please enter an amount');
       return false;
     }
 
-    if (parseFloat(amount) > parseFloat(depositedBalance)) {
-      setError('Insufficient deposited balance');
+    const numAmount = parseFloat(amount);
+
+    if (isNaN(numAmount)) {
+      setError('Invalid number format');
       return false;
+    }
+
+    if (numAmount <= 0) {
+      setError('Amount must be greater than zero');
+      return false;
+    }
+
+    const balance = parseFloat(depositedBalance);
+    if (numAmount > balance) {
+      setError(`Insufficient balance. Available: ${depositedBalance} ETH`);
+      return false;
+    }
+
+    // Warn if withdrawing more than 90% of balance
+    if (numAmount > balance * 0.9) {
+      return true; // Valid but will show confirmation
     }
 
     return true;
@@ -65,17 +99,31 @@ export default function WithdrawModal({ isOpen, onClose, onWithdraw, depositedBa
       return;
     }
 
+    // Check if withdrawing >90% requires confirmation
+    const numAmount = parseFloat(amount);
+    const balance = parseFloat(depositedBalance);
+    if (numAmount > balance * 0.9 && !showConfirmation) {
+      setShowConfirmation(true);
+      return;
+    }
+
     setIsLoading(true);
     setError('');
 
     try {
       await onWithdraw(amount);
+      setCooldownRemaining(WITHDRAWAL_COOLDOWN_SECONDS);
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Withdrawal failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleConfirmWithdrawal = () => {
+    setShowConfirmation(false);
+    handleSubmit(new Event('submit') as any);
   };
 
   const handleBackdropClick = (e: React.MouseEvent) => {
