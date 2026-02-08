@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import { RoundPhase } from '@/lib/prediction-market/types';
 
-interface RoundStatusProps {
+export interface RoundStatusProps {
   phase: RoundPhase;
   asset: string;
   entryPrice: number;
@@ -11,45 +11,53 @@ interface RoundStatusProps {
   className?: string;
 }
 
+// Phase configuration with semantic colors as per CVAULT-126 requirements
 const phaseConfig = {
   [RoundPhase.SCANNING]: {
     label: 'Scanning',
     description: 'AI analyzing market conditions',
-    color: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/30',
+    // Yellow for SCANNING
+    color: 'bg-yellow-500/20 text-yellow-500 border-yellow-500/30',
     icon: '🔍',
   },
   [RoundPhase.ENTRY_SIGNAL]: {
     label: 'Entry Signal',
     description: 'Consensus reached, preparing bets',
-    color: 'bg-blue-500/10 text-blue-500 border-blue-500/30',
+    // Blue for ENTRY_SIGNAL
+    color: 'bg-blue-500/20 text-blue-500 border-blue-500/30',
     icon: '📊',
   },
   [RoundPhase.BETTING_WINDOW]: {
     label: 'Betting Window',
     description: 'Place your bets!',
-    color: 'bg-bullish/10 text-bullish border-bullish/30',
+    // Green (text-bullish) for BETTING_WINDOW
+    color: 'bg-bullish/20 text-bullish border-bullish/30',
     icon: '💰',
   },
   [RoundPhase.POSITION_OPEN]: {
     label: 'Position Open',
     description: 'Tracking live P&L',
-    color: 'bg-orange-500/10 text-orange-500 border-orange-500/30',
+    // Orange for POSITION_OPEN
+    color: 'bg-orange-500/20 text-orange-500 border-orange-500/30',
     icon: '📈',
   },
   [RoundPhase.EXIT_SIGNAL]: {
     label: 'Exit Signal',
     description: 'Position closing soon',
-    color: 'bg-orange-500/10 text-orange-500 border-orange-500/30',
+    // Orange for EXIT_SIGNAL
+    color: 'bg-orange-500/20 text-orange-500 border-orange-500/30',
     icon: '🚪',
   },
   [RoundPhase.SETTLEMENT]: {
     label: 'Settlement',
     description: 'Calculating payouts',
-    color: 'bg-purple-500/10 text-purple-500 border-purple-500/30',
+    // Purple for SETTLEMENT
+    color: 'bg-purple-500/20 text-purple-500 border-purple-500/30',
     icon: '💸',
   },
 };
 
+// 6-phase order for progress bar
 const phaseOrder = [
   RoundPhase.SCANNING,
   RoundPhase.ENTRY_SIGNAL,
@@ -69,6 +77,20 @@ function formatCountdown(seconds: number): string {
   return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
 }
 
+/**
+ * RoundStatus Component
+ * 
+ * Displays the current round phase with:
+ * - Phase badge with semantic colors
+ * - 6-phase progress bar showing current position in cycle
+ * - Asset name, entry price, and countdown timer (during BETTING_WINDOW)
+ * 
+ * Color scheme:
+ * - SCANNING = yellow (bg-yellow-500/20, text-yellow-500)
+ * - BETTING_WINDOW = green (text-bullish)
+ * - POSITION_OPEN = orange (bg-orange-500/20, text-orange-500)
+ * - SETTLEMENT = purple (bg-purple-500/20, text-purple-500)
+ */
 export default function RoundStatus({ 
   phase, 
   asset, 

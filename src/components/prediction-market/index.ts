@@ -6,3 +6,6 @@ export type { SettlementResultProps, Settlement, Round, UserBet } from './Settle
 
 export { default as LivePnL } from './LivePnL';
 export type { LivePnLProps, PredictionRound, PoolInfo, CouncilStatus } from './LivePnL';
+
+export { default as RoundStatus } from './RoundStatus';
+export type { RoundStatusProps } from './RoundStatus';
