@@ -2,19 +2,14 @@
 > consensus-vault@0.1.0 dev
 > next dev
 
+ ⚠ Port 3000 is in use, trying 3001 instead.
   ▲ Next.js 14.2.35
-  - Local:        http://localhost:3000
+  - Local:        http://localhost:3001
   - Environments: .env.local
 
  ✓ Starting...
- ✓ Ready in 1491ms
- ✓ Compiled /api/risk-manager in 274ms (31 modules)
-[gemini] API_ERROR: Your API key was reported as leaked. Please use another API key. (Original: [object Object])
- GET /api/risk-manager?asset=BTC 500 in 583ms
-[gemini] API_ERROR: Your API key was reported as leaked. Please use another API key. (Original: [object Object])
- GET /api/risk-manager?asset=ETH 500 in 214ms
- GET /api/risk-manager?asset= 400 in 7ms
- ○ Compiling /_not-found ...
+ ✓ Ready in 1291ms
+ ○ Compiling / ...
  ⚠ ./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
 Module not found: Can't resolve '@react-native-async-storage/async-storage' in '/home/shazbot/team-consensus-vault/node_modules/@metamask/sdk/dist/browser/es'
 
@@ -35,7 +30,7 @@ Import trace for requested module:
 ./node_modules/@wagmi/connectors/dist/esm/exports/index.js
 ./node_modules/wagmi/dist/esm/exports/connectors.js
 ./node_modules/@rainbow-me/rainbowkit/dist/index.js
-./src/components/Providers.tsx
+./src/app/page.tsx
 
 ./node_modules/pino/lib/tools.js
 Module not found: Can't resolve 'pino-pretty' in '/home/shazbot/team-consensus-vault/node_modules/pino/lib'
@@ -50,9 +45,9 @@ Import trace for requested module:
 ./node_modules/@wagmi/connectors/dist/esm/exports/index.js
 ./node_modules/wagmi/dist/esm/exports/connectors.js
 ./node_modules/@rainbow-me/rainbowkit/dist/index.js
-./src/components/Providers.tsx
+./src/app/page.tsx
 Lit is in dev mode. Not recommended for production! See https://lit.dev/msg/dev-mode for more information.
- GET /api/gemini?query=test 404 in 20537ms
+ GET / 200 in 23445ms
  ⚠ ./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
 Module not found: Can't resolve '@react-native-async-storage/async-storage' in '/home/shazbot/team-consensus-vault/node_modules/@metamask/sdk/dist/browser/es'
 
@@ -62,7 +57,7 @@ Import trace for requested module:
 ./node_modules/@wagmi/connectors/dist/esm/exports/index.js
 ./node_modules/wagmi/dist/esm/exports/connectors.js
 ./node_modules/@rainbow-me/rainbowkit/dist/index.js
-./src/components/Providers.tsx
+./src/app/page.tsx
 
 ./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
 Module not found: Can't resolve '@react-native-async-storage/async-storage' in '/home/shazbot/team-consensus-vault/node_modules/@metamask/sdk/dist/browser/es'
@@ -73,7 +68,7 @@ Import trace for requested module:
 ./node_modules/@wagmi/connectors/dist/esm/exports/index.js
 ./node_modules/wagmi/dist/esm/exports/connectors.js
 ./node_modules/@rainbow-me/rainbowkit/dist/index.js
-./src/components/Providers.tsx
+./src/app/page.tsx
 
 ./node_modules/pino/lib/tools.js
 Module not found: Can't resolve 'pino-pretty' in '/home/shazbot/team-consensus-vault/node_modules/pino/lib'
@@ -88,6 +83,398 @@ Import trace for requested module:
 ./node_modules/@wagmi/connectors/dist/esm/exports/index.js
 ./node_modules/wagmi/dist/esm/exports/connectors.js
 ./node_modules/@rainbow-me/rainbowkit/dist/index.js
-./src/components/Providers.tsx
- GET /api/gemini?query=test%20bitcoin%20risk 404 in 25ms
+./src/app/page.tsx
+ GET / 200 in 133ms
+ ⚠ ./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+Module not found: Can't resolve '@react-native-async-storage/async-storage' in '/home/shazbot/team-consensus-vault/node_modules/@metamask/sdk/dist/browser/es'
+
+Import trace for requested module:
+./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+./node_modules/@wagmi/connectors/dist/esm/metaMask.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./node_modules/@rainbow-me/rainbowkit/dist/index.js
+./src/app/page.tsx
+
+./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+Module not found: Can't resolve '@react-native-async-storage/async-storage' in '/home/shazbot/team-consensus-vault/node_modules/@metamask/sdk/dist/browser/es'
+
+Import trace for requested module:
+./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+./node_modules/@wagmi/connectors/dist/esm/metaMask.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./node_modules/@rainbow-me/rainbowkit/dist/index.js
+./src/app/page.tsx
+
+./node_modules/pino/lib/tools.js
+Module not found: Can't resolve 'pino-pretty' in '/home/shazbot/team-consensus-vault/node_modules/pino/lib'
+
+Import trace for requested module:
+./node_modules/pino/lib/tools.js
+./node_modules/pino/pino.js
+./node_modules/@walletconnect/logger/dist/index.es.js
+./node_modules/@walletconnect/universal-provider/dist/index.es.js
+./node_modules/@walletconnect/ethereum-provider/dist/index.es.js
+./node_modules/@wagmi/connectors/dist/esm/walletConnect.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./node_modules/@rainbow-me/rainbowkit/dist/index.js
+./src/app/page.tsx
+ ⚠ ./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+Module not found: Can't resolve '@react-native-async-storage/async-storage' in '/home/shazbot/team-consensus-vault/node_modules/@metamask/sdk/dist/browser/es'
+
+Import trace for requested module:
+./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+./node_modules/@wagmi/connectors/dist/esm/metaMask.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./node_modules/@rainbow-me/rainbowkit/dist/index.js
+./src/app/page.tsx
+
+./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+Module not found: Can't resolve '@react-native-async-storage/async-storage' in '/home/shazbot/team-consensus-vault/node_modules/@metamask/sdk/dist/browser/es'
+
+Import trace for requested module:
+./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+./node_modules/@wagmi/connectors/dist/esm/metaMask.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./node_modules/@rainbow-me/rainbowkit/dist/index.js
+./src/app/page.tsx
+
+./node_modules/pino/lib/tools.js
+Module not found: Can't resolve 'pino-pretty' in '/home/shazbot/team-consensus-vault/node_modules/pino/lib'
+
+Import trace for requested module:
+./node_modules/pino/lib/tools.js
+./node_modules/pino/pino.js
+./node_modules/@walletconnect/logger/dist/index.es.js
+./node_modules/@walletconnect/universal-provider/dist/index.es.js
+./node_modules/@walletconnect/ethereum-provider/dist/index.es.js
+./node_modules/@wagmi/connectors/dist/esm/walletConnect.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./node_modules/@rainbow-me/rainbowkit/dist/index.js
+./src/app/page.tsx
+ ⚠ ./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+Module not found: Can't resolve '@react-native-async-storage/async-storage' in '/home/shazbot/team-consensus-vault/node_modules/@metamask/sdk/dist/browser/es'
+
+Import trace for requested module:
+./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+./node_modules/@wagmi/connectors/dist/esm/metaMask.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./node_modules/@rainbow-me/rainbowkit/dist/index.js
+./src/app/page.tsx
+
+./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+Module not found: Can't resolve '@react-native-async-storage/async-storage' in '/home/shazbot/team-consensus-vault/node_modules/@metamask/sdk/dist/browser/es'
+
+Import trace for requested module:
+./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+./node_modules/@wagmi/connectors/dist/esm/metaMask.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./node_modules/@rainbow-me/rainbowkit/dist/index.js
+./src/app/page.tsx
+
+./node_modules/pino/lib/tools.js
+Module not found: Can't resolve 'pino-pretty' in '/home/shazbot/team-consensus-vault/node_modules/pino/lib'
+
+Import trace for requested module:
+./node_modules/pino/lib/tools.js
+./node_modules/pino/pino.js
+./node_modules/@walletconnect/logger/dist/index.es.js
+./node_modules/@walletconnect/universal-provider/dist/index.es.js
+./node_modules/@walletconnect/ethereum-provider/dist/index.es.js
+./node_modules/@wagmi/connectors/dist/esm/walletConnect.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./node_modules/@rainbow-me/rainbowkit/dist/index.js
+./src/app/page.tsx
+ ⚠ ./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+Module not found: Can't resolve '@react-native-async-storage/async-storage' in '/home/shazbot/team-consensus-vault/node_modules/@metamask/sdk/dist/browser/es'
+
+Import trace for requested module:
+./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+./node_modules/@wagmi/connectors/dist/esm/metaMask.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./node_modules/@rainbow-me/rainbowkit/dist/index.js
+./src/app/page.tsx
+
+./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+Module not found: Can't resolve '@react-native-async-storage/async-storage' in '/home/shazbot/team-consensus-vault/node_modules/@metamask/sdk/dist/browser/es'
+
+Import trace for requested module:
+./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+./node_modules/@wagmi/connectors/dist/esm/metaMask.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./node_modules/@rainbow-me/rainbowkit/dist/index.js
+./src/app/page.tsx
+
+./node_modules/pino/lib/tools.js
+Module not found: Can't resolve 'pino-pretty' in '/home/shazbot/team-consensus-vault/node_modules/pino/lib'
+
+Import trace for requested module:
+./node_modules/pino/lib/tools.js
+./node_modules/pino/pino.js
+./node_modules/@walletconnect/logger/dist/index.es.js
+./node_modules/@walletconnect/universal-provider/dist/index.es.js
+./node_modules/@walletconnect/ethereum-provider/dist/index.es.js
+./node_modules/@wagmi/connectors/dist/esm/walletConnect.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./node_modules/@rainbow-me/rainbowkit/dist/index.js
+./src/app/page.tsx
+ GET /api/trading/history 200 in 4138ms
+ HEAD /api/consensus 200 in 4153ms
+ HEAD /api/consensus 200 in 4120ms
+WalletConnect Core is already initialized. This is probably a mistake and can lead to unexpected behavior. Init() was called 2 times.
+WalletConnect Core is already initialized. This is probably a mistake and can lead to unexpected behavior. Init() was called 2 times.
+Multiple versions of Lit loaded. Loading multiple versions is not recommended. See https://lit.dev/msg/multiple-versions for more information.
+ HEAD / 200 in 4232ms
+ GET /api/trading/history 200 in 279ms
+[gemini] API_ERROR: Your API key was reported as leaked. Please use another API key. (Original: [object Object])
+[gemini] API_ERROR: Your API key was reported as leaked. Please use another API key. (Original: [object Object])
+[kimi] API_ERROR: Invalid Authentication (Original: [object Object])
+[gemini] API_ERROR: Your API key was reported as leaked. Please use another API key. (Original: [object Object])
+[gemini] API_ERROR: Your API key was reported as leaked. Please use another API key. (Original: [object Object])
+[kimi] API_ERROR: Invalid Authentication (Original: [object Object])
+[kimi] API_ERROR: Invalid Authentication (Original: [object Object])
+[kimi] API_ERROR: Invalid Authentication (Original: [object Object])
+[minimax] PARSE_ERROR: No JSON found in response. Expected format: {"signal": "buy|sell|hold", "confidence": 0-100, "reasoning": "..."} 
+ POST /api/trading/execute 400 in 9437ms
+ GET / 200 in 69ms
+ GET /api/consensus 200 in 21529ms
+ GET /api/trading/history 200 in 34ms
+ HEAD /api/consensus 200 in 49ms
+ HEAD /api/consensus 200 in 28ms
+ GET /api/trading/history 200 in 12ms
+ HEAD / 200 in 44ms
+[gemini] API_ERROR: Your API key was reported as leaked. Please use another API key. (Original: [object Object])
+[kimi] API_ERROR: Invalid Authentication (Original: [object Object])
+[gemini] API_ERROR: Your API key was reported as leaked. Please use another API key. (Original: [object Object])
+[kimi] API_ERROR: Invalid Authentication (Original: [object Object])
+[gemini] API_ERROR: Your API key was reported as leaked. Please use another API key. (Original: [object Object])
+[kimi] API_ERROR: Invalid Authentication (Original: [object Object])
+ GET /api/consensus 200 in 29216ms
+ GET / 200 in 40ms
+ GET /api/trading/history 200 in 25ms
+ HEAD /api/consensus 200 in 32ms
+ HEAD /api/consensus 200 in 28ms
+ GET /api/trading/history 200 in 10ms
+ HEAD / 200 in 24ms
+[gemini] API_ERROR: Your API key was reported as leaked. Please use another API key. (Original: [object Object])
+[gemini] API_ERROR: Your API key was reported as leaked. Please use another API key. (Original: [object Object])
+[kimi] API_ERROR: Invalid Authentication (Original: [object Object])
+[gemini] API_ERROR: Your API key was reported as leaked. Please use another API key. (Original: [object Object])
+[kimi] API_ERROR: Invalid Authentication (Original: [object Object])
+[kimi] API_ERROR: Invalid Authentication (Original: [object Object])
+[minimax] PARSE_ERROR: No JSON found in response. Expected format: {"signal": "buy|sell|hold", "confidence": 0-100, "reasoning": "..."} 
+[minimax] PARSE_ERROR: No JSON found in response. Expected format: {"signal": "buy|sell|hold", "confidence": 0-100, "reasoning": "..."} 
+ GET /api/consensus 200 in 29374ms
+ GET / 200 in 57ms
+ GET / 200 in 31ms
+ GET /api/trading/history 200 in 20ms
+ HEAD /api/consensus 200 in 27ms
+ HEAD /api/consensus 200 in 19ms
+ GET /api/trading/history 200 in 14ms
+[deepseek] API_ERROR: Authentication Fails, Your api key: ****5134 is invalid (Original: [object Object])
+ HEAD / 200 in 22ms
+[gemini] API_ERROR: Your API key was reported as leaked. Please use another API key. (Original: [object Object])
+[gemini] API_ERROR: Your API key was reported as leaked. Please use another API key. (Original: [object Object])
+[deepseek] API_ERROR: Authentication Fails, Your api key: ****5134 is invalid (Original: [object Object])
+[deepseek] API_ERROR: Authentication Fails, Your api key: ****5134 is invalid (Original: [object Object])
+[kimi] API_ERROR: Invalid Authentication (Original: [object Object])
+ GET / 200 in 31ms
+ GET /api/consensus 200 in 1630ms
+[gemini] API_ERROR: Your API key was reported as leaked. Please use another API key. (Original: [object Object])
+ GET /api/trading/history 200 in 12ms
+ HEAD /api/consensus 200 in 16ms
+ HEAD /api/consensus 200 in 16ms
+ GET /api/trading/history 200 in 6ms
+[gemini] API_ERROR: Your API key was reported as leaked. Please use another API key. (Original: [object Object])
+[deepseek] API_ERROR: Authentication Fails, Your api key: ****5134 is invalid (Original: [object Object])
+ HEAD / 200 in 20ms
+[kimi] API_ERROR: Invalid Authentication (Original: [object Object])
+[kimi] API_ERROR: Invalid Authentication (Original: [object Object])
+[kimi] API_ERROR: Invalid Authentication (Original: [object Object])
+[gemini] API_ERROR: Your API key was reported as leaked. Please use another API key. (Original: [object Object])
+[gemini] API_ERROR: Your API key was reported as leaked. Please use another API key. (Original: [object Object])
+[kimi] API_ERROR: Invalid Authentication (Original: [object Object])
+[kimi] API_ERROR: Invalid Authentication (Original: [object Object])
+[deepseek] API_ERROR: Authentication Fails, Your api key: ****5134 is invalid (Original: [object Object])
+[deepseek] API_ERROR: Authentication Fails, Your api key: ****5134 is invalid (Original: [object Object])
+ GET / 200 in 30ms
+ GET /api/consensus 200 in 1937ms
+ GET /api/trading/history 200 in 15ms
+ HEAD /api/consensus 200 in 25ms
+ HEAD /api/consensus 200 in 28ms
+ GET /api/trading/history 200 in 20ms
+[gemini] API_ERROR: Your API key was reported as leaked. Please use another API key. (Original: [object Object])
+[minimax] PARSE_ERROR: No JSON found in response. Expected format: {"signal": "buy|sell|hold", "confidence": 0-100, "reasoning": "..."} 
+[deepseek] API_ERROR: Authentication Fails, Your api key: ****5134 is invalid (Original: [object Object])
+ HEAD / 200 in 42ms
+[kimi] API_ERROR: Invalid Authentication (Original: [object Object])
+[gemini] API_ERROR: Your API key was reported as leaked. Please use another API key. (Original: [object Object])
+[gemini] API_ERROR: Your API key was reported as leaked. Please use another API key. (Original: [object Object])
+[kimi] API_ERROR: Invalid Authentication (Original: [object Object])
+[kimi] API_ERROR: Invalid Authentication (Original: [object Object])
+[deepseek] API_ERROR: Authentication Fails, Your api key: ****5134 is invalid (Original: [object Object])
+[deepseek] API_ERROR: Authentication Fails, Your api key: ****5134 is invalid (Original: [object Object])
+ GET /api/consensus 200 in 2120ms
+[minimax] PARSE_ERROR: No JSON found in response. Expected format: {"signal": "buy|sell|hold", "confidence": 0-100, "reasoning": "..."} 
+[minimax] PARSE_ERROR: No JSON found in response. Expected format: {"signal": "buy|sell|hold", "confidence": 0-100, "reasoning": "..."} 
+[minimax] PARSE_ERROR: Missing required field: signal 
+[minimax] PARSE_ERROR: No JSON found in response. Expected format: {"signal": "buy|sell|hold", "confidence": 0-100, "reasoning": "..."} 
+[minimax] PARSE_ERROR: No JSON found in response. Expected format: {"signal": "buy|sell|hold", "confidence": 0-100, "reasoning": "..."} 
+[minimax] PARSE_ERROR: No JSON found in response. Expected format: {"signal": "buy|sell|hold", "confidence": 0-100, "reasoning": "..."} 
+   Reload env: .env.local
+ ⚠ ./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+Module not found: Can't resolve '@react-native-async-storage/async-storage' in '/home/shazbot/team-consensus-vault/node_modules/@metamask/sdk/dist/browser/es'
+
+Import trace for requested module:
+./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+./node_modules/@wagmi/connectors/dist/esm/metaMask.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./node_modules/@rainbow-me/rainbowkit/dist/index.js
+./src/app/page.tsx
+
+./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+Module not found: Can't resolve '@react-native-async-storage/async-storage' in '/home/shazbot/team-consensus-vault/node_modules/@metamask/sdk/dist/browser/es'
+
+Import trace for requested module:
+./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+./node_modules/@wagmi/connectors/dist/esm/metaMask.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./node_modules/@rainbow-me/rainbowkit/dist/index.js
+./src/app/page.tsx
+
+./node_modules/pino/lib/tools.js
+Module not found: Can't resolve 'pino-pretty' in '/home/shazbot/team-consensus-vault/node_modules/pino/lib'
+
+Import trace for requested module:
+./node_modules/pino/lib/tools.js
+./node_modules/pino/pino.js
+./node_modules/@walletconnect/logger/dist/index.es.js
+./node_modules/@walletconnect/universal-provider/dist/index.es.js
+./node_modules/@walletconnect/ethereum-provider/dist/index.es.js
+./node_modules/@wagmi/connectors/dist/esm/walletConnect.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./node_modules/@rainbow-me/rainbowkit/dist/index.js
+./src/app/page.tsx
+   Reload env: .env.local
+ ⚠ ./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+Module not found: Can't resolve '@react-native-async-storage/async-storage' in '/home/shazbot/team-consensus-vault/node_modules/@metamask/sdk/dist/browser/es'
+
+Import trace for requested module:
+./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+./node_modules/@wagmi/connectors/dist/esm/metaMask.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./node_modules/@rainbow-me/rainbowkit/dist/index.js
+./src/app/page.tsx
+
+./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+Module not found: Can't resolve '@react-native-async-storage/async-storage' in '/home/shazbot/team-consensus-vault/node_modules/@metamask/sdk/dist/browser/es'
+
+Import trace for requested module:
+./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+./node_modules/@wagmi/connectors/dist/esm/metaMask.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./node_modules/@rainbow-me/rainbowkit/dist/index.js
+./src/app/page.tsx
+
+./node_modules/pino/lib/tools.js
+Module not found: Can't resolve 'pino-pretty' in '/home/shazbot/team-consensus-vault/node_modules/pino/lib'
+
+Import trace for requested module:
+./node_modules/pino/lib/tools.js
+./node_modules/pino/pino.js
+./node_modules/@walletconnect/logger/dist/index.es.js
+./node_modules/@walletconnect/universal-provider/dist/index.es.js
+./node_modules/@walletconnect/ethereum-provider/dist/index.es.js
+./node_modules/@wagmi/connectors/dist/esm/walletConnect.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./node_modules/@rainbow-me/rainbowkit/dist/index.js
+./src/app/page.tsx
+   Reload env: .env.local
+ ⚠ ./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+Module not found: Can't resolve '@react-native-async-storage/async-storage' in '/home/shazbot/team-consensus-vault/node_modules/@metamask/sdk/dist/browser/es'
+
+Import trace for requested module:
+./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+./node_modules/@wagmi/connectors/dist/esm/metaMask.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./node_modules/@rainbow-me/rainbowkit/dist/index.js
+./src/app/page.tsx
+
+./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+Module not found: Can't resolve '@react-native-async-storage/async-storage' in '/home/shazbot/team-consensus-vault/node_modules/@metamask/sdk/dist/browser/es'
+
+Import trace for requested module:
+./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+./node_modules/@wagmi/connectors/dist/esm/metaMask.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./node_modules/@rainbow-me/rainbowkit/dist/index.js
+./src/app/page.tsx
+
+./node_modules/pino/lib/tools.js
+Module not found: Can't resolve 'pino-pretty' in '/home/shazbot/team-consensus-vault/node_modules/pino/lib'
+
+Import trace for requested module:
+./node_modules/pino/lib/tools.js
+./node_modules/pino/pino.js
+./node_modules/@walletconnect/logger/dist/index.es.js
+./node_modules/@walletconnect/universal-provider/dist/index.es.js
+./node_modules/@walletconnect/ethereum-provider/dist/index.es.js
+./node_modules/@wagmi/connectors/dist/esm/walletConnect.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./node_modules/@rainbow-me/rainbowkit/dist/index.js
+./src/app/page.tsx
+[?25h
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      Reload env: .env.local
+ ⚠ ./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+Module not found: Can't resolve '@react-native-async-storage/async-storage' in '/home/shazbot/team-consensus-vault/node_modules/@metamask/sdk/dist/browser/es'
+
+Import trace for requested module:
+./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+./node_modules/@wagmi/connectors/dist/esm/metaMask.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./node_modules/@rainbow-me/rainbowkit/dist/index.js
+./src/app/page.tsx
+   Reload env: .env.local
+ ⚠ ./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+Module not found: Can't resolve '@react-native-async-storage/async-storage' in '/home/shazbot/team-consensus-vault/node_modules/@metamask/sdk/dist/browser/es'
+
+Import trace for requested module:
+./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+./node_modules/@wagmi/connectors/dist/esm/metaMask.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./node_modules/@rainbow-me/rainbowkit/dist/index.js
+./src/app/page.tsx
+   Reload env: .env.local
+ ⚠ ./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+Module not found: Can't resolve '@react-native-async-storage/async-storage' in '/home/shazbot/team-consensus-vault/node_modules/@metamask/sdk/dist/browser/es'
+
+Import trace for requested module:
+./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+./node_modules/@wagmi/connectors/dist/esm/metaMask.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./node_modules/@rainbow-me/rainbowkit/dist/index.js
+./src/app/page.tsx
 [?25h

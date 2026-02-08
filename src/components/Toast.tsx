@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 
 export interface ToastProps {
   message: string;
-  type: 'success' | 'error' | 'info';
+  type: 'success' | 'error' | 'info' | 'warning';
   onClose: () => void;
   duration?: number;
 }
@@ -22,13 +22,15 @@ export default function Toast({ message, type, onClose, duration = 3000 }: Toast
   const bgColor = {
     success: 'bg-bullish',
     error: 'bg-bearish',
-    info: 'bg-accent'
+    info: 'bg-accent',
+    warning: 'bg-yellow-500'
   }[type];
 
   const icon = {
     success: '✓',
     error: '✕',
-    info: 'ℹ'
+    info: 'ℹ',
+    warning: '⚠'
   }[type];
 
   return (
