@@ -23,13 +23,15 @@ import { RoundPhase, RoundState, BettingPool, ConsensusSnapshot, PredictionMarke
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5 minute timeout for demo rounds
 
-// Demo configuration
+// Demo mode configuration - reads from environment variable
+const IS_DEMO_MODE = process.env.DEMO_MODE === 'true';
+
 const DEMO_CONFIG = {
-  SCANNING_INTERVAL: 15000, // 15 seconds for demo (not 60s)
-  FORCE_BUY_AFTER_POLLS: 3, // Force BUY signal after 3 polls if no consensus
-  FORCE_EXIT_AFTER_MS: 120000, // Force exit after 2 minutes in POSITION_OPEN
-  PRICE_UPDATE_INTERVAL: 15000, // Every 15 seconds during POSITION_OPEN
-  MAX_ROUND_DURATION: 300000, // 5 minutes max for demo round
+  SCANNING_INTERVAL: IS_DEMO_MODE ? 15000 : 60000, // 15s demo, 60s production
+  FORCE_BUY_AFTER_POLLS: IS_DEMO_MODE ? 3 : 10, // Force signal after N polls
+  FORCE_EXIT_AFTER_MS: IS_DEMO_MODE ? 120000 : 24 * 60 * 60 * 1000, // 2min demo, 24h production
+  PRICE_UPDATE_INTERVAL: IS_DEMO_MODE ? 15000 : 5000, // 15s demo, 5s production
+  MAX_ROUND_DURATION: IS_DEMO_MODE ? 300000 : 24 * 60 * 60 * 1000, // 5min demo, 24h production
 } as const;
 
 // Mock round state for demo (in production, this would come from a database)

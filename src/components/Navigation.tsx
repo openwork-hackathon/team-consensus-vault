@@ -10,25 +10,26 @@ interface NavigationProps {
   showMarketInfo?: boolean;
 }
 
-export default function Navigation({ 
+export default function Navigation({
   title = "Consensus Vault",
   subtitle = "AI Multi-Model Trading Intelligence",
-  showMarketInfo = true 
+  showMarketInfo = true
 }: NavigationProps) {
   const pathname = usePathname();
   const isChatroom = pathname === '/chatroom';
+  const isRounds = pathname === '/rounds';
 
   return (
     <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40" role="banner">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-3">
-            <span 
-              className="text-2xl sm:text-3xl" 
-              role="img" 
-              aria-label={isChatroom ? "Debate arena logo" : "Lobster mascot logo"}
+            <span
+              className="text-2xl sm:text-3xl"
+              role="img"
+              aria-label={isChatroom ? "Debate arena logo" : isRounds ? "Prediction market logo" : "Lobster mascot logo"}
             >
-              {isChatroom ? '💬' : '🦞'}
+              {isChatroom ? '💬' : isRounds ? '🎯' : '🦞'}
             </span>
             <div>
               <h1 className="text-lg sm:text-2xl font-bold">{title}</h1>
@@ -58,14 +59,23 @@ export default function Navigation({
             >
               Predict
             </Link>
-            <Link 
-              href="/chatroom" 
+            <Link
+              href="/chatroom"
               className={`text-sm font-medium transition-colors hover:text-primary ${
                 pathname === '/chatroom' ? 'text-primary' : 'text-muted-foreground'
               }`}
               aria-current={pathname === '/chatroom' ? 'page' : undefined}
             >
               Crypto Chatroom
+            </Link>
+            <Link
+              href="/rounds"
+              className={`text-sm font-medium transition-colors hover:text-primary ${
+                pathname === '/rounds' ? 'text-primary' : 'text-muted-foreground'
+              }`}
+              aria-current={pathname === '/rounds' ? 'page' : undefined}
+            >
+              Rounds
             </Link>
           </nav>
 
@@ -114,16 +124,27 @@ export default function Navigation({
           >
             Predict
           </Link>
-          <Link 
-            href="/chatroom" 
+          <Link
+            href="/chatroom"
             className={`text-sm font-medium px-3 py-2 rounded-md transition-colors ${
-              pathname === '/chatroom' 
-                ? 'bg-primary text-primary-foreground' 
+              pathname === '/chatroom'
+                ? 'bg-primary text-primary-foreground'
                 : 'text-muted-foreground hover:text-primary'
             }`}
             aria-current={pathname === '/chatroom' ? 'page' : undefined}
           >
             Chatroom
+          </Link>
+          <Link
+            href="/rounds"
+            className={`text-sm font-medium px-3 py-2 rounded-md transition-colors ${
+              pathname === '/rounds'
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:text-primary'
+            }`}
+            aria-current={pathname === '/rounds' ? 'page' : undefined}
+          >
+            Rounds
           </Link>
         </nav>
       </div>
