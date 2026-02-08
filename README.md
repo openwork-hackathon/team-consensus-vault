@@ -61,6 +61,28 @@ User requests analysis for BTC
 
 ---
 
+## Screenshots
+
+### Dashboard Overview
+The main dashboard showing the AI Analyst Council, consensus meter, and trade signal panel.
+
+![Dashboard](public/screenshots/dashboard.png)
+
+### AI Analyst Cards
+Five specialized AI models analyzing the market from different perspectives -- each with their own vote and confidence score.
+
+![Analyst Cards](public/screenshots/analyst-cards.png)
+
+### Responsive Design
+Fully responsive interface works seamlessly on mobile and tablet devices.
+
+<p align="center">
+  <img src="public/screenshots/mobile-view.png" alt="Mobile View" width="250" />
+  <img src="public/screenshots/tablet-view.png" alt="Tablet View" width="400" />
+</p>
+
+---
+
 ## Resilient Fallback System
 
 When a primary model fails (timeout, rate limit, API error), the consensus engine does not simply drop that vote. Instead, it **substitutes another available model** into the failed analyst's role, preserving the original role's system prompt and specialty.

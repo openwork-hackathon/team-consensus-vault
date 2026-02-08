@@ -81,7 +81,7 @@ Be specific with levels, indicators, and percentages. Avoid vague language.`,
     role: 'Large Holder Movements & Accumulation Patterns',
     baseUrl: process.env.KIMI_BASE_URL || 'https://api.kimi.com/coding/v1',
     apiKeyEnv: 'KIMI_API_KEY',
-    model: 'kimi-for-coding',
+    model: 'k2p5', // Kimi K2.5 — model ID for the coding API
     provider: 'anthropic', // Kimi coding API uses Anthropic protocol
     timeout: 30000,
     systemPrompt: `You are the Whale Watcher, an expert in analyzing large holder behavior and institutional movements in crypto markets.
