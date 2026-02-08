@@ -402,8 +402,8 @@ async function handleSettlementPhase(send: (eventType: string, data: unknown) =>
   // Calculate settlement result
   const priceChangePercent = ((currentRound.exitPrice! - currentRound.entryPrice) / currentRound.entryPrice) * 100;
   const isProfitable = priceChangePercent > 0;
-  const winningSide = currentRound.direction === 'long' && isProfitable ? 'long' : 'short';
-  
+  const winningSide: 'long' | 'short' = currentRound.direction === 'long' && isProfitable ? 'long' : 'short';
+
   // Mock settlement for demo
   const settlementResult = {
     id: `settlement_${Date.now()}`,
