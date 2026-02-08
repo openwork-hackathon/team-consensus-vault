@@ -1,7 +1,23 @@
+'use client';
+
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 export default function NotFound() {
+  const [canGoBack, setCanGoBack] = useState(false);
+
+  useEffect(() => {
+    // Check if we can go back in history
+    setCanGoBack(window.history.length > 1);
+  }, []);
+
+  const handleGoBack = () => {
+    if (window.history.length > 1) {
+      window.history.back();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <motion.div
@@ -37,12 +53,14 @@ export default function NotFound() {
             <span>←</span>
             <span>Back to Home</span>
           </Link>
-          <button
-            onClick={() => window.history.back()}
-            className="flex-1 px-6 py-3 border border-border rounded-lg font-semibold hover:bg-muted transition-colors touch-manipulation"
-          >
-            Go Back
-          </button>
+          {canGoBack && (
+            <button
+              onClick={handleGoBack}
+              className="flex-1 px-6 py-3 border border-border rounded-lg font-semibold hover:bg-muted transition-colors touch-manipulation"
+            >
+              Go Back
+            </button>
+          )}
         </div>
 
         {/* Help Text */}

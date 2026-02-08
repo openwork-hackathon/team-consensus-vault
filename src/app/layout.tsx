@@ -15,11 +15,11 @@ const inter = Inter({
 export const metadata: Metadata = {
   metadataBase: new URL('https://team-consensus-vault.vercel.app'),
   title: {
-    default: "Consensus Vault - AI-Powered Trading",
+    default: "Consensus Vault - Multi-Agent Decision Making",
     template: "%s | Consensus Vault"
   },
-  description: "Multi-model consensus trading vault powered by AI analysts. Trade cryptocurrencies with AI-driven insights from 5 specialized models.",
-  keywords: ["AI trading", "cryptocurrency", "blockchain", "DeFi", "consensus trading", "automated trading"],
+  description: "AI-powered consensus building platform for decentralized decision making. Multi-agent voting and consensus platform for the Openwork hackathon.",
+  keywords: ["AI consensus", "multi-agent", "voting", "decentralized decision making", "Openwork hackathon", "blockchain", "DeFi"],
   authors: [{ name: "Consensus Vault Team" }],
   creator: "Consensus Vault",
   publisher: "Consensus Vault",
@@ -32,23 +32,23 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: "https://team-consensus-vault.vercel.app",
-    title: "Consensus Vault - AI-Powered Trading",
-    description: "Multi-model consensus trading vault powered by AI analysts",
+    title: "Consensus Vault - Multi-Agent Decision Making",
+    description: "AI-powered consensus building platform for decentralized decision making",
     siteName: "Consensus Vault",
     images: [
       {
-        url: "/og-image.png",
+        url: "/og-image.svg",
         width: 1200,
         height: 630,
-        alt: "Consensus Vault - AI Trading Platform",
+        alt: "Consensus Vault - Multi-Agent Decision Making Platform",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Consensus Vault - AI-Powered Trading",
-    description: "Multi-model consensus trading vault powered by AI analysts",
-    images: ["/og-image.png"],
+    title: "Consensus Vault - Multi-Agent Decision Making",
+    description: "AI-powered consensus building platform for decentralized decision making",
+    images: ["/og-image.svg"],
   },
   robots: {
     index: true,
