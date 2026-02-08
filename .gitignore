@@ -39,6 +39,7 @@ TASK_*.md
 DEMO_*.md
 HACKATHON_*.md
 ACTIVITY_LOG*.md
+activity.log
 BUILD_PLAN.md
 DEPLOYMENT.md
 DEPLOYMENT_STATUS.md
@@ -71,3 +72,17 @@ test-*.sh
 
 # Scripts that may contain secrets
 scripts/
+
+# Logs
+*.log
+dev-server.log
+
+# Demo build artifacts (WAVs, intermediate files)
+demo/audio_segments/
+demo/audio_segments_v2/
+*.wav
+*.aac
+*.duration
+
+# Test result artifacts
+cvault-*-test-results/
