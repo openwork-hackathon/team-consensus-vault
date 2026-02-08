@@ -12,6 +12,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { ANALYST_MODELS } from '@/lib/models';
+import { createApiLogger } from '@/lib/api-logger';
 
 // Timeout for DeepSeek API calls (30 seconds)
 const DEEPSEEK_TIMEOUT = 30000;
@@ -149,41 +150,60 @@ async function callDeepSeekAPI(
  * Query params: asset (required), context (optional)
  */
 export async function GET(request: NextRequest) {
+  const logger = createApiLogger(request);
+  
   try {
+    logger.logRequest();
+    
     const { searchParams } = new URL(request.url);
     const asset = searchParams.get('asset');
     const context = searchParams.get('context');
 
     if (!asset) {
+      const error = new Error('Missing required parameter: asset');
+      logger.logError(error, { validation: 'missing_asset' });
       return NextResponse.json(
-        { error: 'Missing required parameter: asset' },
+        { 
+          error: 'Missing required parameter: asset',
+          requestId: logger.getRequestId(),
+        },
         { status: 400, headers: corsHeaders }
       );
     }
 
+    logger.info('Starting DeepSeek analysis', { asset, hasContext: !!context });
+    
     const analysisResult = await callDeepSeekAPI(asset, context || undefined);
 
-    return NextResponse.json(
-      {
-        signal: analysisResult.signal,
-        confidence: analysisResult.confidence,
-        reasoning: analysisResult.reasoning,
-        asset: asset.toUpperCase(),
-        analyst: {
-          id: 'deepseek',
-          name: 'DeepSeek',
-          role: 'Momentum Hunter - Technical Analysis & Trend Detection',
-        },
-        timestamp: new Date().toISOString(),
+    const responseData = {
+      signal: analysisResult.signal,
+      confidence: analysisResult.confidence,
+      reasoning: analysisResult.reasoning,
+      asset: asset.toUpperCase(),
+      analyst: {
+        id: 'deepseek',
+        name: 'DeepSeek',
+        role: 'Momentum Hunter - Technical Analysis & Trend Detection',
       },
-      { headers: corsHeaders }
-    );
+      timestamp: new Date().toISOString(),
+      requestId: logger.getRequestId(),
+    };
+
+    const response = NextResponse.json(responseData, { headers: corsHeaders });
+    logger.logResponse(response, responseData);
+    
+    return response;
   } catch (error) {
-    console.error('DeepSeek API error:', error);
+    logger.logError(error instanceof Error ? error : new Error(String(error)), {
+      endpoint: 'deepseek',
+      method: 'GET',
+    });
+    
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : 'Unknown error occurred',
         analyst: 'deepseek',
+        requestId: logger.getRequestId(),
       },
       { status: 500, headers: corsHeaders }
     );
@@ -195,48 +215,80 @@ export async function GET(request: NextRequest) {
  * Body: { asset: string, context?: string }
  */
 export async function POST(request: NextRequest) {
+  const logger = createApiLogger(request);
+  
   try {
+    logger.logRequest();
+    
     const body = await request.json();
+    logger.logRequestBody(body);
+    
     const { asset, context } = body;
 
     if (!asset || typeof asset !== 'string') {
+      const error = new Error('Missing or invalid required field: asset');
+      logger.logError(error, { 
+        validation: 'invalid_asset',
+        receivedAsset: asset,
+        assetType: typeof asset,
+      });
       return NextResponse.json(
-        { error: 'Missing or invalid required field: asset' },
+        { 
+          error: 'Missing or invalid required field: asset',
+          requestId: logger.getRequestId(),
+        },
         { status: 400, headers: corsHeaders }
       );
     }
 
+    logger.info('Starting DeepSeek analysis', { asset, hasContext: !!context });
+    
     const analysisResult = await callDeepSeekAPI(asset, context);
 
-    return NextResponse.json(
-      {
-        signal: analysisResult.signal,
-        confidence: analysisResult.confidence,
-        reasoning: analysisResult.reasoning,
-        asset: asset.toUpperCase(),
-        analyst: {
-          id: 'deepseek',
-          name: 'DeepSeek',
-          role: 'Momentum Hunter - Technical Analysis & Trend Detection',
-        },
-        timestamp: new Date().toISOString(),
+    const responseData = {
+      signal: analysisResult.signal,
+      confidence: analysisResult.confidence,
+      reasoning: analysisResult.reasoning,
+      asset: asset.toUpperCase(),
+      analyst: {
+        id: 'deepseek',
+        name: 'DeepSeek',
+        role: 'Momentum Hunter - Technical Analysis & Trend Detection',
       },
-      { headers: corsHeaders }
-    );
-  } catch (error) {
-    console.error('DeepSeek API error:', error);
+      timestamp: new Date().toISOString(),
+      requestId: logger.getRequestId(),
+    };
 
+    const response = NextResponse.json(responseData, { headers: corsHeaders });
+    logger.logResponse(response, responseData);
+    
+    return response;
+  } catch (error) {
     if (error instanceof SyntaxError) {
+      const syntaxError = new Error('Invalid JSON in request body');
+      logger.logError(syntaxError, { 
+        validation: 'invalid_json',
+        errorType: 'SyntaxError',
+      });
       return NextResponse.json(
-        { error: 'Invalid JSON in request body' },
+        { 
+          error: 'Invalid JSON in request body',
+          requestId: logger.getRequestId(),
+        },
         { status: 400, headers: corsHeaders }
       );
     }
 
+    logger.logError(error instanceof Error ? error : new Error(String(error)), {
+      endpoint: 'deepseek',
+      method: 'POST',
+    });
+    
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : 'Unknown error occurred',
         analyst: 'deepseek',
+        requestId: logger.getRequestId(),
       },
       { status: 500, headers: corsHeaders }
     );

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="192" height="192" viewBox="0 0 192 192" xmlns="http://www.w3.org/2000/svg">
+  <rect width="192" height="192" rx="28.799999999999997" fill="#0a0a0a"/>
+  <rect x="9.600000000000001" y="9.600000000000001" width="172.8" height="172.8" rx="19.200000000000003" fill="none" stroke="#ffffff" stroke-width="15.36"/>
+  <text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" 
+        font-family="system-ui, -apple-system, sans-serif" 
+        font-weight="bold" 
+        font-size="67.19999999999999" 
+        fill="#ffffff">CV</text>
+</svg>

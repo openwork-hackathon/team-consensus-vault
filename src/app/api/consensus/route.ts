@@ -1,6 +1,13 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { runConsensusAnalysis } from '@/lib/consensus-engine';
 import { AnalystResult, ANALYST_MODELS, ModelConfig, ModelResponse } from '@/lib/models';
+import { 
+  checkRateLimit, 
+  createRateLimitResponse, 
+  addRateLimitHeaders,
+  CONSENSUS_RATE_LIMIT 
+} from '@/lib/rate-limit';
+import { createApiLogger } from '@/lib/api-logger';
 
 // Use mock data when API keys aren't available (development mode)
 const USE_MOCK = process.env.NODE_ENV === 'development' && !process.env.DEEPSEEK_API_KEY;
@@ -10,6 +17,16 @@ const USE_MOCK = process.env.NODE_ENV === 'development' && !process.env.DEEPSEEK
  * GET /api/consensus?asset=BTC&context=optional context
  */
 export async function GET(request: NextRequest) {
+  // Check rate limit
+  const rateLimitResult = await checkRateLimit(request, CONSENSUS_RATE_LIMIT);
+  if (!rateLimitResult.success) {
+    return createRateLimitResponse(
+      rateLimitResult.limit,
+      rateLimitResult.remaining,
+      rateLimitResult.reset
+    );
+  }
+
   const { searchParams } = new URL(request.url);
   const asset = searchParams.get('asset') || 'BTC';
   const context = searchParams.get('context') || undefined;
@@ -191,6 +208,16 @@ async function streamMockAnalysis(
  * Returns all results at once
  */
 export async function POST(request: NextRequest) {
+  // Check rate limit
+  const rateLimitResult = await checkRateLimit(request, CONSENSUS_RATE_LIMIT);
+  if (!rateLimitResult.success) {
+    return createRateLimitResponse(
+      rateLimitResult.limit,
+      rateLimitResult.remaining,
+      rateLimitResult.reset
+    );
+  }
+
   const startTime = Date.now();
 
   try {
@@ -283,7 +310,7 @@ export async function POST(request: NextRequest) {
 
     const total_time_ms = Date.now() - startTime;
 
-    return Response.json({
+    const response = Response.json({
       consensus,
       individual_responses,
       metadata: {
@@ -291,6 +318,13 @@ export async function POST(request: NextRequest) {
         models_succeeded,
       },
     });
+
+    // Add rate limit headers to successful response
+    response.headers.set('X-RateLimit-Limit', String(rateLimitResult.limit));
+    response.headers.set('X-RateLimit-Remaining', String(rateLimitResult.remaining));
+    response.headers.set('X-RateLimit-Reset', String(rateLimitResult.reset));
+
+    return response;
   } catch (error) {
     console.error('Consensus API error:', error);
     return Response.json(

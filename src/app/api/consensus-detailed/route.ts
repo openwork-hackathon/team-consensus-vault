@@ -1,5 +1,10 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { runDetailedConsensusAnalysis } from '@/lib/consensus-engine';
+import { 
+  checkRateLimit, 
+  createRateLimitResponse, 
+  CONSENSUS_RATE_LIMIT 
+} from '@/lib/rate-limit';
 
 /**
  * POST /api/consensus-detailed
@@ -36,6 +41,16 @@ import { runDetailedConsensusAnalysis } from '@/lib/consensus-engine';
  * }
  */
 export async function POST(request: NextRequest) {
+  // Check rate limit
+  const rateLimitResult = await checkRateLimit(request, CONSENSUS_RATE_LIMIT);
+  if (!rateLimitResult.success) {
+    return createRateLimitResponse(
+      rateLimitResult.limit,
+      rateLimitResult.remaining,
+      rateLimitResult.reset
+    );
+  }
+
   try {
     const body = await request.json();
     const { asset, context } = body;
@@ -50,7 +65,14 @@ export async function POST(request: NextRequest) {
     // Run detailed consensus analysis with 4/5 threshold
     const consensusResponse = await runDetailedConsensusAnalysis(asset, context);
 
-    return Response.json(consensusResponse, { status: 200 });
+    const response = Response.json(consensusResponse, { status: 200 });
+
+    // Add rate limit headers to successful response
+    response.headers.set('X-RateLimit-Limit', String(rateLimitResult.limit));
+    response.headers.set('X-RateLimit-Remaining', String(rateLimitResult.remaining));
+    response.headers.set('X-RateLimit-Reset', String(rateLimitResult.reset));
+
+    return response;
   } catch (error) {
     console.error('Detailed consensus API error:', error);
     return Response.json(
@@ -65,6 +87,16 @@ export async function POST(request: NextRequest) {
  * Same as POST but via query parameters for convenience
  */
 export async function GET(request: NextRequest) {
+  // Check rate limit
+  const rateLimitResult = await checkRateLimit(request, CONSENSUS_RATE_LIMIT);
+  if (!rateLimitResult.success) {
+    return createRateLimitResponse(
+      rateLimitResult.limit,
+      rateLimitResult.remaining,
+      rateLimitResult.reset
+    );
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const asset = searchParams.get('asset');
@@ -80,7 +112,14 @@ export async function GET(request: NextRequest) {
     // Run detailed consensus analysis with 4/5 threshold
     const consensusResponse = await runDetailedConsensusAnalysis(asset, context);
 
-    return Response.json(consensusResponse, { status: 200 });
+    const response = Response.json(consensusResponse, { status: 200 });
+
+    // Add rate limit headers to successful response
+    response.headers.set('X-RateLimit-Limit', String(rateLimitResult.limit));
+    response.headers.set('X-RateLimit-Remaining', String(rateLimitResult.remaining));
+    response.headers.set('X-RateLimit-Reset', String(rateLimitResult.reset));
+
+    return response;
   } catch (error) {
     console.error('Detailed consensus API error:', error);
     return Response.json(
