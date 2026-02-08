@@ -5,6 +5,7 @@ import { useConsensusStream } from '@/lib/useConsensusStream';
 import { useAutoTrading } from '@/lib/useAutoTrading';
 import AnalystCard from '@/components/AnalystCard';
 import ConsensusMeter from '@/components/ConsensusMeter';
+import ConsensusVsContrarian from '@/components/ConsensusVsContrarian';
 import TradeSignal from '@/components/TradeSignal';
 import TradingPerformance from '@/components/TradingPerformance';
 import DepositModal from '@/components/DepositModal';
@@ -204,6 +205,16 @@ export default function Dashboard() {
             level={consensusData.consensusLevel}
             threshold={consensusData.threshold}
           />
+        </motion.div>
+
+        {/* Consensus vs Contrarian Dashboard */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="mb-6"
+        >
+          <ConsensusVsContrarian />
         </motion.div>
 
         {/* AI Analysts Section */}
