@@ -35,7 +35,7 @@ The app **CANNOT function** until Kimi and MiniMax keys are obtained. The consen
 - GEMINI_API_KEY: AIzaSyAjVNavgFw54Dq8slhDCBgDRYPai9spp0I (✅ valid)
 
 ❌ **Still broken:**
-- KIMI_API_KEY: sk-kimi-UVaAt0Is0ffY9haAmNNBv5ABAsPjLoaRH7eD2k37FoLlyWrCyPABXN2bJfxM7xh5 (❌ returns 401)
+- KIMI_API_KEY: sk-kimi-[REDACTED] (❌ returns 401)
 - MINIMAX_API_KEY: eyJhbGci... (JWT token - ❌ returns "invalid api key")
 
 ### Backup created
