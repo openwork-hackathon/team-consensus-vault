@@ -1,9 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  transpilePackages: ['framer-motion'],
   experimental: {
-    optimizeCss: true,
-    optimizePackageImports: ['@rainbow-me/rainbowkit', 'recharts', 'framer-motion'],
+    optimizePackageImports: ['@rainbow-me/rainbowkit', 'recharts'],
   },
   images: {
     formats: ['image/avif', 'image/webp'],
