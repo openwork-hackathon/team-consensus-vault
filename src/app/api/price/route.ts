@@ -2,34 +2,81 @@
  * API Route: Current Price
  * GET /api/price?asset=BTC
  * Returns current price for an asset
+ * 
+ * CVAULT-118: Caching Strategy
+ * - Uses Next.js unstable_cache with 30s revalidation for edge caching
+ * - In-memory memoization prevents duplicate concurrent requests
+ * - Cache-Control headers enable CDN/Vercel Edge caching
+ * - Stale-while-revalidate pattern ensures fresh data with fast responses
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentPrice } from '@/lib/price-service';
+import { 
+  withEdgeCache, 
+  generateCacheKey, 
+  getCacheHeaders,
+  logCacheEvent,
+  CACHE_TTL,
+  CACHE_TAGS 
+} from '@/lib/cache';
 
-export const dynamic = 'force-dynamic';
+// Use edge runtime for global caching
+export const runtime = 'edge';
+
+// Cached price fetcher using Next.js unstable_cache
+const getCachedPrice = withEdgeCache(
+  async (asset: string) => {
+    logCacheEvent('price', 'miss', { asset });
+    return getCurrentPrice(asset);
+  },
+  'price',
+  CACHE_TTL.PRICE,
+  [CACHE_TAGS.PRICE]
+);
 
 export async function GET(request: NextRequest) {
+  const startTime = Date.now();
+  
   try {
     const searchParams = request.nextUrl.searchParams;
     const asset = searchParams.get('asset') || 'BTC/USD';
 
-    const price = await getCurrentPrice(asset);
+    // Use cached price fetcher
+    const price = await getCachedPrice(asset);
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       asset,
       price,
       timestamp: new Date().toISOString(),
+      cached: true,
+      responseTimeMs: Date.now() - startTime,
     });
+
+    // Add cache headers for CDN/Vercel Edge
+    const cacheHeaders = getCacheHeaders(CACHE_TTL.PRICE);
+    Object.entries(cacheHeaders).forEach(([key, value]) => {
+      response.headers.set(key, value);
+    });
+
+    logCacheEvent('price', 'hit', { asset, responseTimeMs: Date.now() - startTime });
+
+    return response;
   } catch (error) {
     console.error('Error fetching price:', error);
-    return NextResponse.json(
+    
+    const response = NextResponse.json(
       {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );
+
+    // Ensure errors are not cached
+    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    
+    return response;
   }
 }
