@@ -1,0 +1,254 @@
+# CVAULT-137: Enhancements to consensus-engine.ts
+
+This patch adds:
+1. Circuit breaker pattern for failed models
+2. Improved error aggregation with categorization
+3. Support for toast notifications
+4. Countdown timer for rate-limited models
+5. Degraded mode indicator
+
+## Changes to apply:
+
+### 1. Add circuit breaker state after performance metrics (around line 278)
+
+```typescript
+// Circuit breaker pattern - track model failures
+interface CircuitBreakerState {
+  failureCount: number;
+  lastFailureTime: number;
+  isOpen: boolean;
+  openUntil?: number;
+}
+
+const CIRCUIT_BREAKER_CONFIG = {
+  FAILURE_THRESHOLD: 3, // Number of failures before opening circuit
+  RESET_TIMEOUT: 10 * 60 * 1000, // 10 minutes in milliseconds
+  HALF_OPEN_ATTEMPTS: 1, // Number of attempts to test in half-open state
+};
+
+const circuitBreakerStates: Record<string, CircuitBreakerState> = {};
+
+/**
+ * Check if circuit breaker is open for a model
+ */
+function isCircuitBreakerOpen(modelId: string): boolean {
+  const state = circuitBreakerStates[modelId];
+  if (!state || !state.isOpen) {
+    return false;
+  }
+
+  // Check if reset timeout has elapsed
+  if (state.openUntil && Date.now() > state.openUntil) {
+    console.log(`[${modelId}] Circuit breaker reset timeout elapsed, allowing test request`);
+    state.isOpen = false;
+    state.failureCount = 0;
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Record a failure for circuit breaker tracking
+ */
+function recordFailure(modelId: string, errorType: ConsensusErrorType): void {
+  const state = circuitBreakerStates[modelId] || {
+    failureCount: 0,
+    lastFailureTime: 0,
+    isOpen: false,
+  };
+
+  state.failureCount++;
+  state.lastFailureTime = Date.now();
+
+  // Only count certain error types for circuit breaker
+  // (rate limits, timeouts, and network errors)
+  const shouldCountForCircuitBreaker = [
+    ConsensusErrorType.RATE_LIMIT,
+    ConsensusErrorType.TIMEOUT,
+    ConsensusErrorType.NETWORK_ERROR,
+  ].includes(errorType);
+
+  if (shouldCountForCircuitBreaker && state.failureCount >= CIRCUIT_BREAKER_CONFIG.FAILURE_THRESHOLD) {
+    state.isOpen = true;
+    state.openUntil = Date.now() + CIRCUIT_BREAKER_CONFIG.RESET_TIMEOUT;
+    console.warn(
+      `[${modelId}] Circuit breaker OPEN after ${state.failureCount} failures. Will retry after ${Math.round(CIRCUIT_BREAKER_CONFIG.RESET_TIMEOUT / 1000)}s`
+    );
+  }
+
+  circuitBreakerStates[modelId] = state;
+}
+
+/**
+ * Record a success for circuit breaker tracking
+ */
+function recordSuccess(modelId: string): void {
+  const state = circuitBreakerStates[modelId];
+  if (state) {
+    // Reset failure count on success (but keep circuit closed)
+    state.failureCount = 0;
+    if (state.isOpen) {
+      console.log(`[${modelId}] Circuit breaker CLOSED after successful request`);
+      state.isOpen = false;
+    }
+  }
+}
+
+/**
+ * Get circuit breaker state for all models (for UI display)
+ */
+export function getCircuitBreakerStates(): Record<string, CircuitBreakerState> {
+  return { ...circuitBreakerStates };
+}
+```
+
+### 2. Update createUserFacingError to handle circuit breaker errors (in RATE_LIMIT case)
+
+Add special handling for circuit breaker errors with wait time:
+```typescript
+// Check if this is a circuit breaker error
+if (originalError && typeof originalError === 'object' && 'waitTimeRemaining' in originalError) {
+  const waitTime = (originalError as { waitTimeRemaining?: number }).waitTimeRemaining || 0;
+  return {
+    type: 'rate_limit',
+    message: 'Model temporarily unavailable due to repeated failures',
+    severity: 'warning',
+    recoveryGuidance: 'This model is taking a break after multiple failures. It will be available again shortly.',
+    retryable: false,
+    modelId,
+    estimatedWaitTime: waitTime,
+  };
+}
+```
+
+### 3. Update callModel to check circuit breaker and record failures
+
+Add at the beginning of callModel (after apiKey check):
+```typescript
+// Check circuit breaker
+if (isCircuitBreakerOpen(config.id)) {
+  const state = circuitBreakerStates[config.id];
+  const waitTimeRemaining = state.openUntil ? Math.max(0, state.openUntil - Date.now()) : 0;
+  
+  throw new ConsensusError(
+    `Model temporarily unavailable due to repeated failures (circuit breaker open)`,
+    ConsensusErrorType.RATE_LIMIT,
+    config.id,
+    { waitTimeRemaining, failureCount: state.failureCount }
+  );
+}
+```
+
+Add in the catch block to record failures:
+```typescript
+// Record failure for circuit breaker
+if (error instanceof ConsensusError) {
+  recordFailure(config.id, error.type);
+}
+```
+
+Add success recording at the end (before return):
+```typescript
+// Record success for circuit breaker
+recordSuccess(config.id);
+```
+
+### 4. Enhance runConsensusAnalysis with error categorization and degraded mode
+
+Add new return type fields:
+```typescript
+degradedMode?: {
+  isActive: boolean;
+  successfulModelCount: number;
+  minimumRequired: 3;
+};
+errorCategorization?: {
+  rateLimitErrors: string[];
+  networkErrors: string[];
+  timeoutErrors: string[];
+  otherErrors: string[];
+};
+```
+
+Add logic to categorize errors and detect degraded mode:
+```typescript
+// Categorize errors by type
+const errorCategorization = {
+  rateLimitErrors: [] as string[],
+  networkErrors: [] as string[],
+  timeoutErrors: [] as string[],
+  otherErrors: [] as string[],
+};
+
+analysts.forEach((analyst) => {
+  if (analyst.userFacingError) {
+    switch (analyst.userFacingError.type) {
+      case 'rate_limit':
+        errorCategorization.rateLimitErrors.push(analyst.name);
+        break;
+      case 'network':
+        errorCategorization.networkErrors.push(analyst.name);
+        break;
+      case 'timeout':
+        errorCategorization.timeoutErrors.push(analyst.name);
+        break;
+      default:
+        errorCategorization.otherErrors.push(analyst.name);
+    }
+  }
+});
+
+// Detect degraded mode (less than 3 successful models)
+const successfulModelCount = analysts.filter(a => !a.error).length;
+const degradedMode = {
+  isActive: successfulModelCount < 3,
+  successfulModelCount,
+  minimumRequired: 3,
+};
+
+return { 
+  analysts, 
+  consensus, 
+  responseTimes, 
+  partialFailures,
+  degradedMode,
+  errorCategorization,
+};
+```
+
+### 5. Export new types and functions
+
+Add to types.ts:
+```typescript
+// Circuit breaker state for UI display
+export interface CircuitBreakerState {
+  failureCount: number;
+  lastFailureTime: number;
+  isOpen: boolean;
+  openUntil?: number;
+}
+
+// Enhanced consensus data with degraded mode
+export interface EnhancedConsensusData extends ConsensusData {
+  degradedMode?: {
+    isActive: boolean;
+    successfulModelCount: number;
+    minimumRequired: 3;
+  };
+  errorCategorization?: {
+    rateLimitErrors: string[];
+    networkErrors: string[];
+    timeoutErrors: string[];
+    otherErrors: string[];
+  };
+}
+```
+
+### 6. Update AnalystCard to show circuit breaker status
+
+Add visual indicator when model is skipped due to circuit breaker.
+
+### 7. Create useToast hook for transient error notifications
+
+Create hooks/useToast.ts for managing toast notifications.

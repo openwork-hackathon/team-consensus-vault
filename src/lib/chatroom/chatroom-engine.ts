@@ -1,6 +1,7 @@
 import { ChatMessage, ChatRoomState, ChatPhase, MessageSentiment } from './types';
 import { PERSONAS, PERSONAS_BY_ID } from './personas';
-import { callModelRaw, ChatroomModelError } from './model-caller';
+import { callModelRaw } from './model-caller';
+import { ChatroomError, ChatroomErrorType, createUserFacingError } from './error-types';
 import { buildDebatePrompt, buildCooldownPrompt, buildModeratorPrompt } from './prompts';
 import { calculateRollingConsensus } from './consensus-calc';
 
@@ -56,6 +57,8 @@ export async function generateNextMessage(
 
   // 4. Call persona's model with error handling
   let rawResponse: string;
+  let messageError: { type: string; message: string; recoveryGuidance: string } | undefined;
+  
   try {
     rawResponse = await callModelRaw(
       persona.modelId,
@@ -65,18 +68,31 @@ export async function generateNextMessage(
     );
   } catch (error) {
     // Log detailed error information for debugging
-    if (error instanceof ChatroomModelError) {
+    if (error instanceof ChatroomError) {
+      const userFacingError = createUserFacingError(error);
       console.error(`[chatroom-engine] Model call failed for ${persona.handle}:`, {
-        modelId: error.modelId,
-        errorType: error.errorType,
-        retryable: error.retryable,
+        modelId: error.personaId,
+        errorType: error.type,
+        retryable: userFacingError.retryable,
         message: error.message,
       });
 
+      // Store structured error for UI display
+      messageError = {
+        type: error.type,
+        message: userFacingError.message,
+        recoveryGuidance: userFacingError.recoveryGuidance,
+      };
+
       // Generate fallback message indicating technical difficulty
-      rawResponse = `[Technical difficulties - unable to generate response. Error: ${error.errorType}]`;
+      rawResponse = `[Technical difficulties - ${userFacingError.message}]`;
     } else {
       console.error(`[chatroom-engine] Unexpected error calling ${persona.handle}:`, error);
+      messageError = {
+        type: 'unknown',
+        message: 'AI service temporarily unavailable',
+        recoveryGuidance: 'This AI is experiencing issues. The conversation will continue with other participants.',
+      };
       rawResponse = '[Technical difficulties - unable to generate response]';
     }
   }
@@ -113,6 +129,7 @@ export async function generateNextMessage(
     confidence,
     timestamp: Date.now(),
     phase: currentState.phase,
+    error: messageError,
   };
 
   // 7. Update state
@@ -215,11 +232,11 @@ async function pickNextSpeaker(
       }
     }
   } catch (error) {
-    if (error instanceof ChatroomModelError) {
-      console.warn('[chatroom-engine] Moderator failed (ChatroomModelError):', {
-        errorType: error.errorType,
-        modelId: error.modelId,
-        retryable: error.retryable,
+    if (error instanceof ChatroomError) {
+      console.warn('[chatroom-engine] Moderator failed (ChatroomError):', {
+        errorType: error.type,
+        personaId: error.personaId,
+        message: error.message,
       });
     } else {
       console.warn('[chatroom-engine] Moderator failed (unexpected):', error);

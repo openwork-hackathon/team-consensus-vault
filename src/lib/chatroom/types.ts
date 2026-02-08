@@ -12,6 +12,11 @@ export interface ChatMessage {
   confidence?: number;
   timestamp: number;
   phase: ChatPhase;
+  error?: {
+    type: string;
+    message: string;
+    recoveryGuidance: string;
+  };
 }
 
 export interface ChatRoomState {
