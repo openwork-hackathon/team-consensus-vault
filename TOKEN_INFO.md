@@ -1,7 +1,7 @@
 # CONSENSUS Token Information
 
-**Status**: 🔶 PENDING CREATION
-**Task**: [CVAULT-22] Token: Create CONSENSUS via Mint Club V2
+**Status**: 🔶 PENDING CREATION (Requires Human Action)
+**Task**: [CVAULT-4] Create CONSENSUS token via Mint Club V2 bonding curve
 
 ---
 
@@ -10,24 +10,35 @@
 | Parameter | Value |
 |-----------|-------|
 | **Name** | CONSENSUS |
-| **Symbol** | CONSENSUS |
+| **Symbol** | CONS |
 | **Network** | Base (Chain ID: 8453) |
-| **Backing Asset** | $OPENWORK (`0x299c30DD5974BF4D5bFE42C340CA40462816AB07`) |
+| **Backing Asset** | WETH (`0x4200000000000000000000000000000000000006`) |
 | **Bonding Curve** | Linear |
-| **Creator Royalty** | 0% (no fees) |
+| **Initial Price** | TBD (see creation guide) |
+| **Creator Royalty** | 2% (protocol fee for vault sustainability) |
+| **Supply Model** | Unlimited (bonding curve) |
 | **Contract Address** | TBD (pending deployment) |
 | **Mint Club URL** | TBD (pending deployment) |
 
 ---
 
-## Backing Asset: $OPENWORK
+## Backing Asset: WETH (Wrapped Ether)
 
-**Contract Address**: `0x299c30DD5974BF4D5bFE42C340CA40462816AB07`
+**Contract Address**: `0x4200000000000000000000000000000000000006`
 **Network**: Base (Chain ID: 8453)
-**BaseScan**: https://basescan.org/token/0x299c30DD5974BF4D5bFE42C340CA40462816AB07
+**BaseScan**: https://basescan.org/token/0x4200000000000000000000000000000000000006
 
-**Wallet Balance**: 3.1M $OPENWORK available
-**Wallet Address**: 0x676a8720a302Ad5C17A7632BF48C48e71C41B79C
+**Team Wallet Address**: 0x676a8720a302Ad5C17A7632BF48C48e71C41B79C
+**Protocol Fee Recipient**: 0x676a8720a302Ad5C17A7632BF48C48e71C41B79C (2% on deposits)
+
+---
+
+## Governance Scope
+
+CONSENSUS token holders will govern vault parameters:
+- **Role Selection**: Which AI analyst roles (Bull, Bear, Technical, etc.) are active
+- **Consensus Thresholds**: Minimum agreement % required for trade signals
+- **Risk Limits**: Maximum position sizes, allocation percentages
 
 ---
 
@@ -36,10 +47,10 @@
 **Status**: Awaiting human execution via Mint Club V2 interface
 
 **Required Steps**:
-1. ✅ Parameters defined
-2. ✅ Wallet funded (3.1M $OPENWORK)
+1. ✅ Parameters defined (WETH-backed linear bonding curve)
+2. ✅ Team wallet address confirmed (0x676a8720a302Ad5C17A7632BF48C48e71C41B79C)
 3. ✅ Base network configured in wagmi
-4. 🔶 **PENDING**: Create token via Mint Club V2 (requires browser)
+4. 🔶 **PENDING**: Create token via Mint Club V2 (requires browser + wallet)
 5. 🔶 **PENDING**: Register with Openwork API
 6. 🔶 **PENDING**: Update project documentation
 
@@ -111,9 +122,11 @@ After token is created, update this file with:
 - **Base Network**: https://base.org
 - **BaseScan Explorer**: https://basescan.org
 - **Openwork API Docs**: https://www.openwork.bot/api/docs
+- **WETH on Base**: https://basescan.org/token/0x4200000000000000000000000000000000000006
 - **$OPENWORK Token**: https://basescan.org/token/0x299c30DD5974BF4D5bFE42C340CA40462816AB07
 
 ---
 
 **Last Updated**: 2026-02-07
-**Next Action**: Human execution required (browser access for Mint Club V2)
+**Updated By**: Lead Engineer (CVAULT-4)
+**Next Action**: Human execution required (browser + wallet access for Mint Club V2)

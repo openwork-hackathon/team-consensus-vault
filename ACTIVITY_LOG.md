@@ -1,5 +1,42 @@
 # Activity Log - Consensus Vault Dashboard
 
+## 2026-02-07 - CVAULT-4: Create CONSENSUS Token via Mint Club V2
+
+**Status**: 🔶 READY FOR HUMAN EXECUTION
+
+**Summary:**
+Prepared all documentation for CONSENSUS token creation via Mint Club V2. This task requires human action (browser + wallet access) to complete.
+
+**Key Correction:**
+- Task specifies **WETH** backing (not $OPENWORK as previously documented)
+- Updated all documentation to reflect correct WETH contract: `0x4200000000000000000000000000000000000006`
+
+**Work Completed:**
+1. Verified WETH contract address on Base via BaseScan
+2. Updated `TOKEN_INFO.md` with correct WETH specification
+3. Updated `TOKEN_CREATION_GUIDE.md` with WETH-specific instructions
+4. Created `CVAULT-4_COMPLETION_REPORT.md` with human action checklist
+
+**Token Specification:**
+| Parameter | Value |
+|-----------|-------|
+| Name | CONSENSUS |
+| Symbol | CONS |
+| Network | Base (8453) |
+| Backing | WETH (`0x4200000000000000000000000000000000000006`) |
+| Curve | Linear |
+| Creator Fee | 2% to `0x676a8720a302Ad5C17A7632BF48C48e71C41B79C` |
+
+**Human Action Required:**
+1. Connect wallet to Mint Club V2 (https://mint.club)
+2. Create token with above parameters
+3. Record contract address and update documentation
+4. Test buy/sell on Mint Club
+
+**Signal**: `[[SIGNAL:task_complete:needs_human_verification]]`
+
+---
+
 ## 2026-02-07 - CVAULT-9: Hackathon Planning and Sub-task Creation
 
 **Status**: ✅ COMPLETE (planning phase)
@@ -1923,3 +1960,153 @@ curl -I https://team-consensus-vault.vercel.app  # Should return HTTP 200
 
 **Impact:** CRITICAL - Blocks hackathon demo site (deadline ~Feb 14)
 
+
+---
+
+## 2026-02-07 - CVAULT-45: DAY 2 Token Creation Preparation
+
+**Status**: 🔶 BLOCKED - Requires human browser interaction
+**Task**: [CVAULT-45] DAY 2: Token creation via Mint Club V2
+
+**Summary:**
+Completed all preparation work for CONSENSUS (CONS) token deployment via Mint Club V2. Cannot proceed with actual deployment as it requires browser-based wallet interaction, but all configuration, documentation, and post-deployment automation is ready.
+
+**Deliverables:**
+
+### 1. Updated Documentation
+- ✅ **TOKEN_CREATION_GUIDE.md** - Updated with corrected parameters:
+  - Symbol changed from "CONSENSUS" to "CONS" (per task spec)
+  - Initial price: 0.0001 OPENWORK per CONS
+  - Creator royalty: 2% (not 0%)
+  - Bonding curve: Linear
+  - All step-by-step instructions verified and clarified
+  
+- ✅ **TOKEN_INFO.md** - Updated specification table:
+  - Symbol: CONS
+  - Initial price: 0.0001 OPENWORK per CONS
+  - Creator royalty: 2%
+  - Supply model: Unlimited (bonding curve)
+
+- ✅ **TOKEN_DEPLOYMENT_READY.md** (NEW) - Comprehensive human operator guide:
+  - Quick start section with TL;DR
+  - Step-by-step deployment instructions
+  - Copy-paste token parameters
+  - Security checklist
+  - Troubleshooting guide
+  - Expected costs ($6-22 total)
+  - Post-deployment verification steps
+  - Success criteria
+
+### 2. Automation Scripts
+
+- ✅ **scripts/register-token-with-openwork.sh** - Post-deployment API registration:
+  - Tries 3 possible API endpoints for Openwork registration
+  - Validates token address format
+  - Constructs proper JSON payload with all parameters
+  - Returns clear success/failure status
+  - Provides manual submission fallback info
+  
+- ✅ **scripts/post-token-deployment.sh** - Complete post-deployment automation:
+  - Prompts for token address and TX hash
+  - Validates input formats
+  - Calls Openwork registration script
+  - Updates TOKEN_INFO.md with deployment details
+  - Updates .env.local with environment variables
+  - Generates BaseScan and Mint Club URLs
+  - Provides git commit command
+  - Creates backup of TOKEN_INFO.md
+
+### 3. Configuration Corrections
+
+**Parameters Verified:**
+- Token Name: CONSENSUS ✓
+- Symbol: CONS (was CONSENSUS - FIXED)
+- Initial Price: 0.0001 OPENWORK per CONS (was TBD - FIXED)
+- Creator Royalty: 2% (was 0% - FIXED)
+- Backing Asset: $OPENWORK (0x299c30DD5974BF4D5bFE42C340CA40462816AB07) ✓
+- Network: Base (Chain ID: 8453) ✓
+- Bonding Curve: Linear ✓
+
+**Files Updated:**
+- TOKEN_CREATION_GUIDE.md (11 sections updated)
+- TOKEN_INFO.md (specification table)
+- All example code blocks and API payloads
+- Environment variable examples
+- Wagmi TypeScript constant examples
+
+### 4. Post-Deployment Integration Plan
+
+**Automated** (via scripts):
+- TOKEN_INFO.md update with contract address
+- .env.local environment variables
+- Openwork API registration
+- BaseScan verification links
+- Mint Club trading URL
+
+**Manual** (requires code edits):
+- src/lib/wagmi.ts - Add CONSENSUS_TOKEN constant
+- README.md - Add token section
+- Test token purchase on Mint Club
+- Verify token in MetaMask
+- Git commit and push
+
+### 5. Verification & Security
+
+**Pre-Deployment Checklist:**
+- ✓ Wallet funded: 3.1M $OPENWORK available
+- ✓ Network configured: Base (Chain ID: 8453)
+- ✓ $OPENWORK contract verified: 0x299c30DD5974BF4D5bFE42C340CA40462816AB07
+- ✓ Parameters documented and validated
+- ✓ Security warnings in place (verify URL, avoid fake tokens)
+
+**Post-Deployment Verification:**
+- BaseScan contract verification
+- Mint Club trading page functional
+- Test buy/sell transactions
+- Token appears in wallet
+- All parameters match specification
+
+**Technical Details:**
+- 3 files created (TOKEN_DEPLOYMENT_READY.md, 2 shell scripts)
+- 11 edits to TOKEN_CREATION_GUIDE.md
+- 1 edit to TOKEN_INFO.md
+- All scripts made executable (chmod +x)
+- Total documentation: ~1,000 lines
+
+**Blocking Issue:**
+- Token creation REQUIRES browser-based Mint Club interface
+- Cannot be automated via API or CLI
+- Human operator (Jonathan) must:
+  1. Connect MetaMask to https://mint.club
+  2. Switch to Base network
+  3. Create token with specified parameters
+  4. Save contract address
+  5. Run post-deployment script
+
+**Next Actions:**
+1. Human operator deploys token via Mint Club V2
+2. Run: `./scripts/post-token-deployment.sh`
+3. Update src/lib/wagmi.ts with token constant
+4. Update README.md with token section
+5. Test token purchase
+6. Commit and push to git
+7. Mark CVAULT-45 as complete
+
+**Files Ready for Human:**
+- Read: `TOKEN_DEPLOYMENT_READY.md` (primary instructions)
+- Reference: `TOKEN_CREATION_GUIDE.md` (comprehensive details)
+- Execute: `./scripts/post-token-deployment.sh` (after deployment)
+
+**Estimated Time:**
+- Human deployment: 10-15 minutes
+- Post-deployment script: 2-3 minutes
+- Code integration: 10-15 minutes
+- Total: ~25-35 minutes
+
+**Risk Assessment:**
+- ✓ Low risk: Using audited Mint Club V2 contracts (no custom code)
+- ✓ Low cost: ~$6-22 total (gas + platform fee)
+- ✓ Reversible: Can create new token if needed
+- ⚠️ IRREVERSIBLE: Contract address cannot be changed after deployment
+
+---
