@@ -50,6 +50,15 @@ export default function Navigation({
               Dashboard
             </Link>
             <Link 
+              href="/predict" 
+              className={`text-sm font-medium transition-colors hover:text-primary ${
+                pathname === '/predict' ? 'text-primary' : 'text-muted-foreground'
+              }`}
+              aria-current={pathname === '/predict' ? 'page' : undefined}
+            >
+              Predict
+            </Link>
+            <Link 
               href="/chatroom" 
               className={`text-sm font-medium transition-colors hover:text-primary ${
                 pathname === '/chatroom' ? 'text-primary' : 'text-muted-foreground'
@@ -93,6 +102,17 @@ export default function Navigation({
             aria-current={pathname === '/' ? 'page' : undefined}
           >
             Dashboard
+          </Link>
+          <Link 
+            href="/predict" 
+            className={`text-sm font-medium px-3 py-2 rounded-md transition-colors ${
+              pathname === '/predict' 
+                ? 'bg-primary text-primary-foreground' 
+                : 'text-muted-foreground hover:text-primary'
+            }`}
+            aria-current={pathname === '/predict' ? 'page' : undefined}
+          >
+            Predict
           </Link>
           <Link 
             href="/chatroom" 
