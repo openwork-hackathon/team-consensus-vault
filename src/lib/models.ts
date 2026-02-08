@@ -212,7 +212,7 @@ Be specific with numbers, percentages, and timeframes. Ground analysis in concre
     role: 'Risk Assessment & Portfolio Exposure',
     baseUrl: 'https://generativelanguage.googleapis.com/v1beta',
     apiKeyEnv: 'GEMINI_API_KEY',
-    model: 'gemini-2.0-flash-lite',
+    model: 'gemini-2.5-flash',
     provider: 'google',
     timeout: 30000,
     systemPrompt: `You are the Risk Manager, an expert in risk assessment and portfolio management for crypto markets.
