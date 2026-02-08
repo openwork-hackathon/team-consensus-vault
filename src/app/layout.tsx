@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
+import Navigation from "@/components/Navigation";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -133,7 +134,14 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.className} antialiased`}>
-        <Providers>{children}</Providers>
+        <Providers>
+          <Navigation 
+            title="Consensus Vault"
+            subtitle="AI Multi-Model Trading Intelligence"
+            showMarketInfo={true}
+          />
+          {children}
+        </Providers>
       </body>
     </html>
   );

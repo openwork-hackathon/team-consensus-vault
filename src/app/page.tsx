@@ -11,6 +11,7 @@ import DepositModal from '@/components/DepositModal';
 import WithdrawModal from '@/components/WithdrawModal';
 import ToastContainer, { ToastData } from '@/components/ToastContainer';
 import LoadingSkeleton from '@/components/LoadingSkeleton';
+
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount } from 'wagmi';
 import { useVault } from '@/contexts/VaultContext';
@@ -225,52 +226,6 @@ export default function Dashboard() {
         onWithdraw={handleWithdraw}
         depositedBalance={userTotalDeposited}
       />
-
-      {/* Skip to main content link for screen readers */}
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-primary text-primary-foreground px-4 py-2 rounded-md z-50"
-      >
-        Skip to main content
-      </a>
-
-      {/* Header */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40" role="banner">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <span 
-                className="text-2xl sm:text-3xl" 
-                role="img" 
-                aria-label="Lobster mascot logo"
-              >
-                🦞
-              </span>
-              <div>
-                <h1 className="text-lg sm:text-2xl font-bold">Consensus Vault</h1>
-                <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">
-                  AI Multi-Model Trading Intelligence
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="text-right hidden sm:block" role="complementary" aria-label="Market information">
-                <div className="text-xs text-muted-foreground">Asset</div>
-                <div className="font-semibold" aria-label="BTC/USD pair">BTC/USD</div>
-              </div>
-              <div className="text-right hidden sm:block" role="complementary" aria-label="Current price">
-                <div className="text-xs text-muted-foreground">Price</div>
-                <div className="font-semibold text-bullish" aria-label="Current BTC price 45,234 dollars">
-                  $45,234
-                </div>
-              </div>
-              <div role="navigation" aria-label="Wallet connection">
-                <ConnectButton />
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
 
       <div id="main-content" className="container mx-auto px-4 py-6 lg:py-8 max-w-7xl">
         {/* Vault Stats + Deposit Button */}
