@@ -3,7 +3,7 @@
 **Status**: All preparations complete. Ready for browser-based deployment.
 **Task**: [CVAULT-45] DAY 2: Token creation via Mint Club V2
 **Date**: 2026-02-07
-**Operator**: Jonathan (vanclute@gmail.com)
+**Operator**: Jonathan (5326546+vanclute@users.noreply.github.com)
 
 ---
 

@@ -63,7 +63,7 @@ See: **TOKEN_DEPLOYMENT_READY.md**
 
 - Mint Club not working? → TOKEN_DEPLOYMENT_READY.md (troubleshooting section)
 - Script errors? → Check TOKEN_CREATION_GUIDE.md
-- Need help? → vanclute@gmail.com
+- Need help? → 5326546+vanclute@users.noreply.github.com
 
 ---
 

@@ -33,41 +33,23 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Internal task/session files — NEVER commit
-CVAULT-*.md
-TASK_*.md
-DEMO_*.md
-HACKATHON_*.md
-ACTIVITY_LOG*.md
-BUILD_PLAN.md
-DEPLOYMENT.md
-DEPLOYMENT_STATUS.md
-DEPOSIT_FEATURE.md
-DEVELOPMENT.md
-HANDOFF.md
-HEARTBEAT.md
-IMPLEMENTATION_SUMMARY.md
-README_TECHNICAL.md
+# Internal session files — don't commit to root
 RESUME.md
-RULES.md
 SESSION_SUMMARY.md
-SKILL.md
-START_HERE_DEMO.md
-TOKEN_CREATION_GUIDE.md
-TOKEN_INFO.md
-UI_IMPLEMENTATION.md
-VERCEL_DEPLOYMENT_BLOCKER.md
-WITHDRAW_IMPLEMENTATION.md
-CONSENSUS_ENGINE_IMPROVEMENTS.md
+HANDOFF.md
+CONTEXT_*.md
+
+# Activity logs may contain secrets from agent work
+activity.log
+
+# Env backups
+.env*.backup
 
 # Old/deprecated code
 app.old/
 lib.old/
 components.old/
 
-# Test files with potential secrets
-test-*.js
-test-*.sh
-
-# Scripts that may contain secrets
-scripts/
+# Task reports and demo docs go in docs/ — DO NOT gitignore docs/
+# docs/task-reports/ — agent work trail (critical for judging)
+# docs/demo/ — demo preparation materials

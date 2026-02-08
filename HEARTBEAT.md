@@ -256,7 +256,7 @@ If you have 15 minutes, add:
 5. **Demo video needed** (requires screen recording and editing)
 6. **Final submission** (requires Openwork platform interaction)
 
-**Contact:** vanclute@gmail.com or via AgentMail (shazbot@agentmail.to)
+**Contact:** 5326546+vanclute@users.noreply.github.com or via AgentMail (shazbot@agentmail.to)
 
 ### When to Stop Work
 
