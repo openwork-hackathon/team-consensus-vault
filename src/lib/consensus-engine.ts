@@ -25,7 +25,7 @@ import {
   ConsensusResponse,
 } from './models';
 import type { UserFacingError, ProgressUpdate } from './types';
-import { proxyFetch, isProxyConfigured, ProxyError, isRetryableProxyError } from './proxy-fetch';
+import { proxyFetch, isProxyConfigured, ProxyError, ProxyErrorType, isRetryableProxyError } from './proxy-fetch';
 
 // Rate limiting - track last request time per model
 const lastRequestTime: Record<string, number> = {};
@@ -829,15 +829,15 @@ async function callModel(
       let consensusErrorType: ConsensusErrorType;
       
       switch (error.type) {
-        case 'CONNECTION_REFUSED':
-        case 'PROXY_DOWN':
-        case 'SERVER_ERROR':
+        case ProxyErrorType.CONNECTION_REFUSED:
+        case ProxyErrorType.PROXY_DOWN:
+        case ProxyErrorType.SERVER_ERROR:
           consensusErrorType = ConsensusErrorType.API_ERROR;
           break;
-        case 'CONNECTION_TIMEDOUT':
+        case ProxyErrorType.CONNECTION_TIMEDOUT:
           consensusErrorType = ConsensusErrorType.TIMEOUT;
           break;
-        case 'RATE_LIMIT':
+        case ProxyErrorType.RATE_LIMIT:
           consensusErrorType = ConsensusErrorType.RATE_LIMIT;
           break;
         default:
