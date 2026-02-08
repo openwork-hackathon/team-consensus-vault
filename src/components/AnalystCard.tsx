@@ -2,13 +2,15 @@
 
 import { Analyst } from '@/lib/types';
 import { motion } from 'framer-motion';
+import ModelRetryButton from './ModelRetryButton';
 
 interface AnalystCardProps {
   analyst: Analyst;
   index: number;
+  onRetry?: (modelId: string) => Promise<void>;
 }
 
-export default function AnalystCard({ analyst, index }: AnalystCardProps) {
+export default function AnalystCard({ analyst, index, onRetry }: AnalystCardProps) {
   const sentimentColors = {
     bullish: 'border-bullish bg-bullish/10 text-bullish',
     bearish: 'border-bearish bg-bearish/10 text-bearish',
@@ -103,6 +105,16 @@ export default function AnalystCard({ analyst, index }: AnalystCardProps) {
               <p className="text-xs text-blue-600 dark:text-blue-400 pl-6">
                 ⏱️ Estimated wait: {Math.round(analyst.userFacingError.estimatedWaitTime / 1000)}s
               </p>
+            )}
+            {/* Retry button */}
+            {onRetry && analyst.userFacingError?.retryable && (
+              <div className="pt-1">
+                <ModelRetryButton
+                  modelId={analyst.id}
+                  modelName={analyst.name}
+                  onRetry={onRetry}
+                />
+              </div>
             )}
           </div>
         ) : (

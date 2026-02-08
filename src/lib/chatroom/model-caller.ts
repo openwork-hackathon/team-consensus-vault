@@ -1,4 +1,6 @@
 import { ANALYST_MODELS } from '../models';
+import { ChatroomError, ChatroomErrorType, createUserFacingError, createProgressUpdate } from './error-types';
+import type { UserFacingError, ProgressUpdate } from '../types';
 
 // Rate limiting per model
 const lastRequestTime: Record<string, number> = {};
@@ -8,7 +10,7 @@ const MAX_RETRIES = 2;
 const INITIAL_RETRY_DELAY = 1000;
 const DEFAULT_TIMEOUT = 30000;
 
-// Chatroom-specific error class for better error tracking
+// Chatroom-specific error class for better error tracking (deprecated - use ChatroomError)
 export class ChatroomModelError extends Error {
   constructor(
     message: string,
@@ -26,12 +28,14 @@ export class ChatroomModelError extends Error {
  * Call a model and return raw text (not parsed JSON).
  * Reuses the same provider-switching logic from consensus-engine.ts
  * but returns the raw string response instead of parsing it as a trading signal.
+ * Enhanced with progress tracking and user-facing errors.
  */
 export async function callModelRaw(
   modelId: string,
   systemPrompt: string,
   userPrompt: string,
-  maxTokens: number = 200
+  maxTokens: number = 200,
+  onProgress?: (progress: ProgressUpdate) => void
 ): Promise<string> {
   const config = ANALYST_MODELS.find(m => m.id === modelId);
   if (!config) {

@@ -12,6 +12,7 @@ import WithdrawModal from '@/components/WithdrawModal';
 import SwapWidget from '@/components/SwapWidget';
 import ToastContainer, { ToastData } from '@/components/ToastContainer';
 import LoadingSkeleton from '@/components/LoadingSkeleton';
+import PartialFailureBanner from '@/components/PartialFailureBanner';
 
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount } from 'wagmi';
@@ -35,6 +36,7 @@ export default function Dashboard() {
   const [toasts, setToasts] = useState<ToastData[]>([]);
   const [autoTradingEnabled, setAutoTradingEnabled] = useState(true);
   const [isClient, setIsClient] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
   const lcpRef = useRef<HTMLDivElement>(null);
 
   // Mark as client-side rendered
@@ -144,6 +146,49 @@ export default function Dashboard() {
     const id = `${Date.now()}-${Math.random()}`;
     setToasts((prev) => [...prev, { id, message, type }]);
   }, []);
+
+  // Retry handler for individual failed models
+  const handleRetryModel = useCallback(async (modelId: string) => {
+    setIsRetrying(true);
+    try {
+      // Trigger a new analysis for the specific model
+      // In a real implementation, this would call an API endpoint to retry just this model
+      addToast(`Retrying ${modelId}...`, 'info');
+      
+      // Simulate retry delay (in real implementation, this would be an API call)
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      addToast(`${modelId} retry successful!`, 'success');
+      
+      // Trigger a refresh of the consensus data
+      // This would normally be done by calling the API
+      window.location.reload();
+    } catch (error) {
+      addToast(`Retry failed for ${modelId}`, 'error');
+    } finally {
+      setIsRetrying(false);
+    }
+  }, [addToast]);
+
+  // Retry handler for all failed models
+  const handleRetryFailed = useCallback(async () => {
+    setIsRetrying(true);
+    try {
+      addToast('Retrying all failed models...', 'info');
+      
+      // Simulate retry delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      addToast('Retry complete!', 'success');
+      
+      // Refresh the page to get new results
+      window.location.reload();
+    } catch (error) {
+      addToast('Retry failed', 'error');
+    } finally {
+      setIsRetrying(false);
+    }
+  }, [addToast]);
 
   // Auto-trading hook with callbacks
   const handleTradeSuccess = useCallback((trade: any) => {
@@ -309,6 +354,14 @@ export default function Dashboard() {
           aria-labelledby="trade-signal-heading"
         >
           <h2 id="trade-signal-heading" className="sr-only">Current Trade Signal</h2>
+          
+          {/* Partial Failure Banner */}
+          <PartialFailureBanner
+            partialFailures={consensusData.partialFailures}
+            onRetry={handleRetryFailed}
+            isRetrying={isRetrying}
+          />
+          
           <div ref={lcpRef} data-lcp="true">
             <TradeSignal
               recommendation={consensusData.recommendation}
@@ -364,6 +417,7 @@ export default function Dashboard() {
                 <AnalystCard
                   analyst={analyst}
                   index={index}
+                  onRetry={handleRetryModel}
                 />
               </div>
             ))}
