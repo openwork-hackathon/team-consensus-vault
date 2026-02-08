@@ -8,6 +8,7 @@ import {
   CONSENSUS_RATE_LIMIT 
 } from '@/lib/rate-limit';
 import { createApiLogger } from '@/lib/api-logger';
+import type { ProgressUpdate } from '@/lib/types';
 
 // Use mock data when API keys aren't available (development mode)
 const USE_MOCK = process.env.NODE_ENV === 'development' && !process.env.DEEPSEEK_API_KEY;
@@ -138,6 +139,7 @@ export async function GET(request: NextRequest) {
 
 /**
  * Stream real API analysis results
+ * Enhanced with progress updates and user-facing error messages
  */
 async function streamRealAnalysis(
   asset: string,
@@ -146,41 +148,91 @@ async function streamRealAnalysis(
   signal: AbortSignal
 ) {
   const results: AnalystResult[] = [];
+  let slowModelWarningSent = false;
+
+  // Progress handler for slow models
+  const handleProgress = (progress: ProgressUpdate) => {
+    if (signal.aborted) return;
+    
+    // Send progress updates for slow models
+    if (progress.status === 'slow') {
+      sendEvent({
+        type: 'progress',
+        modelId: progress.modelId,
+        message: `${progress.modelId} is taking longer than expected...`,
+        elapsedTime: progress.elapsedTime,
+        estimatedRemainingTime: progress.estimatedRemainingTime,
+      });
+    }
+  };
 
   // Use the consensus engine with progress callback
-  const { analysts, consensus, responseTimes } = await runConsensusAnalysis(
+  const { analysts, consensus, responseTimes, partialFailures } = await runConsensusAnalysis(
     asset,
     context,
     (result) => {
-      // Stream each result as it comes in
+      // Stream each result as it comes in with enhanced error handling
       if (!signal.aborted) {
-        sendEvent({
+        const eventData: any = {
           id: result.id,
           sentiment: result.sentiment,
           confidence: result.confidence,
           reasoning: result.reasoning,
-          error: result.error,
-        });
+        };
+
+        // Include user-facing error information if available
+        if (result.error) {
+          eventData.error = result.error;
+          
+          if (result.userFacingError) {
+            eventData.userFacingError = result.userFacingError;
+            eventData.severity = result.userFacingError.severity;
+            eventData.recoveryGuidance = result.userFacingError.recoveryGuidance;
+          }
+        }
+
+        sendEvent(eventData);
         results.push(result);
+
+        // Send partial failure summary if multiple models have failed
+        const currentFailures = results.filter(r => r.error).length;
+        if (currentFailures >= 2 && partialFailures) {
+          sendEvent({
+            type: 'partial_failure',
+            message: `${partialFailures.failedCount} models failed, but ${partialFailures.successCount} provided results`,
+            failedModels: partialFailures.failedModels,
+            severity: 'warning',
+            recoveryGuidance: 'You can still get meaningful insights from the successful models.',
+          });
+        }
       }
-    }
+    },
+    handleProgress
   );
 
-  // Send final consensus
+  // Send final consensus with enhanced information
   if (!signal.aborted) {
-    sendEvent({
+    const consensusEvent: any = {
       type: 'consensus',
       consensusLevel: consensus.consensusLevel,
       recommendation: consensus.recommendation,
       signal: consensus.signal,
-    });
+    };
 
+    // Include partial failure information if available
+    if (partialFailures && partialFailures.failedCount > 0) {
+      consensusEvent.partialFailures = partialFailures;
+      consensusEvent.message = `Consensus based on ${partialFailures.successCount} of ${partialFailures.successCount + partialFailures.failedCount} models`;
+    }
+
+    sendEvent(consensusEvent);
     sendEvent({ type: 'complete' });
   }
 }
 
 /**
  * Mock streaming for development
+ * Enhanced with progress updates and error simulation
  */
 async function streamMockAnalysis(
   sendEvent: (data: object) => void,
@@ -229,26 +281,83 @@ async function streamMockAnalysis(
     },
   ];
 
-  // Stream mock analyst updates with delays
-  for (const analyst of mockAnalysts) {
+  let elapsedTime = 0;
+
+  // Stream mock analyst updates with delays and progress
+  for (let i = 0; i < mockAnalysts.length; i++) {
+    const analyst = mockAnalysts[i];
+    const startTime = Date.now();
+    
+    // Send progress updates for slow models
+    while (elapsedTime < analyst.delay - 5000 && !signal.aborted) { // 5 seconds before completion
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      elapsedTime += 2000;
+      
+      if (elapsedTime > 10000 && !signal.aborted) { // After 10 seconds total
+        sendEvent({
+          type: 'progress',
+          modelId: analyst.id,
+          message: `${analyst.id} is taking longer than expected...`,
+          elapsedTime,
+          estimatedRemainingTime: analyst.delay - elapsedTime,
+        });
+      }
+    }
+
     if (signal.aborted) break;
-    await new Promise((resolve) => setTimeout(resolve, analyst.delay));
+    await new Promise(resolve => setTimeout(resolve, Math.min(analyst.delay - elapsedTime, 2000)));
+    elapsedTime = Date.now() - startTime;
+
     if (signal.aborted) break;
-    sendEvent({
-      id: analyst.id,
-      sentiment: analyst.sentiment,
-      confidence: analyst.confidence,
-      reasoning: analyst.reasoning,
-    });
+    
+    // Simulate a failed model occasionally for testing
+    const shouldSimulateFailure = i === 2 && Math.random() < 0.3; // 30% chance for minimax to fail
+    
+    if (shouldSimulateFailure) {
+      sendEvent({
+        id: analyst.id,
+        error: 'Rate limit exceeded - please wait before trying again',
+        userFacingError: {
+          type: 'rate_limit',
+          message: 'Rate limit exceeded - please wait before trying again',
+          severity: 'warning',
+          recoveryGuidance: 'Wait 30-60 seconds before submitting another request. Consider reducing query frequency.',
+          retryable: true,
+          modelId: analyst.id,
+          estimatedWaitTime: 45000,
+        },
+        severity: 'warning',
+        recoveryGuidance: 'Wait 30-60 seconds before submitting another request. Consider reducing query frequency.',
+      });
+    } else {
+      sendEvent({
+        id: analyst.id,
+        sentiment: analyst.sentiment,
+        confidence: analyst.confidence,
+        reasoning: analyst.reasoning,
+      });
+    }
   }
 
   // Calculate mock consensus (4/5 bullish = 80% agreement)
   if (!signal.aborted) {
+    const failedCount = 1; // Simulated failure
+    const successCount = 4;
+    
     sendEvent({
       type: 'consensus',
       consensusLevel: 78,
       recommendation: 'BUY',
       signal: 'buy',
+      partialFailures: failedCount > 0 ? {
+        failedModels: ['minimax'],
+        failedCount,
+        successCount,
+        errorSummary: `${failedCount} out of ${failedCount + successCount} models failed. ${successCount} models provided successful analysis.`,
+      } : undefined,
+      message: failedCount > 0 
+        ? `Consensus based on ${successCount} of ${failedCount + successCount} models` 
+        : undefined,
     });
 
     sendEvent({ type: 'complete' });

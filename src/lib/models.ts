@@ -18,6 +18,16 @@ export interface AnalystResult {
   confidence: number;
   reasoning: string;
   error?: string;
+  // Enhanced error handling
+  userFacingError?: {
+    type: string;
+    message: string;
+    severity: 'warning' | 'critical';
+    recoveryGuidance: string;
+    retryable: boolean;
+    modelId?: string;
+    estimatedWaitTime?: number;
+  };
 }
 
 export interface ModelConfig {

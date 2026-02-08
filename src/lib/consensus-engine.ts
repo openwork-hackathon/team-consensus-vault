@@ -24,6 +24,7 @@ import {
   calculateConsensusDetailed,
   ConsensusResponse,
 } from './models';
+import type { UserFacingError, ProgressUpdate } from './types';
 
 // Rate limiting - track last request time per model
 const lastRequestTime: Record<string, number> = {};
@@ -87,6 +88,125 @@ export class ConsensusError extends Error {
     super(message);
     this.name = 'ConsensusError';
   }
+}
+
+/**
+ * Create user-facing error messages with recovery guidance
+ */
+function createUserFacingError(error: ConsensusError): UserFacingError {
+  const { type, message, modelId, originalError } = error;
+  
+  switch (type) {
+    case ConsensusErrorType.RATE_LIMIT:
+      return {
+        type: 'rate_limit',
+        message: 'Rate limit exceeded - please wait before trying again',
+        severity: 'warning',
+        recoveryGuidance: 'Wait 30-60 seconds before submitting another request. Consider reducing query frequency.',
+        retryable: true,
+        modelId,
+        estimatedWaitTime: 45000, // 45 seconds average
+      };
+      
+    case ConsensusErrorType.TIMEOUT:
+      return {
+        type: 'timeout',
+        message: 'Request timed out - the model is taking longer than expected',
+        severity: 'warning',
+        recoveryGuidance: 'The model may be experiencing high load. Try again in a few moments.',
+        retryable: true,
+        modelId,
+      };
+      
+    case ConsensusErrorType.NETWORK_ERROR:
+      return {
+        type: 'network',
+        message: 'Network connection issue - unable to reach the model',
+        severity: 'warning',
+        recoveryGuidance: 'Check your internet connection and try again. If the issue persists, the service may be temporarily unavailable.',
+        retryable: true,
+        modelId,
+      };
+      
+    case ConsensusErrorType.MISSING_API_KEY:
+      return {
+        type: 'configuration',
+        message: 'API configuration missing - service unavailable',
+        severity: 'critical',
+        recoveryGuidance: 'This is a server configuration issue. Please contact support or try again later.',
+        retryable: false,
+        modelId,
+      };
+      
+    case ConsensusErrorType.PARSE_ERROR:
+      return {
+        type: 'parse_error',
+        message: 'Received invalid response from model',
+        severity: 'warning',
+        recoveryGuidance: 'The model returned an unexpected response. This usually resolves automatically.',
+        retryable: true,
+        modelId,
+      };
+      
+    case ConsensusErrorType.API_ERROR:
+      if (originalError && typeof originalError === 'object' && 'message' in originalError) {
+        const errorMsg = (originalError as { message?: string }).message || '';
+        if (errorMsg.includes('quota') || errorMsg.includes('billing')) {
+          return {
+            type: 'quota_exceeded',
+            message: 'API quota exceeded - service temporarily unavailable',
+            severity: 'critical',
+            recoveryGuidance: 'This is a temporary service limitation. Please try again later.',
+            retryable: false,
+            modelId,
+          };
+        }
+      }
+      return {
+        type: 'api_error',
+        message: 'Model service temporarily unavailable',
+        severity: 'warning',
+        recoveryGuidance: 'The model service is experiencing issues. Try again in a few minutes.',
+        retryable: true,
+        modelId,
+      };
+      
+    case ConsensusErrorType.INVALID_RESPONSE:
+      return {
+        type: 'invalid_response',
+        message: 'Received empty or malformed response from model',
+        severity: 'warning',
+        recoveryGuidance: 'The model service returned an unexpected response. This usually resolves automatically.',
+        retryable: true,
+        modelId,
+      };
+      
+    default:
+      return {
+        type: 'unknown_error',
+        message: 'An unexpected error occurred',
+        severity: 'warning',
+        recoveryGuidance: 'Please try again. If the issue persists, contact support.',
+        retryable: true,
+        modelId,
+      };
+  }
+}
+
+/**
+ * Create progress update for slow models
+ */
+function createProgressUpdate(modelId: string, elapsedTime: number, message?: string): ProgressUpdate {
+  const isSlow = elapsedTime > 15000; // 15 seconds
+  const estimatedRemaining = elapsedTime * 0.5; // Rough estimate
+  
+  return {
+    modelId,
+    status: isSlow ? 'slow' : 'processing',
+    message: message || (isSlow ? 'Taking longer than expected...' : 'Processing...'),
+    elapsedTime,
+    estimatedRemainingTime: estimatedRemaining,
+  };
 }
 
 // Performance tracking
@@ -575,11 +695,13 @@ function parseModelResponse(text: string, modelId: string): ModelResponse {
  * Get analysis from a single model, with fallback to alternative models.
  * When the primary model fails (after retries), tries fallback models
  * using the same role prompt for continuity.
+ * Enhanced with progress tracking and user-facing error messages.
  */
 export async function getAnalystOpinion(
   modelId: string,
   asset: string,
-  context?: string
+  context?: string,
+  onProgress?: (progress: ProgressUpdate) => void
 ): Promise<{ result: AnalystResult; responseTime: number }> {
   const startTime = Date.now();
   const primaryConfig = ANALYST_MODELS.find((m) => m.id === modelId);
@@ -598,11 +720,23 @@ export async function getAnalystOpinion(
     };
   }
 
+  // Progress tracking
+  const sendProgress = (status: 'processing' | 'slow' | 'completed' | 'failed', message?: string) => {
+    const elapsedTime = Date.now() - startTime;
+    const progress = createProgressUpdate(modelId, elapsedTime, message);
+    progress.status = status;
+    onProgress?.(progress);
+  };
+
+  sendProgress('processing', 'Starting analysis...');
+
   // Try primary model first
   try {
+    sendProgress('processing', 'Analyzing market data...');
     const response = await callModel(primaryConfig, asset, context);
     const responseTime = Date.now() - startTime;
     updateMetrics(primaryConfig.id, true, responseTime);
+    sendProgress('completed', 'Analysis complete');
 
     return {
       result: {
@@ -618,10 +752,21 @@ export async function getAnalystOpinion(
     const primaryTime = Date.now() - startTime;
     updateMetrics(primaryConfig.id, false, primaryTime);
 
+    const userError = primaryError instanceof ConsensusError 
+      ? createUserFacingError(primaryError)
+      : createUserFacingError(new ConsensusError(
+          primaryError instanceof Error ? primaryError.message : 'Unknown error',
+          ConsensusErrorType.API_ERROR,
+          primaryConfig.id,
+          primaryError
+        ));
+
     const errorMsg = primaryError instanceof ConsensusError
       ? `${primaryError.type}: ${primaryError.message}`
       : primaryError instanceof Error ? primaryError.message : 'Unknown error';
     console.warn(`[${primaryConfig.id}] Primary failed: ${errorMsg}. Trying fallbacks...`);
+
+    sendProgress('failed', `Primary model failed: ${userError.message}`);
 
     // Try fallback models with the SAME role prompt
     const fallbackIds = FALLBACK_ORDER[modelId] || [];
@@ -643,9 +788,11 @@ export async function getAnalystOpinion(
 
       try {
         console.log(`[${primaryConfig.id}] Trying fallback: ${fallbackId}`);
+        sendProgress('processing', `Trying fallback: ${fallbackProvider.name}...`);
         const response = await callModel(fallbackConfig, asset, context);
         const responseTime = Date.now() - startTime;
         updateMetrics(fallbackId, true, responseTime);
+        sendProgress('completed', 'Fallback analysis complete');
 
         return {
           result: {
@@ -669,6 +816,14 @@ export async function getAnalystOpinion(
     const responseTime = Date.now() - startTime;
     console.error(`[${primaryConfig.id}] All fallbacks exhausted`);
 
+    // Create final user-facing error with recovery guidance
+    const finalUserError = createUserFacingError(new ConsensusError(
+      'All models failed for this analyst role',
+      ConsensusErrorType.API_ERROR,
+      primaryConfig.id,
+      primaryError
+    ));
+
     return {
       result: {
         id: primaryConfig.id,
@@ -677,6 +832,7 @@ export async function getAnalystOpinion(
         confidence: 0,
         reasoning: '',
         error: `All models failed. Primary: ${errorMsg}`,
+        userFacingError: finalUserError,
       },
       responseTime,
     };
@@ -685,22 +841,36 @@ export async function getAnalystOpinion(
 
 /**
  * Run all 5 analysts in parallel and aggregate results
+ * Enhanced with progress tracking and partial failure reporting
  */
 export async function runConsensusAnalysis(
   asset: string,
   context?: string,
-  onProgress?: (result: AnalystResult) => void
+  onProgress?: (result: AnalystResult) => void,
+  onModelProgress?: (progress: ProgressUpdate) => void
 ): Promise<{
   analysts: AnalystResult[];
   consensus: ReturnType<typeof calculateConsensus>;
   responseTimes: Map<string, number>;
+  partialFailures?: {
+    failedModels: string[];
+    failedCount: number;
+    successCount: number;
+    errorSummary: string;
+  };
 }> {
   const responseTimes = new Map<string, number>();
+  const failedModels: string[] = [];
 
   // Run all models in parallel using Promise.allSettled for resilience
   const promises = ANALYST_MODELS.map(async (config) => {
-    const { result, responseTime } = await getAnalystOpinion(config.id, asset, context);
+    const { result, responseTime } = await getAnalystOpinion(config.id, asset, context, onModelProgress);
     responseTimes.set(config.id, responseTime);
+
+    // Track failures for partial failure reporting
+    if (result.error) {
+      failedModels.push(result.name);
+    }
 
     // Report progress if callback provided
     if (onProgress) {
@@ -718,7 +888,7 @@ export async function runConsensusAnalysis(
       return result.value;
     } else {
       const config = ANALYST_MODELS[index];
-      return {
+      const errorResult = {
         id: config.id,
         name: config.name,
         sentiment: 'neutral' as const,
@@ -726,13 +896,29 @@ export async function runConsensusAnalysis(
         reasoning: '',
         error: result.reason?.message || 'Promise rejected',
       };
+      failedModels.push(config.name);
+      return errorResult;
     }
   });
 
   // Calculate consensus from all results
   const consensus = calculateConsensus(analysts);
 
-  return { analysts, consensus, responseTimes };
+  // Generate partial failure summary
+  let partialFailures;
+  if (failedModels.length > 0) {
+    const successCount = analysts.length - failedModels.length;
+    const failedCount = failedModels.length;
+    
+    partialFailures = {
+      failedModels,
+      failedCount,
+      successCount,
+      errorSummary: `${failedCount} out of ${analysts.length} models failed. ${successCount} models provided successful analysis.`,
+    };
+  }
+
+  return { analysts, consensus, responseTimes, partialFailures };
 }
 
 /**
@@ -741,13 +927,14 @@ export async function runConsensusAnalysis(
  */
 export async function runDetailedConsensusAnalysis(
   asset: string,
-  context?: string
+  context?: string,
+  onModelProgress?: (progress: ProgressUpdate) => void
 ): Promise<ConsensusResponse> {
   const responseTimes = new Map<string, number>();
 
   // Run all models in parallel using Promise.allSettled for resilience
   const promises = ANALYST_MODELS.map(async (config) => {
-    const { result, responseTime } = await getAnalystOpinion(config.id, asset, context);
+    const { result, responseTime } = await getAnalystOpinion(config.id, asset, context, onModelProgress);
     responseTimes.set(config.id, responseTime);
     return result;
   });
@@ -777,16 +964,18 @@ export async function runDetailedConsensusAnalysis(
 
 /**
  * Stream results as they come in (for SSE)
+ * Enhanced with progress updates
  */
 export async function* streamConsensusAnalysis(
   asset: string,
-  context?: string
-): AsyncGenerator<AnalystResult | { type: 'consensus'; data: ReturnType<typeof calculateConsensus> }> {
+  context?: string,
+  onModelProgress?: (progress: ProgressUpdate) => void
+): AsyncGenerator<AnalystResult | { type: 'consensus'; data: ReturnType<typeof calculateConsensus> } | { type: 'progress'; data: ProgressUpdate }> {
   const results: AnalystResult[] = [];
 
   // Create promises that yield as they complete
   const promises = ANALYST_MODELS.map(async (config) => {
-    const { result } = await getAnalystOpinion(config.id, asset, context);
+    const { result } = await getAnalystOpinion(config.id, asset, context, onModelProgress);
     return result;
   });
 

@@ -19,8 +19,10 @@ const priceCache = new Map<string, PriceCache>();
 const ASSET_ID_MAP: Record<string, string> = {
   'BTC': 'bitcoin',
   'ETH': 'ethereum',
+  'SOL': 'solana',
   'BTC/USD': 'bitcoin',
   'ETH/USD': 'ethereum',
+  'SOL/USD': 'solana',
 };
 
 /**
