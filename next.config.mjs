@@ -16,10 +16,7 @@ const nextConfig = {
   },
   compress: true,
   poweredByHeader: false,
-  
-  // Performance optimizations
-  swcMinify: true,
-  
+
   // Compiler options for better performance
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
