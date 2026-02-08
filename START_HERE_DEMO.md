@@ -294,6 +294,6 @@ All you need to do is:
 ---
 
 **Prepared**: 2026-02-07
-**For**: Jonathan (vanclute@gmail.com)
+**For**: Jonathan (5326546+vanclute@users.noreply.github.com)
 **Task**: CVAULT-34 Demo Video Recording
 **Deadline**: ~February 14, 2026

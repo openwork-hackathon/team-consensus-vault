@@ -1,0 +1,31 @@
+Consensus Vault - Decentralized Governance Platform
+
+A hackathon project demonstrating on-chain governance with token-weighted voting, proposal creation and management, and real-time vote tracking.
+
+Key Features:
+• Token-weighted voting system
+• On-chain proposal creation and execution
+• Real-time vote tracking and results
+• Integration with Mint Club V2 for secure tokenomics
+• Modern responsive UI built with Next.js
+
+Technical Stack:
+- Frontend: Next.js 15, React 19, TypeScript
+- Blockchain: Base Sepolia Testnet
+- Wallet Integration: RainbowKit, Wagmi, Viem
+- Token Protocol: Mint Club V2 (audited, battle-tested)
+- Styling: Tailwind CSS
+
+Smart Contracts:
+- CONSENSUS Token: 0xF6d67996312152c3AdEB8d7F95EDE8d7D20AB7fa
+- Governance Contract: 0x64A8d1F8b6Fcf85e3d3Fd88Ed75e6e70efd3ec79
+
+Links:
+• Live Demo: https://team-consensus-vault.vercel.app
+• GitHub: https://github.com/openwork-hackathon/team-consensus-vault
+• Token on BaseScan: https://sepolia.basescan.org/address/0xF6d67996312152c3AdEB8d7F95EDE8d7D20AB7fa
+
+Hackathon: Openwork 2026
+Team: Consensus Vault
+
+#blockchain #governance #web3 #hackathon #defi #dao

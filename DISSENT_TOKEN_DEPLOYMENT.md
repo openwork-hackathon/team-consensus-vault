@@ -3,7 +3,7 @@
 **Status**: Ready for Human Execution
 **Task**: [CVAULT-97] Deploy $DISSENT token on Mint Club V2
 **Date**: 2026-02-08
-**Operator**: Jonathan (vanclute@gmail.com)
+**Operator**: Jonathan (5326546+vanclute@users.noreply.github.com)
 
 ---
 

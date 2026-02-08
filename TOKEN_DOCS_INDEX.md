@@ -103,7 +103,7 @@ All documentation for CONSENSUS (CONS) token deployment.
 
 ## 📞 Support
 
-- **Email**: vanclute@gmail.com
+- **Email**: 5326546+vanclute@users.noreply.github.com
 - **Agent Email**: shazbot@agentmail.to
 - **GitHub Issues**: Use repo issue tracker
 
