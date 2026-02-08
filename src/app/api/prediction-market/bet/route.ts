@@ -1,11 +1,14 @@
 /**
  * Prediction Market Bet API Route
  * POST /api/prediction-market/bet
+ * GET /api/prediction-market/bet
  * 
- * Handles user bet placement in the prediction market.
- * Validates inputs, checks round phase, records bets, and returns updated odds.
+ * CVAULT-139: Caching Strategy
+ * - POST: No-cache headers (state-modifying mutation)
+ * - GET: Short 5s cache TTL for pool state (changes frequently during betting)
+ * - Response time logging for all requests
  * 
- * Request body:
+ * POST Request body:
  * - address: string - User's wallet address (0x...)
  * - amount: number - Bet amount in USD (must be positive)
  * - side: 'up' | 'down' - Direction of bet (long or short)
@@ -15,6 +18,7 @@
  * - bet: Bet - The created bet object
  * - odds: object - Current odds after placing the bet
  * - pool: object - Updated pool state
+ * - responseTimeMs: number - Response time for performance monitoring
  * 
  * Error responses:
  * - 400: Invalid input or not in betting phase
@@ -30,13 +34,22 @@ import {
   getCurrentOdds,
   validateBet
 } from '@/lib/prediction-market/state';
+import { 
+  getNoCacheHeaders, 
+  getCacheHeaders, 
+  CACHE_TTL,
+  logCacheEvent 
+} from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
 /**
  * POST handler for bet placement
+ * CVAULT-139: POST mutation endpoint - no caching
  */
 export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+  
   try {
     // Parse request body
     const body = await request.json();
@@ -44,71 +57,131 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!address || amount === undefined || !side) {
-      return NextResponse.json(
+      const responseTime = Date.now() - startTime;
+      const response = NextResponse.json(
         { 
           success: false,
-          error: 'Missing required fields: address, amount, side' 
+          error: 'Missing required fields: address, amount, side',
+          responseTimeMs: responseTime,
         },
         { status: 400 }
       );
+      
+      // Add no-cache headers (POST mutation - CVAULT-139)
+      const noCacheHeaders = getNoCacheHeaders();
+      Object.entries(noCacheHeaders).forEach(([key, value]) => {
+        response.headers.set(key, value);
+      });
+      
+      return response;
     }
 
     // Validate address format
     if (typeof address !== 'string' || !/^0x[a-fA-F0-9]{40}$/.test(address)) {
-      return NextResponse.json(
+      const responseTime = Date.now() - startTime;
+      const response = NextResponse.json(
         { 
           success: false,
-          error: 'Invalid Ethereum address format. Expected 0x... format' 
+          error: 'Invalid Ethereum address format. Expected 0x... format',
+          responseTimeMs: responseTime,
         },
         { status: 400 }
       );
+      
+      // Add no-cache headers (POST mutation - CVAULT-139)
+      const noCacheHeaders = getNoCacheHeaders();
+      Object.entries(noCacheHeaders).forEach(([key, value]) => {
+        response.headers.set(key, value);
+      });
+      
+      return response;
     }
 
     // Validate amount
     const numAmount = Number(amount);
     if (isNaN(numAmount) || numAmount <= 0) {
-      return NextResponse.json(
+      const responseTime = Date.now() - startTime;
+      const response = NextResponse.json(
         { 
           success: false,
-          error: 'Amount must be a positive number' 
+          error: 'Amount must be a positive number',
+          responseTimeMs: responseTime,
         },
         { status: 400 }
       );
+      
+      // Add no-cache headers (POST mutation - CVAULT-139)
+      const noCacheHeaders = getNoCacheHeaders();
+      Object.entries(noCacheHeaders).forEach(([key, value]) => {
+        response.headers.set(key, value);
+      });
+      
+      return response;
     }
 
     // Validate side
     if (side !== 'up' && side !== 'down') {
-      return NextResponse.json(
+      const responseTime = Date.now() - startTime;
+      const response = NextResponse.json(
         { 
           success: false,
-          error: 'Side must be either "up" or "down"' 
+          error: 'Side must be either "up" or "down"',
+          responseTimeMs: responseTime,
         },
         { status: 400 }
       );
+      
+      // Add no-cache headers (POST mutation - CVAULT-139)
+      const noCacheHeaders = getNoCacheHeaders();
+      Object.entries(noCacheHeaders).forEach(([key, value]) => {
+        response.headers.set(key, value);
+      });
+      
+      return response;
     }
 
     // Get current round and check if betting is open
     const currentRound = getCurrentRound();
     
     if (!currentRound) {
-      return NextResponse.json(
+      const responseTime = Date.now() - startTime;
+      const response = NextResponse.json(
         { 
           success: false,
-          error: 'No active prediction round' 
+          error: 'No active prediction round',
+          responseTimeMs: responseTime,
         },
         { status: 400 }
       );
+      
+      // Add no-cache headers (POST mutation - CVAULT-139)
+      const noCacheHeaders = getNoCacheHeaders();
+      Object.entries(noCacheHeaders).forEach(([key, value]) => {
+        response.headers.set(key, value);
+      });
+      
+      return response;
     }
 
     // Check if round is in betting phase
     if (currentRound.phase !== RoundPhase.BETTING_WINDOW) {
-      return NextResponse.json(
+      const responseTime = Date.now() - startTime;
+      const response = NextResponse.json(
         { 
           success: false,
-          error: `Betting window is not open. Current phase: ${currentRound.phase}` 
+          error: `Betting window is not open. Current phase: ${currentRound.phase}`,
+          responseTimeMs: responseTime,
         },
         { status: 400 }
       );
+      
+      // Add no-cache headers (POST mutation - CVAULT-139)
+      const noCacheHeaders = getNoCacheHeaders();
+      Object.entries(noCacheHeaders).forEach(([key, value]) => {
+        response.headers.set(key, value);
+      });
+      
+      return response;
     }
 
     // Check if betting window has expired
@@ -116,30 +189,51 @@ export async function POST(request: NextRequest) {
       const endTime = new Date(currentRound.bettingWindowEnd).getTime();
       const now = Date.now();
       if (now > endTime) {
-        return NextResponse.json(
+        const responseTime = Date.now() - startTime;
+        const response = NextResponse.json(
           { 
             success: false,
-            error: 'Betting window has closed' 
+            error: 'Betting window has closed',
+            responseTimeMs: responseTime,
           },
           { status: 400 }
         );
+        
+        // Add no-cache headers (POST mutation - CVAULT-139)
+        const noCacheHeaders = getNoCacheHeaders();
+        Object.entries(noCacheHeaders).forEach(([key, value]) => {
+          response.headers.set(key, value);
+        });
+        
+        return response;
       }
     }
 
     // Validate bet against business rules
     const validation = validateBet(address, numAmount, side);
     if (!validation.isValid) {
-      return NextResponse.json(
+      const responseTime = Date.now() - startTime;
+      const response = NextResponse.json(
         { 
           success: false,
-          error: validation.error 
+          error: validation.error,
+          responseTimeMs: responseTime,
         },
         { status: 400 }
       );
+      
+      // Add no-cache headers (POST mutation - CVAULT-139)
+      const noCacheHeaders = getNoCacheHeaders();
+      Object.entries(noCacheHeaders).forEach(([key, value]) => {
+        response.headers.set(key, value);
+      });
+      
+      return response;
     }
 
     // Place the bet
     const bet = placeBetInPool(address, numAmount, side);
+    const responseTime = Date.now() - startTime;
 
     // Get updated pool state and odds
     const pool = getCurrentPool();
@@ -153,7 +247,7 @@ export async function POST(request: NextRequest) {
       : numAmount;
 
     // Return success response with bet details and updated odds
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
         success: true,
         bet: {
@@ -181,38 +275,62 @@ export async function POST(request: NextRequest) {
           net: potentialPayout * 0.98, // Assuming 2% platform fee
           profit: (potentialPayout * 0.98) - numAmount,
         },
+        responseTimeMs: responseTime,
       },
       { status: 200 }
     );
+    
+    // Add no-cache headers (POST mutation - CVAULT-139)
+    const noCacheHeaders = getNoCacheHeaders();
+    Object.entries(noCacheHeaders).forEach(([key, value]) => {
+      response.headers.set(key, value);
+    });
+    response.headers.set('X-Cache-Status', 'BYPASS'); // State-modifying endpoint
+    
+    return response;
 
   } catch (error) {
     // Handle any unexpected errors
     console.error('[prediction-market-bet] Error placing bet:', error);
     
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    const responseTime = Date.now() - startTime;
     
-    return NextResponse.json(
+    const response = NextResponse.json(
       { 
         success: false,
         error: 'Failed to place bet',
-        details: errorMessage
+        details: errorMessage,
+        responseTimeMs: responseTime,
       },
       { status: 500 }
     );
+    
+    // Add no-cache headers (POST mutation - CVAULT-139)
+    const noCacheHeaders = getNoCacheHeaders();
+    Object.entries(noCacheHeaders).forEach(([key, value]) => {
+      response.headers.set(key, value);
+    });
+    
+    return response;
   }
 }
 
 /**
  * GET handler to retrieve current pool state
  * Useful for clients to check betting status before placing a bet
+ * CVAULT-139: Short cache TTL (5s) for pool state - changes frequently during betting
  */
 export async function GET() {
+  const startTime = Date.now();
+  
   try {
     const currentRound = getCurrentRound();
     const pool = getCurrentPool();
     const odds = getCurrentOdds();
+    const responseTime = Date.now() - startTime;
 
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
         round: currentRound ? {
           id: currentRound.id,
@@ -232,18 +350,35 @@ export async function GET() {
           down: odds.down,
         },
         canBet: currentRound?.phase === RoundPhase.BETTING_WINDOW,
+        responseTimeMs: responseTime,
       },
       { status: 200 }
     );
+    
+    // Add cache headers for pool state - short TTL since it changes frequently (CVAULT-139)
+    const cacheHeaders = getCacheHeaders(CACHE_TTL.TRADING_HISTORY); // 5s TTL
+    Object.entries(cacheHeaders).forEach(([key, value]) => {
+      response.headers.set(key, value);
+    });
+    response.headers.set('X-Cache-Status', 'MISS'); // Dynamic content, not truly cached
+    
+    logCacheEvent('prediction-market-bet', 'miss', { responseTimeMs: responseTime });
+    
+    return response;
   } catch (error) {
     console.error('[prediction-market-bet] Error getting pool state:', error);
     
-    return NextResponse.json(
+    const response = NextResponse.json(
       { 
         success: false,
         error: 'Failed to retrieve pool state'
       },
       { status: 500 }
     );
+    
+    // Ensure errors are not cached
+    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    
+    return response;
   }
 }

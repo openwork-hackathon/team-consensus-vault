@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import CustomConnectButton from './CustomConnectButton';
 import { useState } from 'react';
 
 interface NavigationProps {
@@ -82,7 +82,7 @@ export default function Navigation({
               </>
             )}
             <div role="navigation" aria-label="Wallet connection">
-              <ConnectButton />
+              <CustomConnectButton />
             </div>
             
             {/* Mobile Menu Toggle Button */}

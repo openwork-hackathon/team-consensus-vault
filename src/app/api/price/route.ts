@@ -37,21 +37,23 @@ const getCachedPrice = withEdgeCache(
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
-  
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const asset = searchParams.get('asset') || 'BTC/USD';
 
     // Use cached price fetcher
     const price = await getCachedPrice(asset);
+    const responseTime = Date.now() - startTime;
+    const isCached = responseTime < 50; // Likely cached if very fast
 
     const response = NextResponse.json({
       success: true,
       asset,
       price,
       timestamp: new Date().toISOString(),
-      cached: true,
-      responseTimeMs: Date.now() - startTime,
+      cached: isCached,
+      responseTimeMs: responseTime,
     });
 
     // Add cache headers for CDN/Vercel Edge
@@ -60,7 +62,10 @@ export async function GET(request: NextRequest) {
       response.headers.set(key, value);
     });
 
-    logCacheEvent('price', 'hit', { asset, responseTimeMs: Date.now() - startTime });
+    // Add cache status header for debugging (CVAULT-139)
+    response.headers.set('X-Cache-Status', isCached ? 'HIT' : 'MISS');
+
+    logCacheEvent('price', isCached ? 'hit' : 'miss', { asset, responseTimeMs: responseTime });
 
     return response;
   } catch (error) {

@@ -3,12 +3,13 @@
  * POST /api/consensus-detailed
  * GET /api/consensus-detailed?asset=BTC
  * 
- * CVAULT-118: Caching Strategy
- * - Implements request memoization for identical asset+context queries
- * - 60s TTL for AI consensus responses (expensive to compute, stable short-term)
+ * CVAULT-118/139: Caching Strategy
+ * - GET: Edge caching with 60s TTL using Next.js unstable_cache
+ * - POST: Request memoization only (no HTTP caching for mutations)
  * - Rate limiting preserved to prevent API abuse
  * - Cache key includes asset and context hash for precise invalidation
  * - Dynamic content (real-time debate) is NOT cached - see /api/chatroom/stream
+ * - Response time logging for performance monitoring
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -21,9 +22,15 @@ import {
 import {
   consensusMemoizer,
   generateCacheKeySync,
+  getCacheHeaders,
   getNoCacheHeaders,
   logCacheEvent,
+  CACHE_TTL,
+  withEdgeCache,
 } from '@/lib/cache';
+
+// Use edge runtime for global caching on GET requests
+export const runtime = 'edge';
 
 /**
  * POST /api/consensus-detailed
@@ -77,10 +84,16 @@ export async function POST(request: NextRequest) {
     const { asset, context } = body;
 
     if (!asset || typeof asset !== 'string') {
-      return Response.json(
+      const response = Response.json(
         { error: 'Missing or invalid asset parameter' },
         { status: 400 }
       );
+      // Add no-cache headers to POST mutation (CVAULT-139)
+      const noCacheHeaders = getNoCacheHeaders();
+      Object.entries(noCacheHeaders).forEach(([key, value]) => {
+        response.headers.set(key, value);
+      });
+      return response;
     }
 
     // Generate cache key from asset + context
@@ -93,10 +106,16 @@ export async function POST(request: NextRequest) {
 
     // Ensure consensusResponse is an object
     if (!consensusResponse || typeof consensusResponse !== 'object') {
-      return Response.json(
+      const response = Response.json(
         { error: 'Invalid consensus response' },
         { status: 500 }
       );
+      // Add no-cache headers to POST mutation (CVAULT-139)
+      const noCacheHeaders = getNoCacheHeaders();
+      Object.entries(noCacheHeaders).forEach(([key, value]) => {
+        response.headers.set(key, value);
+      });
+      return response;
     }
 
     const responseTime = Date.now() - startTime;
@@ -111,13 +130,17 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     );
 
+    // Add no-cache headers to POST mutation (CVAULT-139)
+    const noCacheHeaders = getNoCacheHeaders();
+    Object.entries(noCacheHeaders).forEach(([key, value]) => {
+      response.headers.set(key, value);
+    });
+    response.headers.set('X-Cache-Status', 'BYPASS'); // State-modifying endpoint
+
     // Add rate limit headers to successful response
     response.headers.set('X-RateLimit-Limit', String(rateLimitResult.limit));
     response.headers.set('X-RateLimit-Remaining', String(rateLimitResult.remaining));
     response.headers.set('X-RateLimit-Reset', String(rateLimitResult.reset));
-    
-    // Add cache status header
-    response.headers.set('X-Cache-Status', isCached ? 'HIT' : 'MISS');
 
     logCacheEvent('consensus-detailed', isCached ? 'hit' : 'miss', { 
       asset, 
@@ -128,17 +151,34 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (error) {
     console.error('Detailed consensus API error:', error);
-    return Response.json(
+    const response = Response.json(
       { error: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
+    // Add no-cache headers to POST mutation (CVAULT-139)
+    const noCacheHeaders = getNoCacheHeaders();
+    Object.entries(noCacheHeaders).forEach(([key, value]) => {
+      response.headers.set(key, value);
+    });
+    return response;
   }
 }
+
+// Cached consensus fetcher using Next.js unstable_cache
+const getCachedConsensus = withEdgeCache(
+  async (asset: string, context?: string) => {
+    logCacheEvent('consensus-detailed', 'miss', { asset, context: context || '' });
+    return runDetailedConsensusAnalysis(asset, context);
+  },
+  'consensus-detailed',
+  CACHE_TTL.CONSENSUS,
+  ['consensus']
+);
 
 /**
  * GET /api/consensus-detailed?asset=BTC&context=optional
  * Same as POST but via query parameters for convenience
- * Includes request memoization for identical queries (CVAULT-118)
+ * Includes edge caching with 60s TTL (CVAULT-139)
  */
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
@@ -159,26 +199,27 @@ export async function GET(request: NextRequest) {
     const context = searchParams.get('context') || undefined;
 
     if (!asset) {
-      return Response.json(
+      const response = Response.json(
         { error: 'Missing asset parameter' },
         { status: 400 }
       );
+      // Ensure errors are not cached
+      response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+      return response;
     }
 
-    // Generate cache key from asset + context
-    const cacheKey = generateCacheKeySync('consensus', { asset, context: context || '' });
-
-    // Use memoization to prevent duplicate concurrent requests
-    const consensusResponse = await consensusMemoizer.execute(cacheKey, () =>
-      runDetailedConsensusAnalysis(asset, context)
-    );
+    // Use edge cache for GET requests (CVAULT-139)
+    const consensusResponse = await getCachedConsensus(asset, context);
 
     // Ensure consensusResponse is an object
     if (!consensusResponse || typeof consensusResponse !== 'object') {
-      return Response.json(
+      const response = Response.json(
         { error: 'Invalid consensus response' },
         { status: 500 }
       );
+      // Ensure errors are not cached
+      response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+      return response;
     }
 
     const responseTime = Date.now() - startTime;
@@ -192,6 +233,12 @@ export async function GET(request: NextRequest) {
       }, 
       { status: 200 }
     );
+
+    // Add cache headers for CDN/Vercel Edge (CVAULT-139)
+    const cacheHeaders = getCacheHeaders(CACHE_TTL.CONSENSUS);
+    Object.entries(cacheHeaders).forEach(([key, value]) => {
+      response.headers.set(key, value);
+    });
 
     // Add rate limit headers to successful response
     response.headers.set('X-RateLimit-Limit', String(rateLimitResult.limit));
@@ -210,9 +257,12 @@ export async function GET(request: NextRequest) {
     return response;
   } catch (error) {
     console.error('Detailed consensus API error:', error);
-    return Response.json(
+    const response = Response.json(
       { error: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
+    // Ensure errors are not cached
+    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    return response;
   }
 }

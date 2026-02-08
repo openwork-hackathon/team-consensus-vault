@@ -105,9 +105,14 @@
     }
   }
 
-  /* Improve color contrast */
+  /* Improve color contrast for WCAG AA compliance (4.5:1 ratio) */
   .text-muted-foreground {
-    color: hsl(var(--muted-foreground) / 0.8);
+    color: hsl(var(--muted-foreground) / 1);
+  }
+  
+  /* Ensure better contrast for muted text in dark mode */
+  .dark .text-muted-foreground {
+    color: hsl(240 5% 75%); /* Lighter color for better contrast on dark backgrounds */
   }
 
   /* Better loading states */
