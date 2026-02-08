@@ -25,7 +25,7 @@ import {
   ConsensusResponse,
 } from './models';
 import type { UserFacingError, ProgressUpdate } from './types';
-import { proxyFetch, isProxyConfigured } from './proxy-fetch';
+import { proxyFetch, isProxyConfigured, ProxyError, isRetryableProxyError } from './proxy-fetch';
 
 // Rate limiting - track last request time per model
 const lastRequestTime: Record<string, number> = {};
@@ -137,9 +137,9 @@ function createUserFacingError(error: ConsensusError): UserFacingError {
     case ConsensusErrorType.NETWORK_ERROR:
       return {
         type: 'network',
-        message: 'Network connection issue - unable to reach the model',
+        message: 'AI models temporarily unavailable. Please try again.',
         severity: 'warning',
-        recoveryGuidance: 'Check your internet connection and try again. If the issue persists, the service may be temporarily unavailable.',
+        recoveryGuidance: 'The AI service is experiencing connection issues. This usually resolves within a few minutes. Click Retry to attempt the request again.',
         retryable: true,
         modelId,
       };
@@ -816,10 +816,39 @@ async function callModel(
     // Handle network errors
     if (error instanceof TypeError && error.message.includes('fetch')) {
       throw new ConsensusError(
-        'Network error during API call',
+        'AI models temporarily unavailable. Please try again.',
         ConsensusErrorType.NETWORK_ERROR,
         config.id,
         error
+      );
+    }
+
+    // Handle ProxyError from proxy-fetch
+    if (error instanceof ProxyError) {
+      // Map ProxyError types to ConsensusError types
+      let consensusErrorType: ConsensusErrorType;
+      
+      switch (error.type) {
+        case 'CONNECTION_REFUSED':
+        case 'PROXY_DOWN':
+        case 'SERVER_ERROR':
+          consensusErrorType = ConsensusErrorType.API_ERROR;
+          break;
+        case 'CONNECTION_TIMEDOUT':
+          consensusErrorType = ConsensusErrorType.TIMEOUT;
+          break;
+        case 'RATE_LIMIT':
+          consensusErrorType = ConsensusErrorType.RATE_LIMIT;
+          break;
+        default:
+          consensusErrorType = ConsensusErrorType.NETWORK_ERROR;
+      }
+
+      throw new ConsensusError(
+        error.message,
+        consensusErrorType,
+        config.id,
+        error.originalError || error
       );
     }
 

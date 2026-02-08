@@ -105,6 +105,11 @@ export default function RootLayout({
         {/* Preconnect for API endpoints */}
         <link rel="preconnect" href="https://api.coinbase.com" key="coinbase" />
         <link rel="preconnect" href="https://api.coingecko.com" key="coingecko" />
+        {/* DNS Prefetch for external resources */}
+        <link rel="dns-prefetch" href="https://fonts.googleapis.com" key="dns-fonts" />
+        <link rel="dns-prefetch" href="https://fonts.gstatic.com" key="dns-gstatic" />
+        <link rel="dns-prefetch" href="https://api.coinbase.com" key="dns-coinbase" />
+        <link rel="dns-prefetch" href="https://api.coingecko.com" key="dns-coingecko" />
         {/* Preload critical resources */}
         <link
           rel="preload"
@@ -116,17 +121,22 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              // Defer service worker registration
+              // Defer service worker registration using requestIdleCallback
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
-                  setTimeout(function() {
+                  var registerSW = function() {
                     navigator.serviceWorker.register('/sw.js')
                       .then(function(registration) {
                         console.log('SW registered: ', registration);
                       }, function(registrationError) {
                         console.log('SW registration failed: ', registrationError);
                       });
-                  }, 3000); // Delay to prioritize critical rendering
+                  };
+                  if ('requestIdleCallback' in window) {
+                    requestIdleCallback(registerSW);
+                  } else {
+                    setTimeout(registerSW, 1000);
+                  }
                 });
               }
             `,

@@ -9,7 +9,7 @@ import {
 } from '@/lib/rate-limit';
 import { createApiLogger } from '@/lib/api-logger';
 import type { ProgressUpdate } from '@/lib/types';
-import { proxyFetch, isProxyConfigured } from '@/lib/proxy-fetch';
+import { proxyFetch, isProxyConfigured, ProxyError, isRetryableProxyError } from '@/lib/proxy-fetch';
 
 // Use mock data when API keys aren't available (development mode)
 const USE_MOCK = process.env.NODE_ENV === 'development' && !process.env.DEEPSEEK_API_KEY;
@@ -78,9 +78,16 @@ export async function GET(request: NextRequest) {
             method: 'GET',
             streamType: 'SSE',
           });
+          
+          // Check if this is a retryable proxy error
+          const isRetryable = error instanceof ProxyError ? error.retryable : false;
+          const errorType = error instanceof ProxyError ? error.type : 'UNKNOWN_ERROR';
+          
           sendEvent({
             type: 'error',
             message: error instanceof Error ? error.message : 'Unknown error',
+            retryable: isRetryable,
+            errorType,
             requestId: logger.getRequestId(),
           });
         }
@@ -127,13 +134,19 @@ export async function GET(request: NextRequest) {
       stage: 'initialization',
     });
     
-    // Return error response for non-streaming errors
+    // Check if this is a retryable proxy error
+    const isRetryable = error instanceof ProxyError ? error.retryable : false;
+    const statusCode = error instanceof ProxyError ? error.statusCode || 503 : 500;
+    
+    // Return structured error response for proxy/connection issues
     return Response.json(
       {
         error: error instanceof Error ? error.message : 'Unknown error',
+        retryable: isRetryable,
         requestId: logger.getRequestId(),
+        type: error instanceof ProxyError ? error.type : 'UNKNOWN_ERROR',
       },
-      { status: 500 }
+      { status: statusCode }
     );
   }
 }
@@ -489,9 +502,19 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (error) {
     console.error('Consensus API error:', error);
+    
+    // Check if this is a retryable proxy error
+    const isRetryable = error instanceof ProxyError ? error.retryable : false;
+    const statusCode = error instanceof ProxyError ? error.statusCode || 503 : 500;
+    const errorType = error instanceof ProxyError ? error.type : 'UNKNOWN_ERROR';
+    
     return Response.json(
-      { error: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
+      { 
+        error: error instanceof Error ? error.message : 'Unknown error',
+        retryable: isRetryable,
+        errorType,
+      },
+      { status: statusCode }
     );
   }
 }

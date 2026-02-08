@@ -53,8 +53,8 @@ export default function Dashboard() {
     preloadLink.href = '/_next/static/css/app/layout.css';
     document.head.appendChild(preloadLink);
 
-    // Mark LCP element for performance tracking
-    if (lcpRef.current) {
+    // LCP tracking only in development
+    if (process.env.NODE_ENV === 'development' && lcpRef.current) {
       const observer = new PerformanceObserver((list) => {
         for (const entry of list.getEntries()) {
           if ((entry as PerformanceEntry & { element?: Element }).element === lcpRef.current) {
@@ -63,7 +63,7 @@ export default function Dashboard() {
         }
       });
       observer.observe({ type: 'largest-contentful-paint', buffered: true });
-      
+
       return () => observer.disconnect();
     }
   }, []);

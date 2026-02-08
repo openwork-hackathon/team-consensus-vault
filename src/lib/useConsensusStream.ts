@@ -76,6 +76,7 @@ export function useConsensusStream(apiEndpoint: string = '/api/consensus') {
   });
   const [useSSE, setUseSSE] = useState(false);
   const [sseError, setSSEError] = useState<string | null>(null);
+  const [isRetryable, setIsRetryable] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [progressUpdates, setProgressUpdates] = useState<Map<string, string>>(new Map());
   const maxRetries = 3;
