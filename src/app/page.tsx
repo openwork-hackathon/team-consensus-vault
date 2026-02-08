@@ -1,21 +1,28 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, lazy, Suspense, useEffect, useRef } from 'react';
 import { useConsensusStream } from '@/lib/useConsensusStream';
 import { useAutoTrading } from '@/lib/useAutoTrading';
 import AnalystCard from '@/components/AnalystCard';
 import ConsensusMeter from '@/components/ConsensusMeter';
-import ConsensusVsContrarian from '@/components/ConsensusVsContrarian';
 import TradeSignal from '@/components/TradeSignal';
-import TradingPerformance from '@/components/TradingPerformance';
 import SignalHistory, { SignalHistoryEntry } from '@/components/SignalHistory';
 import DepositModal from '@/components/DepositModal';
 import WithdrawModal from '@/components/WithdrawModal';
 import ToastContainer, { ToastData } from '@/components/ToastContainer';
+import LoadingSkeleton from '@/components/LoadingSkeleton';
 import { motion } from 'framer-motion';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount } from 'wagmi';
 import { useVault } from '@/contexts/VaultContext';
+
+// Lazy load heavy components to reduce initial bundle size
+const ConsensusVsContrarian = lazy(() => 
+  import('@/components/ConsensusVsContrarian').then(m => ({ default: m.default }))
+);
+const TradingPerformance = lazy(() => 
+  import('@/components/TradingPerformance').then(m => ({ default: m.default }))
+);
 
 export default function Dashboard() {
   const consensusData = useConsensusStream();
@@ -25,6 +32,37 @@ export default function Dashboard() {
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
   const [toasts, setToasts] = useState<ToastData[]>([]);
   const [autoTradingEnabled, setAutoTradingEnabled] = useState(true);
+  const [isClient, setIsClient] = useState(false);
+  const lcpRef = useRef<HTMLDivElement>(null);
+
+  // Mark as client-side rendered
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Performance optimization: Preload critical resources
+  useEffect(() => {
+    // Preload RainbowKit CSS to prevent layout shift
+    const preloadLink = document.createElement('link');
+    preloadLink.rel = 'preload';
+    preloadLink.as = 'style';
+    preloadLink.href = '/_next/static/css/app/layout.css';
+    document.head.appendChild(preloadLink);
+
+    // Mark LCP element for performance tracking
+    if (lcpRef.current) {
+      const observer = new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+          if ((entry as PerformanceEntry & { element?: Element }).element === lcpRef.current) {
+            console.log('LCP element measured:', entry.startTime);
+          }
+        }
+      });
+      observer.observe({ type: 'largest-contentful-paint', buffered: true });
+      
+      return () => observer.disconnect();
+    }
+  }, []);
 
   // Mock signal history data for demonstration
   const signalHistory: SignalHistoryEntry[] = [
@@ -170,7 +208,7 @@ export default function Dashboard() {
   const userTotalDeposited = userDeposits.reduce((sum, d) => sum + parseFloat(d.amount), 0).toFixed(6);
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen bg-background" role="main" aria-label="Consensus Vault Dashboard">
       {/* Toast Notifications */}
       <ToastContainer toasts={toasts} onRemove={removeToast} />
 
@@ -189,49 +227,78 @@ export default function Dashboard() {
         depositedBalance={userTotalDeposited}
       />
 
+      {/* Skip to main content link for screen readers */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-primary text-primary-foreground px-4 py-2 rounded-md z-50"
+      >
+        Skip to main content
+      </a>
+
       {/* Header */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40">
+      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40" role="banner">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 sm:gap-3">
-              <span className="text-2xl sm:text-3xl">🦞</span>
+              <span 
+                className="text-2xl sm:text-3xl" 
+                role="img" 
+                aria-label="Lobster mascot logo"
+              >
+                🦞
+              </span>
               <div>
                 <h1 className="text-lg sm:text-2xl font-bold">Consensus Vault</h1>
-                <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">AI Multi-Model Trading Intelligence</p>
+                <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">
+                  AI Multi-Model Trading Intelligence
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <div className="text-right hidden sm:block">
+              <div className="text-right hidden sm:block" role="complementary" aria-label="Market information">
                 <div className="text-xs text-muted-foreground">Asset</div>
-                <div className="font-semibold">BTC/USD</div>
+                <div className="font-semibold" aria-label="BTC/USD pair">BTC/USD</div>
               </div>
-              <div className="text-right hidden sm:block">
+              <div className="text-right hidden sm:block" role="complementary" aria-label="Current price">
                 <div className="text-xs text-muted-foreground">Price</div>
-                <div className="font-semibold text-bullish">$45,234</div>
+                <div className="font-semibold text-bullish" aria-label="Current BTC price 45,234 dollars">
+                  $45,234
+                </div>
               </div>
-              <ConnectButton />
+              <div role="navigation" aria-label="Wallet connection">
+                <ConnectButton />
+              </div>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-6 lg:py-8 max-w-7xl">
+      <div id="main-content" className="container mx-auto px-4 py-6 lg:py-8 max-w-7xl">
         {/* Vault Stats + Deposit Button */}
-        <motion.div
+        <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-6 bg-card rounded-xl p-6 border border-border"
+          aria-labelledby="vault-stats-heading"
         >
+          <h2 id="vault-stats-heading" className="sr-only">Vault Statistics and Actions</h2>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="flex flex-wrap gap-6">
-              <div>
+              <div role="status" aria-live="polite">
                 <div className="text-xs text-muted-foreground mb-1">Total Value Locked</div>
-                <div className="text-2xl font-bold">{totalValueLocked} ETH</div>
+                <div className="text-2xl font-bold" aria-label={`${totalValueLocked} ETH locked`}>
+                  {totalValueLocked} ETH
+                </div>
               </div>
               {isConnected && (
-                <div>
+                <div role="status" aria-live="polite">
                   <div className="text-xs text-muted-foreground mb-1">Your Deposits</div>
-                  <div className="text-2xl font-bold text-bullish">{userTotalDeposited} ETH</div>
+                  <div 
+                    className="text-2xl font-bold text-bullish" 
+                    aria-label={`${userTotalDeposited} ETH deposited`}
+                  >
+                    {userTotalDeposited} ETH
+                  </div>
                 </div>
               )}
             </div>
@@ -240,92 +307,130 @@ export default function Dashboard() {
                 onClick={() => setIsDepositModalOpen(true)}
                 disabled={!isConnected}
                 className="px-6 py-3 bg-bullish text-white rounded-lg font-semibold hover:bg-bullish/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 touch-manipulation min-h-[44px]"
+                aria-label="Open deposit modal to add funds to your vault"
+                aria-describedby="deposit-button-description"
               >
-                <span className="text-lg">+</span>
+                <span className="text-lg" aria-hidden="true">+</span>
                 <span>Deposit</span>
               </button>
+              <span id="deposit-button-description" className="sr-only">
+                Opens a modal dialog to deposit cryptocurrency into your vault
+              </span>
               <button
                 onClick={() => setIsWithdrawModalOpen(true)}
                 disabled={!isConnected || parseFloat(userTotalDeposited) <= 0}
                 className="px-6 py-3 bg-bearish text-white rounded-lg font-semibold hover:bg-bearish/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 touch-manipulation min-h-[44px]"
+                aria-label="Open withdraw modal to remove funds from your vault"
+                aria-describedby="withdraw-button-description"
               >
-                <span className="text-lg">−</span>
+                <span className="text-lg" aria-hidden="true">−</span>
                 <span>Withdraw</span>
               </button>
+              <span id="withdraw-button-description" className="sr-only">
+                Opens a modal dialog to withdraw cryptocurrency from your vault
+              </span>
             </div>
           </div>
-        </motion.div>
+        </motion.section>
 
-        {/* Trade Signal */}
-        <motion.div
+        {/* Trade Signal - Critical LCP Element */}
+        <motion.section
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="mb-6"
+          aria-labelledby="trade-signal-heading"
         >
-          <TradeSignal
-            recommendation={consensusData.recommendation}
-            consensusLevel={consensusData.consensusLevel}
-            threshold={consensusData.threshold}
-          />
-        </motion.div>
+          <h2 id="trade-signal-heading" className="sr-only">Current Trade Signal</h2>
+          <div ref={lcpRef} data-lcp="true">
+            <TradeSignal
+              recommendation={consensusData.recommendation}
+              consensusLevel={consensusData.consensusLevel}
+              threshold={consensusData.threshold}
+            />
+          </div>
+        </motion.section>
 
         {/* Consensus Meter */}
-        <motion.div
+        <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
           className="bg-card rounded-xl p-6 mb-6 border border-border"
+          aria-labelledby="consensus-meter-heading"
         >
+          <h2 id="consensus-meter-heading" className="sr-only">Consensus Meter</h2>
           <ConsensusMeter
             level={consensusData.consensusLevel}
             threshold={consensusData.threshold}
           />
-        </motion.div>
+        </motion.section>
 
         {/* Consensus vs Contrarian Dashboard */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="mb-6"
-        >
-          <ConsensusVsContrarian />
-        </motion.div>
+        <Suspense fallback={<LoadingSkeleton />}>
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="mb-6"
+            aria-labelledby="consensus-dashboard-heading"
+          >
+            <h2 id="consensus-dashboard-heading" className="sr-only">Consensus vs Contrarian Analysis</h2>
+            <ConsensusVsContrarian />
+          </motion.section>
+        </Suspense>
 
         {/* AI Analysts Section */}
-        <div className="mb-4">
-          <h2 className="text-xl font-bold mb-1">AI Analyst Council</h2>
+        <section className="mb-4" aria-labelledby="analysts-heading">
+          <h2 id="analysts-heading" className="text-xl font-bold mb-1">
+            AI Analyst Council
+          </h2>
           <p className="text-sm sm:text-sm text-muted-foreground">
             Five specialized AI models analyzing the market from different perspectives
           </p>
-        </div>
+        </section>
 
         {/* Analyst Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4 mb-6">
-          {consensusData.analysts.map((analyst, index) => (
-            <AnalystCard key={analyst.id} analyst={analyst} index={index} />
-          ))}
-        </div>
+        <section className="mb-6" aria-labelledby="analyst-cards-heading">
+          <h3 id="analyst-cards-heading" className="sr-only">AI Analyst Cards</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
+            {consensusData.analysts.map((analyst, index) => (
+              <div
+                key={analyst.id}
+                role="article"
+                aria-labelledby={`analyst-${analyst.id}-heading`}
+              >
+                <AnalystCard
+                  analyst={analyst}
+                  index={index}
+                />
+              </div>
+            ))}
+          </div>
+        </section>
 
         {/* Trading Performance Section */}
-        <TradingPerformance className="mb-6" />
+        <Suspense fallback={<LoadingSkeleton />}>
+          <TradingPerformance className="mb-6" />
+        </Suspense>
 
         {/* Signal History Section */}
-        <motion.div
+        <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
           className="mb-6"
+          aria-labelledby="signal-history-heading"
         >
           <SignalHistory signals={signalHistory} maxEntries={5} />
-        </motion.div>
+        </motion.section>
 
         {/* Footer Info */}
-        <motion.div
+        <motion.footer
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1 }}
           className="mt-8 text-center text-sm text-muted-foreground"
+          role="contentinfo"
         >
           <p className="text-sm sm:text-sm">
             Real-time consensus powered by DeepSeek, Kimi, MiniMax, GLM, and Gemini
@@ -333,7 +438,7 @@ export default function Dashboard() {
           <p className="mt-1 text-sm sm:text-sm">
             Trade executes automatically when consensus threshold is reached
           </p>
-        </motion.div>
+        </motion.footer>
       </div>
     </main>
   );

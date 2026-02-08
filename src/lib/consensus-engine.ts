@@ -244,27 +244,29 @@ async function callModel(
       );
 
       if (!response.ok) {
-        data = await response.json();
-        const geminiData = data as {
-          candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-          error?: { message?: string; code?: number };
-        };
+        let geminiErrorData: { error?: { message?: string; code?: number } } = {};
+        try {
+          data = await response.json();
+          geminiErrorData = data as typeof geminiErrorData;
+        } catch {
+          // Response body may not be valid JSON
+        }
 
         // Check for rate limiting
-        if (response.status === 429 || geminiData.error?.code === 429) {
+        if (response.status === 429 || geminiErrorData.error?.code === 429) {
           throw new ConsensusError(
             'Rate limit exceeded',
             ConsensusErrorType.RATE_LIMIT,
             config.id,
-            geminiData.error
+            geminiErrorData.error
           );
         }
 
         throw new ConsensusError(
-          geminiData.error?.message || `Gemini API error: ${response.status}`,
+          geminiErrorData.error?.message || `Gemini API error: ${response.status}`,
           ConsensusErrorType.API_ERROR,
           config.id,
-          geminiData.error
+          geminiErrorData.error
         );
       }
 
@@ -285,7 +287,7 @@ async function callModel(
 
       return parseModelResponse(text, config.id);
     } else if (config.provider === 'anthropic') {
-      // Anthropic-compatible API (GLM)
+      // Anthropic-compatible API (GLM, Kimi)
       response = await fetch(`${config.baseUrl}/messages`, {
         method: 'POST',
         headers: {
@@ -303,27 +305,29 @@ async function callModel(
       });
 
       if (!response.ok) {
-        data = await response.json();
-        const anthropicData = data as {
-          content?: Array<{ text?: string }>;
-          error?: { message?: string; type?: string };
-        };
+        let anthropicErrorData: { error?: { message?: string; type?: string } } = {};
+        try {
+          data = await response.json();
+          anthropicErrorData = data as typeof anthropicErrorData;
+        } catch {
+          // Response body may not be valid JSON (e.g., HTML error page)
+        }
 
         // Check for rate limiting
-        if (response.status === 429 || anthropicData.error?.type === 'rate_limit_error') {
+        if (response.status === 429 || anthropicErrorData.error?.type === 'rate_limit_error') {
           throw new ConsensusError(
             'Rate limit exceeded',
             ConsensusErrorType.RATE_LIMIT,
             config.id,
-            anthropicData.error
+            anthropicErrorData.error
           );
         }
 
         throw new ConsensusError(
-          anthropicData.error?.message || `API error: ${response.status}`,
+          anthropicErrorData.error?.message || `API error: ${response.status} from ${config.baseUrl}/messages (model: ${config.model})`,
           ConsensusErrorType.API_ERROR,
           config.id,
-          anthropicData.error
+          anthropicErrorData.error
         );
       }
 
@@ -336,7 +340,7 @@ async function callModel(
       const text = anthropicData.content?.[0]?.text;
       if (!text) {
         throw new ConsensusError(
-          'Empty response from Anthropic API',
+          `Empty response from ${config.id} (${config.baseUrl}/messages, model: ${config.model})`,
           ConsensusErrorType.INVALID_RESPONSE,
           config.id
         );
@@ -344,7 +348,7 @@ async function callModel(
 
       return parseModelResponse(text, config.id);
     } else {
-      // OpenAI-compatible API (DeepSeek, Kimi, MiniMax)
+      // OpenAI-compatible API (DeepSeek, MiniMax)
       response = await fetch(`${config.baseUrl}/chat/completions`, {
         method: 'POST',
         headers: {
@@ -364,31 +368,33 @@ async function callModel(
       });
 
       if (!response.ok) {
-        data = await response.json();
-        const openaiData = data as {
-          choices?: Array<{ message?: { content?: string } }>;
-          error?: { message?: string; type?: string; code?: string };
-        };
+        let openaiErrorData: { error?: { message?: string; type?: string; code?: string } } = {};
+        try {
+          data = await response.json();
+          openaiErrorData = data as typeof openaiErrorData;
+        } catch {
+          // Response body may not be valid JSON (e.g., HTML error page)
+        }
 
         // Check for rate limiting
         if (
           response.status === 429 ||
-          openaiData.error?.type === 'rate_limit_exceeded' ||
-          openaiData.error?.code === 'rate_limit_exceeded'
+          openaiErrorData.error?.type === 'rate_limit_exceeded' ||
+          openaiErrorData.error?.code === 'rate_limit_exceeded'
         ) {
           throw new ConsensusError(
             'Rate limit exceeded',
             ConsensusErrorType.RATE_LIMIT,
             config.id,
-            openaiData.error
+            openaiErrorData.error
           );
         }
 
         throw new ConsensusError(
-          openaiData.error?.message || `API error: ${response.status}`,
+          openaiErrorData.error?.message || `API error: ${response.status} from ${config.baseUrl}/chat/completions (model: ${config.model})`,
           ConsensusErrorType.API_ERROR,
           config.id,
-          openaiData.error
+          openaiErrorData.error
         );
       }
 
@@ -401,7 +407,7 @@ async function callModel(
       const text = openaiData.choices?.[0]?.message?.content;
       if (!text) {
         throw new ConsensusError(
-          'Empty response from OpenAI API',
+          `Empty response from ${config.id} (${config.baseUrl}/chat/completions, model: ${config.model})`,
           ConsensusErrorType.INVALID_RESPONSE,
           config.id
         );

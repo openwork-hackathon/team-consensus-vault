@@ -19,31 +19,6 @@ interface ApiErrorHandling {
 export function useApiError(options: UseApiErrorOptions = {}): ApiErrorHandling {
   const { showToast, onError } = options;
 
-  const handleError = useCallback((error: Error, context?: string) => {
-    // Call custom error handler if provided
-    if (onError) {
-      onError(error);
-    }
-
-    // Log error for debugging
-    console.error(`API Error${context ? ` in ${context}` : ''}:`, error);
-
-    // Determine error type and show appropriate toast
-    if (error.message.includes('fetch') || error.message.includes('network')) {
-      handleNetworkError(context);
-    } else if (error.message.includes('429')) {
-      handleRateLimit(context);
-    } else if (error.message.includes('500') || error.message.includes('502') || error.message.includes('503')) {
-      handleServerError(undefined, context);
-    } else {
-      // Generic error
-      showToast?.(
-        error.message || 'An unexpected error occurred',
-        'error'
-      );
-    }
-  }, [showToast, onError, handleNetworkError, handleServerError, handleRateLimit]);
-
   const handleNetworkError = useCallback((context?: string) => {
     const message = context
       ? `Network error while ${context}. Please check your connection.`
@@ -76,6 +51,31 @@ export function useApiError(options: UseApiErrorOptions = {}): ApiErrorHandling 
       : 'Too many requests. Please wait a moment.';
     showToast?.(message, 'warning');
   }, [showToast]);
+
+  const handleError = useCallback((error: Error, context?: string) => {
+    // Call custom error handler if provided
+    if (onError) {
+      onError(error);
+    }
+
+    // Log error for debugging
+    console.error(`API Error${context ? ` in ${context}` : ''}:`, error);
+
+    // Determine error type and show appropriate toast
+    if (error.message.includes('fetch') || error.message.includes('network')) {
+      handleNetworkError(context);
+    } else if (error.message.includes('429')) {
+      handleRateLimit(context);
+    } else if (error.message.includes('500') || error.message.includes('502') || error.message.includes('503')) {
+      handleServerError(undefined, context);
+    } else {
+      // Generic error
+      showToast?.(
+        error.message || 'An unexpected error occurred',
+        'error'
+      );
+    }
+  }, [showToast, onError, handleNetworkError, handleServerError, handleRateLimit]);
 
   const isRetryable = useCallback((error: Error): boolean => {
     const retryablePatterns = [
