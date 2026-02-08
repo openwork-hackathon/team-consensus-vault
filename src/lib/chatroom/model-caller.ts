@@ -1,6 +1,7 @@
 import { ANALYST_MODELS } from '../models';
 import { ChatroomError, ChatroomErrorType, createUserFacingError, createProgressUpdate } from './error-types';
 import type { UserFacingError, ProgressUpdate } from '../types';
+import { proxyFetch, isProxyConfigured } from '../proxy-fetch';
 
 // Rate limiting per model
 const lastRequestTime: Record<string, number> = {};
@@ -9,20 +10,6 @@ const MIN_REQUEST_INTERVAL = 1000;
 const MAX_RETRIES = 2;
 const INITIAL_RETRY_DELAY = 1000;
 const DEFAULT_TIMEOUT = 30000;
-
-// Chatroom-specific error class for better error tracking (deprecated - use ChatroomError)
-export class ChatroomModelError extends Error {
-  constructor(
-    message: string,
-    public modelId: string,
-    public errorType: 'timeout' | 'rate_limit' | 'api_error' | 'network' | 'parse_error',
-    public retryable: boolean = true,
-    public originalError?: unknown
-  ) {
-    super(message);
-    this.name = 'ChatroomModelError';
-  }
-}
 
 /**
  * Call a model and return raw text (not parsed JSON).
@@ -42,7 +29,8 @@ export async function callModelRaw(
     throw new Error(`Unknown model: ${modelId}`);
   }
 
-  const apiKey = process.env[config.apiKeyEnv];
+  const usingProxy = isProxyConfigured();
+  const apiKey = usingProxy ? 'proxy-managed' : process.env[config.apiKeyEnv];
   if (!apiKey) {
     throw new Error(`Missing API key: ${config.apiKeyEnv}`);
   }
@@ -87,21 +75,21 @@ async function callWithRetry(
     clearTimeout(timeoutId);
 
     // Classify error type
-    let errorType: ChatroomModelError['errorType'] = 'api_error';
+    let errorType: ChatroomErrorType = ChatroomErrorType.API_ERROR;
     let retryable = false;
 
     if (error instanceof Error) {
       if (error.name === 'AbortError') {
-        errorType = 'timeout';
+        errorType = ChatroomErrorType.TIMEOUT;
         retryable = true;
       } else if (error.message.includes('rate limit') || error.message.includes('429')) {
-        errorType = 'rate_limit';
+        errorType = ChatroomErrorType.RATE_LIMIT;
         retryable = true;
       } else if (error.message.includes('fetch') || error.message.includes('network')) {
-        errorType = 'network';
+        errorType = ChatroomErrorType.NETWORK_ERROR;
         retryable = true;
       } else if (error.message.includes('Empty response')) {
-        errorType = 'parse_error';
+        errorType = ChatroomErrorType.PARSE_ERROR;
         retryable = true;
       }
     }
@@ -114,16 +102,15 @@ async function callWithRetry(
       return callWithRetry(config, apiKey, systemPrompt, userPrompt, maxTokens, retryCount + 1);
     }
 
-    // Convert to ChatroomModelError for better error tracking
-    if (error instanceof ChatroomModelError) {
+    // Convert to ChatroomError for better error tracking
+    if (error instanceof ChatroomError) {
       throw error;
     }
 
-    throw new ChatroomModelError(
+    throw new ChatroomError(
       error instanceof Error ? error.message : 'Unknown error',
-      config.id,
       errorType,
-      retryable,
+      config.id,
       error
     );
   }
@@ -137,14 +124,12 @@ async function callOpenAI(
   maxTokens: number,
   signal: AbortSignal
 ): Promise<string> {
-  const response = await fetch(`${config.baseUrl}/chat/completions`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
-    signal,
-    body: JSON.stringify({
+  const response = await proxyFetch('openai', {
+    baseUrl: config.baseUrl,
+    path: '/chat/completions',
+    model: config.model,
+    apiKeyEnv: config.apiKeyEnv,
+    body: {
       model: config.model,
       messages: [
         { role: 'system', content: systemPrompt },
@@ -152,8 +137,8 @@ async function callOpenAI(
       ],
       temperature: 0.9,
       max_tokens: maxTokens,
-    }),
-  });
+    },
+  }, signal);
 
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
@@ -176,21 +161,19 @@ async function callAnthropic(
   maxTokens: number,
   signal: AbortSignal
 ): Promise<string> {
-  const response = await fetch(`${config.baseUrl}/messages`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-    },
-    signal,
-    body: JSON.stringify({
+  const response = await proxyFetch('anthropic', {
+    baseUrl: config.baseUrl,
+    path: '/messages',
+    model: config.model,
+    apiKeyEnv: config.apiKeyEnv,
+    body: {
       model: config.model,
       max_tokens: maxTokens,
       system: systemPrompt,
       messages: [{ role: 'user', content: userPrompt }],
-    }),
-  });
+    },
+    extraHeaders: { 'anthropic-version': '2023-06-01' },
+  }, signal);
 
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
@@ -213,25 +196,22 @@ async function callGoogle(
   maxTokens: number,
   signal: AbortSignal
 ): Promise<string> {
-  const response = await fetch(
-    `${config.baseUrl}/models/${config.model}:generateContent?key=${apiKey}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      signal,
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [{ text: systemPrompt + '\n\n' + userPrompt }],
-          },
-        ],
-        generationConfig: {
-          temperature: 0.9,
-          maxOutputTokens: maxTokens,
+  const response = await proxyFetch('google', {
+    baseUrl: config.baseUrl,
+    model: config.model,
+    apiKeyEnv: config.apiKeyEnv,
+    body: {
+      contents: [
+        {
+          parts: [{ text: systemPrompt + '\n\n' + userPrompt }],
         },
-      }),
-    }
-  );
+      ],
+      generationConfig: {
+        temperature: 0.9,
+        maxOutputTokens: maxTokens,
+      },
+    },
+  }, signal);
 
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));

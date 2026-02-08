@@ -25,6 +25,7 @@ import {
   ConsensusResponse,
 } from './models';
 import type { UserFacingError, ProgressUpdate } from './types';
+import { proxyFetch, isProxyConfigured } from './proxy-fetch';
 
 // Rate limiting - track last request time per model
 const lastRequestTime: Record<string, number> = {};
@@ -92,6 +93,21 @@ export class ConsensusError extends Error {
 
 /**
  * Create user-facing error messages with recovery guidance
+ *
+ * Transforms internal ConsensusError objects into user-friendly messages
+ * with actionable recovery steps and appropriate severity levels.
+ *
+ * @param error - The internal ConsensusError to transform
+ * @returns A UserFacingError with friendly message and recovery guidance
+ *
+ * @example
+ * ```ts
+ * const internalError = new ConsensusError('Rate limit', ConsensusErrorType.RATE_LIMIT, 'deepseek');
+ * const userError = createUserFacingError(internalError);
+ * // userError.message: "Rate limit exceeded - please wait before trying again"
+ * // userError.retryable: true
+ * // userError.estimatedWaitTime: 45000
+ * ```
  */
 function createUserFacingError(error: ConsensusError): UserFacingError {
   const { type, message, modelId, originalError } = error;
@@ -195,6 +211,22 @@ function createUserFacingError(error: ConsensusError): UserFacingError {
 
 /**
  * Create progress update for slow models
+ *
+ * Generates progress tracking information for models that are taking longer
+ * than expected to respond. Threshold for "slow" is 15 seconds.
+ *
+ * @param modelId - The model being tracked
+ * @param elapsedTime - Milliseconds elapsed since request started
+ * @param message - Optional custom status message
+ * @returns A ProgressUpdate object with status and timing information
+ *
+ * @example
+ * ```ts
+ * const progress = createProgressUpdate('kimi', 18000);
+ * // progress.status: 'slow'
+ * // progress.message: 'Taking longer than expected...'
+ * // progress.elapsedTime: 18000
+ * ```
  */
 function createProgressUpdate(modelId: string, elapsedTime: number, message?: string): ProgressUpdate {
   const isSlow = elapsedTime > 15000; // 15 seconds
@@ -218,6 +250,88 @@ interface RequestMetrics {
 }
 
 const metricsPerModel: Record<string, RequestMetrics> = {};
+
+// Circuit breaker pattern - track model failures
+interface CircuitBreakerState {
+  failureCount: number;
+  lastFailureTime: number;
+  isOpen: boolean;
+  openUntil?: number;
+}
+
+const CIRCUIT_BREAKER_CONFIG = {
+  FAILURE_THRESHOLD: 3, // Number of failures before opening circuit
+  RESET_TIMEOUT: 10 * 60 * 1000, // 10 minutes in milliseconds
+  HALF_OPEN_ATTEMPTS: 1, // Number of attempts to test in half-open state
+};
+
+const circuitBreakerStates: Record<string, CircuitBreakerState> = {};
+
+/**
+ * Check if circuit breaker is open for a model
+ * @param modelId - The model to check
+ * @returns true if circuit is open (model should not be called)
+ */
+function isCircuitOpen(modelId: string): boolean {
+  const state = circuitBreakerStates[modelId];
+  if (!state || !state.isOpen) return false;
+
+  // Check if circuit should be reset (timeout elapsed)
+  const now = Date.now();
+  if (state.openUntil && now >= state.openUntil) {
+    console.log(`[${modelId}] Circuit breaker reset after timeout`);
+    state.isOpen = false;
+    state.failureCount = 0;
+    delete state.openUntil;
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Record a failure for circuit breaker
+ * @param modelId - The model that failed
+ */
+function recordCircuitBreakerFailure(modelId: string): void {
+  if (!circuitBreakerStates[modelId]) {
+    circuitBreakerStates[modelId] = {
+      failureCount: 0,
+      lastFailureTime: 0,
+      isOpen: false,
+    };
+  }
+
+  const state = circuitBreakerStates[modelId];
+  state.failureCount++;
+  state.lastFailureTime = Date.now();
+
+  // Open circuit if threshold exceeded
+  if (state.failureCount >= CIRCUIT_BREAKER_CONFIG.FAILURE_THRESHOLD) {
+    state.isOpen = true;
+    state.openUntil = Date.now() + CIRCUIT_BREAKER_CONFIG.RESET_TIMEOUT;
+    console.warn(
+      `[${modelId}] Circuit breaker opened after ${state.failureCount} failures. ` +
+      `Will reset in ${CIRCUIT_BREAKER_CONFIG.RESET_TIMEOUT / 1000}s`
+    );
+  }
+}
+
+/**
+ * Record a success for circuit breaker (resets failure count)
+ * @param modelId - The model that succeeded
+ */
+function recordCircuitBreakerSuccess(modelId: string): void {
+  if (!circuitBreakerStates[modelId]) return;
+
+  const state = circuitBreakerStates[modelId];
+  if (state.failureCount > 0) {
+    console.log(`[${modelId}] Circuit breaker reset after successful call`);
+  }
+  state.failureCount = 0;
+  state.isOpen = false;
+  delete state.openUntil;
+}
 
 /**
  * Update performance metrics for a model
@@ -289,7 +403,26 @@ Remember: Respond ONLY with valid JSON in the exact format specified.`;
 
 /**
  * Call a single AI model with the analysis prompt
- * Enhanced with retry logic, better error handling, and performance tracking
+ *
+ * Enhanced with:
+ * - Circuit breaker pattern (stops calling consistently failing models)
+ * - Retry logic with exponential backoff
+ * - Rate limiting (1 req/sec per model)
+ * - Timeout handling with configurable timeouts
+ * - Provider-specific API formats (OpenAI, Anthropic, Google)
+ *
+ * @param config - Model configuration (endpoints, prompts, timeout)
+ * @param asset - Crypto asset symbol to analyze
+ * @param context - Optional user-provided context
+ * @param retryCount - Current retry attempt (internal, starts at 0)
+ * @returns Parsed model response with signal, confidence, reasoning
+ * @throws {ConsensusError} - On API errors, timeouts, network issues, etc.
+ *
+ * @example
+ * ```ts
+ * const response = await callModel(ANALYST_MODELS[0], 'BTC');
+ * // response: { signal: 'buy', confidence: 75, reasoning: '...' }
+ * ```
  */
 async function callModel(
   config: ModelConfig,
@@ -297,10 +430,20 @@ async function callModel(
   context?: string,
   retryCount = 0
 ): Promise<ModelResponse> {
-  // Use Gemini key pool for Google provider, standard env var for others
-  const apiKey = config.provider === 'google'
-    ? getGeminiApiKey()
-    : process.env[config.apiKeyEnv];
+  // Circuit breaker check - skip models that are consistently failing
+  if (isCircuitOpen(config.id)) {
+    throw new ConsensusError(
+      `Circuit breaker open - model has failed ${CIRCUIT_BREAKER_CONFIG.FAILURE_THRESHOLD} times recently`,
+      ConsensusErrorType.API_ERROR,
+      config.id
+    );
+  }
+
+  // When proxy is configured, skip local API key check (proxy has the keys)
+  const usingProxy = isProxyConfigured();
+  const apiKey = usingProxy
+    ? 'proxy-managed'
+    : (config.provider === 'google' ? getGeminiApiKey() : process.env[config.apiKeyEnv]);
 
   if (!apiKey) {
     throw new ConsensusError(
@@ -341,35 +484,39 @@ async function callModel(
 
     if (config.provider === 'google') {
       // Gemini API has a different format
-      response = await fetch(
-        `${config.baseUrl}/models/${config.model}:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          signal: controller.signal,
-          body: JSON.stringify({
-            contents: [
-              {
-                parts: [
-                  { text: config.systemPrompt + '\n\n' + userPrompt },
-                ],
-              },
+      const geminiBody = {
+        contents: [
+          {
+            parts: [
+              { text: config.systemPrompt + '\n\n' + userPrompt },
             ],
-            generationConfig: {
-              temperature: 0.7,
-              maxOutputTokens: 500,
-            },
-          }),
-        }
-      );
+          },
+        ],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 500,
+        },
+      };
+      response = await proxyFetch('google', {
+        baseUrl: config.baseUrl,
+        model: config.model,
+        apiKeyEnv: config.apiKeyEnv,
+        body: geminiBody,
+      }, controller.signal);
 
       if (!response.ok) {
         let geminiErrorData: { error?: { message?: string; code?: number } } = {};
+        let responseText: string | null = null;
         try {
           data = await response.json();
           geminiErrorData = data as typeof geminiErrorData;
-        } catch {
-          // Response body may not be valid JSON
+        } catch (parseError) {
+          // Response body may not be valid JSON (e.g., HTML error page, plain text)
+          try {
+            responseText = await response.text();
+          } catch {
+            // Can't read response body at all
+          }
         }
 
         // Check for rate limiting
@@ -382,15 +529,48 @@ async function callModel(
           );
         }
 
+        // Handle specific HTTP status codes
+        if (response.status === 401 || response.status === 403) {
+          throw new ConsensusError(
+            'Authentication failed - API key may be invalid or expired',
+            ConsensusErrorType.MISSING_API_KEY,
+            config.id,
+            geminiErrorData.error
+          );
+        }
+
+        if (response.status >= 500) {
+          throw new ConsensusError(
+            `Gemini API server error: ${response.status} - service temporarily unavailable`,
+            ConsensusErrorType.API_ERROR,
+            config.id,
+            geminiErrorData.error
+          );
+        }
+
+        // Construct detailed error message
+        const errorMsg = geminiErrorData.error?.message
+          || (responseText ? `HTTP ${response.status}: ${responseText.substring(0, 200)}` : `Gemini API error: ${response.status}`);
+
         throw new ConsensusError(
-          geminiErrorData.error?.message || `Gemini API error: ${response.status}`,
+          errorMsg,
           ConsensusErrorType.API_ERROR,
           config.id,
           geminiErrorData.error
         );
       }
 
-      data = await response.json();
+      // Parse successful response
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        throw new ConsensusError(
+          'Failed to parse JSON response from Gemini API',
+          ConsensusErrorType.PARSE_ERROR,
+          config.id,
+          jsonError
+        );
+      }
       const geminiData = data as {
         candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
         error?: { message?: string };
@@ -405,32 +585,40 @@ async function callModel(
         );
       }
 
-      return parseModelResponse(text, config.id);
+      const result = parseModelResponse(text, config.id);
+      // Success - record for circuit breaker
+      recordCircuitBreakerSuccess(config.id);
+      return result;
     } else if (config.provider === 'anthropic') {
       // Anthropic-compatible API (GLM, Kimi)
-      response = await fetch(`${config.baseUrl}/messages`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-        },
-        signal: controller.signal,
-        body: JSON.stringify({
-          model: config.model,
-          max_tokens: 500,
-          system: config.systemPrompt,
-          messages: [{ role: 'user', content: userPrompt }],
-        }),
-      });
+      const anthropicBody = {
+        model: config.model,
+        max_tokens: 500,
+        system: config.systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }],
+      };
+      response = await proxyFetch('anthropic', {
+        baseUrl: config.baseUrl,
+        path: '/messages',
+        model: config.model,
+        apiKeyEnv: config.apiKeyEnv,
+        body: anthropicBody,
+        extraHeaders: { 'anthropic-version': '2023-06-01' },
+      }, controller.signal);
 
       if (!response.ok) {
         let anthropicErrorData: { error?: { message?: string; type?: string } } = {};
+        let responseText: string | null = null;
         try {
           data = await response.json();
           anthropicErrorData = data as typeof anthropicErrorData;
-        } catch {
-          // Response body may not be valid JSON (e.g., HTML error page)
+        } catch (parseError) {
+          // Response body may not be valid JSON (e.g., HTML error page, plain text)
+          try {
+            responseText = await response.text();
+          } catch {
+            // Can't read response body at all
+          }
         }
 
         // Check for rate limiting
@@ -443,15 +631,48 @@ async function callModel(
           );
         }
 
+        // Handle specific HTTP status codes
+        if (response.status === 401 || response.status === 403) {
+          throw new ConsensusError(
+            'Authentication failed - API key may be invalid or expired',
+            ConsensusErrorType.MISSING_API_KEY,
+            config.id,
+            anthropicErrorData.error
+          );
+        }
+
+        if (response.status >= 500) {
+          throw new ConsensusError(
+            `API server error: ${response.status} - service temporarily unavailable`,
+            ConsensusErrorType.API_ERROR,
+            config.id,
+            anthropicErrorData.error
+          );
+        }
+
+        // Construct detailed error message
+        const errorMsg = anthropicErrorData.error?.message
+          || (responseText ? `HTTP ${response.status}: ${responseText.substring(0, 200)}` : `API error: ${response.status} from ${config.baseUrl}/messages (model: ${config.model})`);
+
         throw new ConsensusError(
-          anthropicErrorData.error?.message || `API error: ${response.status} from ${config.baseUrl}/messages (model: ${config.model})`,
+          errorMsg,
           ConsensusErrorType.API_ERROR,
           config.id,
           anthropicErrorData.error
         );
       }
 
-      data = await response.json();
+      // Parse successful response
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        throw new ConsensusError(
+          'Failed to parse JSON response from Anthropic API',
+          ConsensusErrorType.PARSE_ERROR,
+          config.id,
+          jsonError
+        );
+      }
       const anthropicData = data as {
         content?: Array<{ text?: string }>;
         error?: { message?: string };
@@ -466,34 +687,42 @@ async function callModel(
         );
       }
 
-      return parseModelResponse(text, config.id);
+      const result = parseModelResponse(text, config.id);
+      // Success - record for circuit breaker
+      recordCircuitBreakerSuccess(config.id);
+      return result;
     } else {
       // OpenAI-compatible API (DeepSeek, MiniMax)
-      response = await fetch(`${config.baseUrl}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${apiKey}`,
-        },
-        signal: controller.signal,
-        body: JSON.stringify({
-          model: config.model,
-          messages: [
-            { role: 'system', content: config.systemPrompt },
-            { role: 'user', content: userPrompt },
-          ],
-          temperature: 0.7,
-          max_tokens: 500,
-        }),
-      });
+      const openaiBody = {
+        model: config.model,
+        messages: [
+          { role: 'system', content: config.systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+        temperature: 0.7,
+        max_tokens: 500,
+      };
+      response = await proxyFetch('openai', {
+        baseUrl: config.baseUrl,
+        path: '/chat/completions',
+        model: config.model,
+        apiKeyEnv: config.apiKeyEnv,
+        body: openaiBody,
+      }, controller.signal);
 
       if (!response.ok) {
         let openaiErrorData: { error?: { message?: string; type?: string; code?: string } } = {};
+        let responseText: string | null = null;
         try {
           data = await response.json();
           openaiErrorData = data as typeof openaiErrorData;
-        } catch {
-          // Response body may not be valid JSON (e.g., HTML error page)
+        } catch (parseError) {
+          // Response body may not be valid JSON (e.g., HTML error page, plain text)
+          try {
+            responseText = await response.text();
+          } catch {
+            // Can't read response body at all
+          }
         }
 
         // Check for rate limiting
@@ -510,15 +739,48 @@ async function callModel(
           );
         }
 
+        // Handle specific HTTP status codes
+        if (response.status === 401 || response.status === 403) {
+          throw new ConsensusError(
+            'Authentication failed - API key may be invalid or expired',
+            ConsensusErrorType.MISSING_API_KEY,
+            config.id,
+            openaiErrorData.error
+          );
+        }
+
+        if (response.status >= 500) {
+          throw new ConsensusError(
+            `API server error: ${response.status} - service temporarily unavailable`,
+            ConsensusErrorType.API_ERROR,
+            config.id,
+            openaiErrorData.error
+          );
+        }
+
+        // Construct detailed error message
+        const errorMsg = openaiErrorData.error?.message
+          || (responseText ? `HTTP ${response.status}: ${responseText.substring(0, 200)}` : `API error: ${response.status} from ${config.baseUrl}/chat/completions (model: ${config.model})`);
+
         throw new ConsensusError(
-          openaiErrorData.error?.message || `API error: ${response.status} from ${config.baseUrl}/chat/completions (model: ${config.model})`,
+          errorMsg,
           ConsensusErrorType.API_ERROR,
           config.id,
           openaiErrorData.error
         );
       }
 
-      data = await response.json();
+      // Parse successful response
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        throw new ConsensusError(
+          'Failed to parse JSON response from OpenAI-compatible API',
+          ConsensusErrorType.PARSE_ERROR,
+          config.id,
+          jsonError
+        );
+      }
       const openaiData = data as {
         choices?: Array<{ message?: { content?: string } }>;
         error?: { message?: string };
@@ -533,7 +795,10 @@ async function callModel(
         );
       }
 
-      return parseModelResponse(text, config.id);
+      const result = parseModelResponse(text, config.id);
+      // Success - record for circuit breaker
+      recordCircuitBreakerSuccess(config.id);
+      return result;
     }
   } catch (error) {
     clearTimeout(timeoutId);
@@ -560,6 +825,9 @@ async function callModel(
 
     // Re-throw ConsensusErrors with retry logic
     if (error instanceof ConsensusError) {
+      // Record failure for circuit breaker (before retry logic)
+      recordCircuitBreakerFailure(config.id);
+
       // Rotate Gemini key on rate limit before retrying
       if (config.provider === 'google' && error.type === ConsensusErrorType.RATE_LIMIT) {
         rotateGeminiKey();
@@ -583,12 +851,15 @@ async function callModel(
     }
 
     // Wrap unknown errors
-    throw new ConsensusError(
+    const wrappedError = new ConsensusError(
       error instanceof Error ? error.message : 'Unknown error',
       ConsensusErrorType.API_ERROR,
       config.id,
       error
     );
+    // Record failure for circuit breaker
+    recordCircuitBreakerFailure(config.id);
+    throw wrappedError;
   } finally {
     clearTimeout(timeoutId);
   }
@@ -596,7 +867,22 @@ async function callModel(
 
 /**
  * Parse the model's text response into structured format
- * Enhanced with better error handling and validation
+ *
+ * Enhanced with better error handling and validation. Extracts JSON from
+ * model responses (supports both direct JSON and markdown code blocks),
+ * validates required fields, and normalizes signal/confidence values.
+ *
+ * @param text - The raw text response from the model
+ * @param modelId - The model that generated the response (for error tracking)
+ * @returns Parsed and validated ModelResponse object
+ * @throws {ConsensusError} - On missing/invalid fields or malformed JSON
+ *
+ * @example
+ * ```ts
+ * const text = '{"signal": "buy", "confidence": 85, "reasoning": "Strong momentum"}';
+ * const response = parseModelResponse(text, 'deepseek');
+ * // response: { signal: 'buy', confidence: 85, reasoning: 'Strong momentum' }
+ * ```
  */
 function parseModelResponse(text: string, modelId: string): ModelResponse {
   if (!text || text.trim().length === 0) {
@@ -692,10 +978,37 @@ function parseModelResponse(text: string, modelId: string): ModelResponse {
 }
 
 /**
- * Get analysis from a single model, with fallback to alternative models.
+ * Get analysis from a single model, with fallback to alternative models
+ *
  * When the primary model fails (after retries), tries fallback models
- * using the same role prompt for continuity.
- * Enhanced with progress tracking and user-facing error messages.
+ * using the same role prompt for continuity. Enhanced with progress
+ * tracking and user-facing error messages.
+ *
+ * **Fallback Strategy:**
+ * - Primary model fails → tries fallback models in FALLBACK_ORDER
+ * - Keeps original role identity (e.g., "Technical Analyst via Gemini")
+ * - Uses the same system prompt to maintain analytical perspective
+ *
+ * **Error Handling:**
+ * - All errors are wrapped in UserFacingError objects
+ * - Results include error field if all models fail
+ * - Progress callbacks report status throughout execution
+ *
+ * @param modelId - The primary analyst model to use
+ * @param asset - Crypto asset symbol to analyze
+ * @param context - Optional user-provided context
+ * @param onProgress - Optional callback for progress updates
+ * @returns AnalystResult with response time, or error details if all models fail
+ *
+ * @example
+ * ```ts
+ * const { result, responseTime } = await getAnalystOpinion(
+ *   'technical',
+ *   'BTC',
+ *   'Recent breakout above resistance',
+ *   (progress) => console.log(progress.status)
+ * );
+ * ```
  */
 export async function getAnalystOpinion(
   modelId: string,
@@ -841,7 +1154,37 @@ export async function getAnalystOpinion(
 
 /**
  * Run all 5 analysts in parallel and aggregate results
- * Enhanced with progress tracking and partial failure reporting
+ *
+ * Enhanced with progress tracking and partial failure reporting. Uses
+ * Promise.allSettled for resilience - continues even if some models fail.
+ *
+ * **Partial Failure Handling:**
+ * - If ANY model succeeds, consensus calculation proceeds
+ * - Failed models contribute neutral sentiment (0 confidence)
+ * - Returns partialFailures object with summary of failed models
+ *
+ * **Progress Tracking:**
+ * - onProgress: called when each analyst completes
+ * - onModelProgress: called during each model's execution
+ *
+ * @param asset - Crypto asset symbol to analyze
+ * @param context - Optional user-provided context
+ * @param onProgress - Optional callback when each analyst completes
+ * @param onModelProgress - Optional callback for model execution progress
+ * @returns Aggregated consensus with all analyst results and timing data
+ *
+ * @example
+ * ```ts
+ * const { analysts, consensus, partialFailures } = await runConsensusAnalysis(
+ *   'ETH',
+ *   'Network upgrade approaching',
+ *   (result) => console.log(`${result.name}: ${result.sentiment}`),
+ *   (progress) => console.log(`${progress.modelId}: ${progress.status}`)
+ * );
+ * if (partialFailures) {
+ *   console.log(`${partialFailures.failedCount} models failed`);
+ * }
+ * ```
  */
 export async function runConsensusAnalysis(
   asset: string,

@@ -9,6 +9,7 @@ import {
 } from '@/lib/rate-limit';
 import { createApiLogger } from '@/lib/api-logger';
 import type { ProgressUpdate } from '@/lib/types';
+import { proxyFetch, isProxyConfigured } from '@/lib/proxy-fetch';
 
 // Use mock data when API keys aren't available (development mode)
 const USE_MOCK = process.env.NODE_ENV === 'development' && !process.env.DEEPSEEK_API_KEY;
@@ -503,7 +504,8 @@ async function callModelWithQuery(
   query: string,
   signal: AbortSignal
 ): Promise<ModelResponse> {
-  const apiKey = process.env[config.apiKeyEnv];
+  const usingProxy = isProxyConfigured();
+  const apiKey = usingProxy ? 'proxy-managed' : process.env[config.apiKeyEnv];
 
   if (!apiKey) {
     throw new Error(`Missing API key: ${config.apiKeyEnv}`);
@@ -519,26 +521,17 @@ Provide clear, concise analysis from your area of expertise. Respond with only a
     let data: unknown;
 
     if (config.provider === 'google') {
-      // Gemini API
-      response = await fetch(
-        `${config.baseUrl}/models/${config.model}:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          signal,
-          body: JSON.stringify({
-            contents: [
-              {
-                parts: [{ text: systemPrompt + '\n\n' + query }],
-              },
-            ],
-            generationConfig: {
-              temperature: 0.7,
-              maxOutputTokens: 500,
-            },
-          }),
-        }
-      );
+      response = await proxyFetch('google', {
+        baseUrl: config.baseUrl,
+        model: config.model,
+        apiKeyEnv: config.apiKeyEnv,
+        body: {
+          contents: [
+            { parts: [{ text: systemPrompt + '\n\n' + query }] },
+          ],
+          generationConfig: { temperature: 0.7, maxOutputTokens: 500 },
+        },
+      }, signal);
 
       data = await response.json();
       const geminiData = data as {
@@ -555,22 +548,19 @@ Provide clear, concise analysis from your area of expertise. Respond with only a
       const text = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || '';
       return parseModelResponse(text);
     } else if (config.provider === 'anthropic') {
-      // Anthropic-compatible API (GLM)
-      response = await fetch(`${config.baseUrl}/messages`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-        },
-        signal,
-        body: JSON.stringify({
+      response = await proxyFetch('anthropic', {
+        baseUrl: config.baseUrl,
+        path: '/messages',
+        model: config.model,
+        apiKeyEnv: config.apiKeyEnv,
+        body: {
           model: config.model,
           max_tokens: 500,
           system: systemPrompt,
           messages: [{ role: 'user', content: query }],
-        }),
-      });
+        },
+        extraHeaders: { 'anthropic-version': '2023-06-01' },
+      }, signal);
 
       data = await response.json();
       const anthropicData = data as {
@@ -587,15 +577,12 @@ Provide clear, concise analysis from your area of expertise. Respond with only a
       const text = anthropicData.content?.[0]?.text || '';
       return parseModelResponse(text);
     } else {
-      // OpenAI-compatible API (DeepSeek, Kimi, MiniMax)
-      response = await fetch(`${config.baseUrl}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${apiKey}`,
-        },
-        signal,
-        body: JSON.stringify({
+      response = await proxyFetch('openai', {
+        baseUrl: config.baseUrl,
+        path: '/chat/completions',
+        model: config.model,
+        apiKeyEnv: config.apiKeyEnv,
+        body: {
           model: config.model,
           messages: [
             { role: 'system', content: systemPrompt },
@@ -603,8 +590,8 @@ Provide clear, concise analysis from your area of expertise. Respond with only a
           ],
           temperature: 0.7,
           max_tokens: 500,
-        }),
-      });
+        },
+      }, signal);
 
       data = await response.json();
       const openaiData = data as {
