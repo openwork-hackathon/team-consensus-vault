@@ -11,7 +11,6 @@ import DepositModal from '@/components/DepositModal';
 import WithdrawModal from '@/components/WithdrawModal';
 import ToastContainer, { ToastData } from '@/components/ToastContainer';
 import LoadingSkeleton from '@/components/LoadingSkeleton';
-import { motion } from 'framer-motion';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount } from 'wagmi';
 import { useVault } from '@/contexts/VaultContext';
@@ -275,9 +274,7 @@ export default function Dashboard() {
 
       <div id="main-content" className="container mx-auto px-4 py-6 lg:py-8 max-w-7xl">
         {/* Vault Stats + Deposit Button */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+        <section
           className="mb-6 bg-card rounded-xl p-6 border border-border"
           aria-labelledby="vault-stats-heading"
         >
@@ -331,12 +328,10 @@ export default function Dashboard() {
               </span>
             </div>
           </div>
-        </motion.section>
+        </section>
 
         {/* Trade Signal - Critical LCP Element */}
-        <motion.section
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+        <section
           className="mb-6"
           aria-labelledby="trade-signal-heading"
         >
@@ -348,13 +343,10 @@ export default function Dashboard() {
               threshold={consensusData.threshold}
             />
           </div>
-        </motion.section>
+        </section>
 
         {/* Consensus Meter */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
+        <section
           className="bg-card rounded-xl p-6 mb-6 border border-border"
           aria-labelledby="consensus-meter-heading"
         >
@@ -363,20 +355,17 @@ export default function Dashboard() {
             level={consensusData.consensusLevel}
             threshold={consensusData.threshold}
           />
-        </motion.section>
+        </section>
 
         {/* Consensus vs Contrarian Dashboard */}
         <Suspense fallback={<LoadingSkeleton />}>
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
+          <section
             className="mb-6"
             aria-labelledby="consensus-dashboard-heading"
           >
             <h2 id="consensus-dashboard-heading" className="sr-only">Consensus vs Contrarian Analysis</h2>
             <ConsensusVsContrarian />
-          </motion.section>
+          </section>
         </Suspense>
 
         {/* AI Analysts Section */}
@@ -414,21 +403,15 @@ export default function Dashboard() {
         </Suspense>
 
         {/* Signal History Section */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
+        <section
           className="mb-6"
           aria-labelledby="signal-history-heading"
         >
           <SignalHistory signals={signalHistory} maxEntries={5} />
-        </motion.section>
+        </section>
 
         {/* Footer Info */}
-        <motion.footer
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1 }}
+        <footer
           className="mt-8 text-center text-sm text-muted-foreground"
           role="contentinfo"
         >
@@ -438,7 +421,7 @@ export default function Dashboard() {
           <p className="mt-1 text-sm sm:text-sm">
             Trade executes automatically when consensus threshold is reached
           </p>
-        </motion.footer>
+        </footer>
       </div>
     </main>
   );

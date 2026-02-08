@@ -3,10 +3,13 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 
-const inter = Inter({ 
+const inter = Inter({
   subsets: ["latin"],
   display: 'swap',
-  preload: true,
+  preload: true, // Enable preload for faster font loading
+  adjustFontFallback: true,
+  fallback: ['system-ui', 'arial'],
+  variable: '--font-inter',
 });
 
 export const metadata: Metadata = {
@@ -85,29 +88,44 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark scroll-smooth">
       <head>
+        {/* Critical preconnect for fonts */}
         <link
           rel="preconnect"
           href="https://fonts.googleapis.com"
           crossOrigin="anonymous"
+          key="fonts-googleapis"
         />
         <link
           rel="preconnect"
           href="https://fonts.gstatic.com"
           crossOrigin="anonymous"
+          key="fonts-gstatic"
         />
-        <link rel="dns-prefetch" href="https://api.coinbase.com" />
-        <link rel="dns-prefetch" href="https://api.coingecko.com" />
+        {/* Preconnect for API endpoints */}
+        <link rel="preconnect" href="https://api.coinbase.com" key="coinbase" />
+        <link rel="preconnect" href="https://api.coingecko.com" key="coingecko" />
+        {/* Preload critical resources */}
+        <link
+          rel="preload"
+          href="/_next/static/css/app/layout.css"
+          as="style"
+          key="critical-css"
+        />
+        {/* Defer non-critical scripts */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
+              // Defer service worker registration
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js')
-                    .then(function(registration) {
-                      console.log('SW registered: ', registration);
-                    }, function(registrationError) {
-                      console.log('SW registration failed: ', registrationError);
-                    });
+                  setTimeout(function() {
+                    navigator.serviceWorker.register('/sw.js')
+                      .then(function(registration) {
+                        console.log('SW registered: ', registration);
+                      }, function(registrationError) {
+                        console.log('SW registration failed: ', registrationError);
+                      });
+                  }, 3000); // Delay to prioritize critical rendering
                 });
               }
             `,
