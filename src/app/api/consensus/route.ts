@@ -17,71 +17,123 @@ const USE_MOCK = process.env.NODE_ENV === 'development' && !process.env.DEEPSEEK
  * GET /api/consensus?asset=BTC&context=optional context
  */
 export async function GET(request: NextRequest) {
-  // Check rate limit
-  const rateLimitResult = await checkRateLimit(request, CONSENSUS_RATE_LIMIT);
-  if (!rateLimitResult.success) {
-    return createRateLimitResponse(
-      rateLimitResult.limit,
-      rateLimitResult.remaining,
-      rateLimitResult.reset
+  const logger = createApiLogger(request);
+  
+  try {
+    logger.logRequest();
+    
+    // Check rate limit
+    const rateLimitResult = await checkRateLimit(request, CONSENSUS_RATE_LIMIT);
+    if (!rateLimitResult.success) {
+      logger.warn('Rate limit exceeded', {
+        limit: rateLimitResult.limit,
+        remaining: rateLimitResult.remaining,
+        reset: rateLimitResult.reset,
+      });
+      return createRateLimitResponse(
+        rateLimitResult.limit,
+        rateLimitResult.remaining,
+        rateLimitResult.reset
+      );
+    }
+
+    const { searchParams } = new URL(request.url);
+    const asset = searchParams.get('asset') || 'BTC';
+    const context = searchParams.get('context') || undefined;
+
+    logger.info('Starting SSE consensus stream', { 
+      asset, 
+      hasContext: !!context,
+      useMock: USE_MOCK,
+    });
+
+    const encoder = new TextEncoder();
+
+    const stream = new ReadableStream({
+      async start(controller) {
+        const sendEvent = (data: object) => {
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
+        };
+
+        // Send initial connection message
+        sendEvent({ 
+          type: 'connected', 
+          asset,
+          requestId: logger.getRequestId(),
+        });
+
+        try {
+          if (USE_MOCK) {
+            logger.info('Using mock data for development');
+            await streamMockAnalysis(sendEvent, request.signal);
+          } else {
+            // Real API calls
+            await streamRealAnalysis(asset, context, sendEvent, request.signal, logger);
+          }
+        } catch (error) {
+          logger.logError(error instanceof Error ? error : new Error(String(error)), {
+            endpoint: 'consensus',
+            method: 'GET',
+            streamType: 'SSE',
+          });
+          sendEvent({
+            type: 'error',
+            message: error instanceof Error ? error.message : 'Unknown error',
+            requestId: logger.getRequestId(),
+          });
+        }
+
+        // Set up keepalive
+        const keepAliveInterval = setInterval(() => {
+          try {
+            controller.enqueue(encoder.encode(': keepalive\n\n'));
+          } catch {
+            clearInterval(keepAliveInterval);
+          }
+        }, 30000);
+
+        // Clean up on close
+        request.signal.addEventListener('abort', () => {
+          logger.info('SSE stream aborted by client');
+          clearInterval(keepAliveInterval);
+          controller.close();
+        });
+      },
+    });
+
+    const response = new Response(stream, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive',
+        'X-Request-ID': logger.getRequestId(),
+      },
+    });
+
+    // Log response start (streaming responses are logged differently)
+    logger.info('SSE stream started', {
+      asset,
+      requestId: logger.getRequestId(),
+      responseType: 'stream',
+    });
+
+    return response;
+  } catch (error) {
+    logger.logError(error instanceof Error ? error : new Error(String(error)), {
+      endpoint: 'consensus',
+      method: 'GET',
+      stage: 'initialization',
+    });
+    
+    // Return error response for non-streaming errors
+    return Response.json(
+      {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        requestId: logger.getRequestId(),
+      },
+      { status: 500 }
     );
   }
-
-  const { searchParams } = new URL(request.url);
-  const asset = searchParams.get('asset') || 'BTC';
-  const context = searchParams.get('context') || undefined;
-
-  const encoder = new TextEncoder();
-
-  const stream = new ReadableStream({
-    async start(controller) {
-      const sendEvent = (data: object) => {
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
-      };
-
-      // Send initial connection message
-      sendEvent({ type: 'connected', asset });
-
-      try {
-        if (USE_MOCK) {
-          // Mock mode for development without API keys
-          await streamMockAnalysis(sendEvent, request.signal);
-        } else {
-          // Real API calls
-          await streamRealAnalysis(asset, context, sendEvent, request.signal);
-        }
-      } catch (error) {
-        console.error('Consensus stream error:', error);
-        sendEvent({
-          type: 'error',
-          message: error instanceof Error ? error.message : 'Unknown error',
-        });
-      }
-
-      // Set up keepalive
-      const keepAliveInterval = setInterval(() => {
-        try {
-          controller.enqueue(encoder.encode(': keepalive\n\n'));
-        } catch {
-          clearInterval(keepAliveInterval);
-        }
-      }, 30000);
-
-      // Clean up on close
-      request.signal.addEventListener('abort', () => {
-        clearInterval(keepAliveInterval);
-        controller.close();
-      });
-    },
-  });
-
-  return new Response(stream, {
-    headers: {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      Connection: 'keep-alive',
-    },
-  });
 }
 
 /**
