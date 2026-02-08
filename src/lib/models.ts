@@ -79,9 +79,9 @@ Be specific with levels, indicators, and percentages. Avoid vague language.`,
     id: 'kimi',
     name: 'Whale Watcher',
     role: 'Large Holder Movements & Accumulation Patterns',
-    baseUrl: process.env.KIMI_BASE_URL || 'https://api.moonshot.cn/v1',
+    baseUrl: process.env.KIMI_BASE_URL || 'https://api.kimi.com/coding/v1',
     apiKeyEnv: 'KIMI_API_KEY',
-    model: 'moonshot-v1-8k',
+    model: 'kimi-for-coding',
     provider: 'openai', // Moonshot/Kimi uses OpenAI-compatible API
     timeout: 30000,
     systemPrompt: `You are the Whale Watcher, an expert in analyzing large holder behavior and institutional movements in crypto markets.
@@ -264,6 +264,18 @@ export function signalToSentiment(signal: Signal): 'bullish' | 'bearish' | 'neut
       return 'neutral';
   }
 }
+
+/**
+ * Fallback order: when a model fails, try these alternatives with the same role prompt.
+ * Each model can be substituted by any other — the role prompt stays the same.
+ */
+export const FALLBACK_ORDER: Record<string, string[]> = {
+  deepseek: ['minimax', 'glm', 'kimi', 'gemini'],
+  kimi: ['deepseek', 'minimax', 'glm', 'gemini'],
+  minimax: ['deepseek', 'kimi', 'glm', 'gemini'],
+  glm: ['deepseek', 'minimax', 'kimi', 'gemini'],
+  gemini: ['deepseek', 'minimax', 'kimi', 'glm'],
+};
 
 export type ConsensusStatus = 'CONSENSUS_REACHED' | 'NO_CONSENSUS' | 'INSUFFICIENT_RESPONSES';
 

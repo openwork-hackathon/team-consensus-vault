@@ -15,6 +15,7 @@
 
 import {
   ANALYST_MODELS,
+  FALLBACK_ORDER,
   ModelConfig,
   ModelResponse,
   AnalystResult,
@@ -38,9 +39,32 @@ export const TIMEOUT_CONFIG = {
 };
 
 // Retry configuration with exponential backoff
-const MAX_RETRIES = 3;
+const MAX_RETRIES = 2; // Reduced from 3 — fallbacks handle persistent failures
 const INITIAL_RETRY_DELAY = 1000; // 1 second
 const RETRY_BACKOFF_MULTIPLIER = 2;
+
+// Gemini API key rotation — supports GEMINI_API_KEYS (comma-separated) for pool rotation
+let geminiKeyIndex = 0;
+
+function getGeminiApiKey(): string {
+  const pool = process.env.GEMINI_API_KEYS;
+  if (pool) {
+    const keys = pool.split(',').map(k => k.trim()).filter(Boolean);
+    if (keys.length > 0) {
+      return keys[geminiKeyIndex % keys.length];
+    }
+  }
+  return process.env.GEMINI_API_KEY || '';
+}
+
+function rotateGeminiKey(): void {
+  geminiKeyIndex++;
+  const pool = process.env.GEMINI_API_KEYS;
+  if (pool) {
+    const keys = pool.split(',').filter(Boolean);
+    console.log(`[gemini] Rotated to key index ${geminiKeyIndex % keys.length} of ${keys.length}`);
+  }
+}
 
 // Error types for better error handling
 export enum ConsensusErrorType {
@@ -153,7 +177,10 @@ async function callModel(
   context?: string,
   retryCount = 0
 ): Promise<ModelResponse> {
-  const apiKey = process.env[config.apiKeyEnv];
+  // Use Gemini key pool for Google provider, standard env var for others
+  const apiKey = config.provider === 'google'
+    ? getGeminiApiKey()
+    : process.env[config.apiKeyEnv];
 
   if (!apiKey) {
     throw new ConsensusError(
@@ -407,6 +434,11 @@ async function callModel(
 
     // Re-throw ConsensusErrors with retry logic
     if (error instanceof ConsensusError) {
+      // Rotate Gemini key on rate limit before retrying
+      if (config.provider === 'google' && error.type === ConsensusErrorType.RATE_LIMIT) {
+        rotateGeminiKey();
+      }
+
       // Retry logic for transient errors
       if (
         retryCount < MAX_RETRIES &&
@@ -534,7 +566,9 @@ function parseModelResponse(text: string, modelId: string): ModelResponse {
 }
 
 /**
- * Get analysis from a single model, with enhanced error handling and timing
+ * Get analysis from a single model, with fallback to alternative models.
+ * When the primary model fails (after retries), tries fallback models
+ * using the same role prompt for continuity.
  */
 export async function getAnalystOpinion(
   modelId: string,
@@ -542,9 +576,9 @@ export async function getAnalystOpinion(
   context?: string
 ): Promise<{ result: AnalystResult; responseTime: number }> {
   const startTime = Date.now();
-  const config = ANALYST_MODELS.find((m) => m.id === modelId);
+  const primaryConfig = ANALYST_MODELS.find((m) => m.id === modelId);
 
-  if (!config) {
+  if (!primaryConfig) {
     return {
       result: {
         id: modelId,
@@ -558,66 +592,85 @@ export async function getAnalystOpinion(
     };
   }
 
+  // Try primary model first
   try {
-    const response = await callModel(config, asset, context);
+    const response = await callModel(primaryConfig, asset, context);
     const responseTime = Date.now() - startTime;
-
-    // Track successful request
-    updateMetrics(config.id, true, responseTime);
+    updateMetrics(primaryConfig.id, true, responseTime);
 
     return {
       result: {
-        id: config.id,
-        name: config.name,
+        id: primaryConfig.id,
+        name: primaryConfig.name,
         sentiment: signalToSentiment(response.signal),
         confidence: response.confidence,
         reasoning: response.reasoning,
       },
       responseTime,
     };
-  } catch (error) {
-    const responseTime = Date.now() - startTime;
+  } catch (primaryError) {
+    const primaryTime = Date.now() - startTime;
+    updateMetrics(primaryConfig.id, false, primaryTime);
 
-    // Enhanced error logging with structured information
-    if (error instanceof ConsensusError) {
-      console.error(
-        `[${config.id}] ${error.type}:`,
-        error.message,
-        error.originalError ? `(Original: ${error.originalError})` : ''
-      );
+    const errorMsg = primaryError instanceof ConsensusError
+      ? `${primaryError.type}: ${primaryError.message}`
+      : primaryError instanceof Error ? primaryError.message : 'Unknown error';
+    console.warn(`[${primaryConfig.id}] Primary failed: ${errorMsg}. Trying fallbacks...`);
 
-      // Track failed request
-      updateMetrics(config.id, false, responseTime);
+    // Try fallback models with the SAME role prompt
+    const fallbackIds = FALLBACK_ORDER[modelId] || [];
+    for (const fallbackId of fallbackIds) {
+      const fallbackProvider = ANALYST_MODELS.find((m) => m.id === fallbackId);
+      if (!fallbackProvider) continue;
 
-      return {
-        result: {
-          id: config.id,
-          name: config.name,
-          sentiment: 'neutral',
-          confidence: 0,
-          reasoning: '',
-          error: `${error.type}: ${error.message}`,
-        },
-        responseTime,
+      // Check if fallback has an API key configured
+      const fallbackKey = fallbackProvider.provider === 'google'
+        ? getGeminiApiKey()
+        : process.env[fallbackProvider.apiKeyEnv];
+      if (!fallbackKey) continue;
+
+      // Create config that uses fallback's provider but primary's role prompt
+      const fallbackConfig: ModelConfig = {
+        ...fallbackProvider,
+        systemPrompt: primaryConfig.systemPrompt, // Keep the role identity
       };
+
+      try {
+        console.log(`[${primaryConfig.id}] Trying fallback: ${fallbackId}`);
+        const response = await callModel(fallbackConfig, asset, context);
+        const responseTime = Date.now() - startTime;
+        updateMetrics(fallbackId, true, responseTime);
+
+        return {
+          result: {
+            id: primaryConfig.id, // Keep original role identity
+            name: `${primaryConfig.name} (via ${fallbackProvider.name})`,
+            sentiment: signalToSentiment(response.signal),
+            confidence: response.confidence,
+            reasoning: response.reasoning,
+          },
+          responseTime,
+        };
+      } catch (fallbackError) {
+        const fbMsg = fallbackError instanceof ConsensusError
+          ? fallbackError.type : 'error';
+        console.warn(`[${primaryConfig.id}] Fallback ${fallbackId} failed: ${fbMsg}`);
+        continue; // Try next fallback
+      }
     }
 
-    // Fallback for non-ConsensusError exceptions
-    const message = error instanceof Error ? error.message : 'Unknown error';
-
-    // Track failed request
-    updateMetrics(config.id, false, responseTime);
-
-    console.error(`[${config.id}] Unexpected error:`, message, error);
+    // All fallbacks exhausted
+    const responseTime = Date.now() - startTime;
+    console.error(`[${primaryConfig.id}] All fallbacks exhausted`);
 
     return {
       result: {
-        id: config.id,
-        name: config.name,
+        id: primaryConfig.id,
+        name: primaryConfig.name,
         sentiment: 'neutral',
         confidence: 0,
         reasoning: '',
-        error: message,
+        error: `All models failed. Primary: ${errorMsg}`,
       },
       responseTime,
     };

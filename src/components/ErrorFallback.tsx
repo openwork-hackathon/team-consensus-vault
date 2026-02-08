@@ -1,8 +1,6 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { AlertCircle, RefreshCw, WifiOff, ServerCrash } from 'lucide-react';
 
 interface ErrorFallbackProps {
   error?: Error;
@@ -46,13 +44,7 @@ export default function ErrorFallback({
     >
       {/* Error Icon */}
       <div className="w-16 h-16 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mb-4">
-        {isNetworkError ? (
-          <WifiOff className="w-8 h-8 text-red-500" />
-        ) : isServerError ? (
-          <ServerCrash className="w-8 h-8 text-red-500" />
-        ) : (
-          <AlertCircle className="w-8 h-8 text-red-500" />
-        )}
+        <span className="text-2xl">{isNetworkError ? '📡' : isServerError ? '🖥️' : '⚠️'}</span>
       </div>
 
       {/* Title */}
@@ -77,22 +69,20 @@ export default function ErrorFallback({
       {/* Action Buttons */}
       <div className="flex gap-3">
         {retry && (
-          <Button
+          <button
             onClick={retry}
-            variant="default"
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-opacity"
           >
-            <RefreshCw className="w-4 h-4" />
             Try Again
-          </Button>
+          </button>
         )}
         {reset && (
-          <Button
+          <button
             onClick={reset}
-            variant="outline"
+            className="px-4 py-2 border border-border rounded-md hover:bg-muted transition-colors"
           >
             Reset
-          </Button>
+          </button>
         )}
       </div>
     </motion.div>
