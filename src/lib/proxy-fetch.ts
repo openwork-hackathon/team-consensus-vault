@@ -6,12 +6,15 @@
  * proxy is not configured (local dev with keys in .env.local).
  */
 
-// In production (Vercel), use the proxy since API keys aren't available there.
+// In production (Vercel), always use the proxy since API keys live on the proxy server.
 // In local dev, keys are in .env.local so call models directly.
 const DEFAULT_PROXY_URL = 'https://disposal-sophisticated-adsl-rate.trycloudflare.com';
+const IS_VERCEL = !!process.env.VERCEL;
 const PROXY_URL = process.env.AI_PROXY_URL !== undefined
   ? process.env.AI_PROXY_URL  // Explicitly set (can be empty string to disable)
-  : (process.env.DEEPSEEK_API_KEY ? '' : DEFAULT_PROXY_URL);  // Auto-detect: if local keys exist, skip proxy
+  : IS_VERCEL
+    ? DEFAULT_PROXY_URL  // On Vercel, always use proxy
+    : (process.env.DEEPSEEK_API_KEY ? '' : DEFAULT_PROXY_URL);  // Local: auto-detect
 
 /**
  * Fetch from an AI model API, optionally routing through the proxy.
