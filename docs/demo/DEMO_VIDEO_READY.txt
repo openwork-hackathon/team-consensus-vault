@@ -1,0 +1,82 @@
+=================================================================
+CONSENSUS VAULT DEMO VIDEO - READY FOR UPLOAD
+=================================================================
+
+STATUS: ✅ VIDEO GENERATED AND READY
+
+Video File: demo-final.mp4
+Location:   ~/consensus-vault/demo-final.mp4
+Duration:   28 seconds
+Resolution: 1920x1080 (1080p)
+Format:     MP4 (H.264)
+Size:       ~375 KB
+
+=================================================================
+QUICK UPLOAD STEPS
+=================================================================
+
+1. UPLOAD TO YOUTUBE (Recommended):
+   - Go to: https://studio.youtube.com/
+   - Click "Create" → "Upload videos"
+   - Select: demo-final.mp4
+   - Title: "Consensus Vault - Decentralized Governance Platform"
+   - Description: See demo-video-description.txt
+   - Visibility: Unlisted (or Public)
+   - Click "Publish"
+
+2. SAVE THE URL:
+   echo "YOUR_VIDEO_URL" > ~/consensus-vault/DEMO_VIDEO_URL.txt
+
+3. VERIFY:
+   - Open URL in browser
+   - Confirm video plays
+   - Check visibility settings
+
+4. SUBMIT:
+   - Add URL to hackathon submission form
+
+=================================================================
+ALTERNATIVE: LOOM
+=================================================================
+
+1. Go to: https://www.loom.com/
+2. Upload demo-final.mp4
+3. Set sharing: "Anyone with the link"
+4. Copy URL and save to DEMO_VIDEO_URL.txt
+
+=================================================================
+FILES REFERENCE
+=================================================================
+
+Video Files:
+  demo-final.mp4              - Final video (UPLOAD THIS)
+  demo-generated.mp4          - Raw backup
+
+Scripts:
+  generate-demo-video.js      - Video generator
+  create-enhanced-demo-video.sh - Enhanced creator
+
+Documentation:
+  DEMO_VIDEO_UPLOAD_INSTRUCTIONS.md - Detailed upload guide
+  demo-video-description.txt    - YouTube description
+  CVAULT-85_COMPLETION_REPORT.md - Full report
+
+=================================================================
+VIDEO CONTENT
+=================================================================
+
+[00:00-00:03] Intro - Title card with project name
+[00:03-00:05] Features - Key features highlight
+[00:05-00:25] Live Demo - Website capture with scrolling
+[00:25-00:28] Outro - Links and thank you
+
+=================================================================
+NEXT ACTIONS REQUIRED
+=================================================================
+
+[ ] Upload video to YouTube or Loom
+[ ] Save video URL to DEMO_VIDEO_URL.txt
+[ ] Verify video plays correctly
+[ ] Add URL to hackathon submission
+
+=================================================================

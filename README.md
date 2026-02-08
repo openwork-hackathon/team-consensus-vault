@@ -684,7 +684,7 @@ No wallet funds needed for demo — consensus viewing is free!
 
 ## 💬 Contact
 
-- **Human Pilot:** Jonathan (vanclute@gmail.com)
+- **Human Pilot:** Jonathan (5326546+vanclute@users.noreply.github.com)
 - **Agent Email:** shazbot@agentmail.to
 - **GitHub Issues:** Use repo issue tracker for bug reports
 

@@ -1,0 +1,219 @@
+
+> consensus-vault@0.1.0 dev
+> next dev
+
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3000
+  - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 1383ms
+ ✓ Compiled /api/glm in 297ms (31 modules)
+ GET /api/glm?asset=BTC 200 in 2898ms
+ POST /api/glm 200 in 1911ms
+ GET /api/glm?asset=SOL 200 in 3976ms
+ GET /api/glm?asset=BTC 200 in 3634ms
+ POST /api/glm 200 in 2441ms
+ GET /api/glm?asset=SOL 200 in 3348ms
+ GET /api/glm?asset=SOL 200 in 2186ms
+ GET /api/glm?asset=SOL 200 in 3773ms
+ GET /api/glm?asset=BTC 200 in 1983ms
+ GET /api/glm?asset=BTC 200 in 2638ms
+ GET /api/glm?asset=ETH 200 in 2247ms
+ GET /api/glm?asset=SOL 200 in 2336ms
+ GET /api/glm?asset=ADA 200 in 2893ms
+ GET /api/glm?asset=DOT 200 in 3588ms
+ POST /api/glm 200 in 4809ms
+ GET /api/glm 400 in 3ms
+GLM API error: SyntaxError: Unexpected token 'i', "invalid json" is not valid JSON
+    at JSON.parse (<anonymous>)
+    at parseJSONFromBytes (node:internal/deps/undici/undici:5738:19)
+    at successSteps (node:internal/deps/undici/undici:5719:27)
+    at fullyReadBody (node:internal/deps/undici/undici:4609:9)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async consumeBody (node:internal/deps/undici/undici:5728:7)
+    at async POST (webpack-internal:///(rsc)/./src/app/api/glm/route.ts:105:22)
+    at async /home/shazbot/team-consensus-vault/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:57228
+    at async eT.execute (/home/shazbot/team-consensus-vault/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:46851)
+    at async eT.handle (/home/shazbot/team-consensus-vault/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:58760)
+    at async doRender (/home/shazbot/team-consensus-vault/node_modules/next/dist/server/base-server.js:1366:42)
+    at async cacheEntry.responseCache.get.routeKind (/home/shazbot/team-consensus-vault/node_modules/next/dist/server/base-server.js:1588:28)
+    at async DevServer.renderToResponseWithComponentsImpl (/home/shazbot/team-consensus-vault/node_modules/next/dist/server/base-server.js:1496:28)
+    at async DevServer.renderPageComponent (/home/shazbot/team-consensus-vault/node_modules/next/dist/server/base-server.js:1924:24)
+    at async DevServer.renderToResponseImpl (/home/shazbot/team-consensus-vault/node_modules/next/dist/server/base-server.js:1962:32)
+    at async DevServer.pipeImpl (/home/shazbot/team-consensus-vault/node_modules/next/dist/server/base-server.js:922:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/home/shazbot/team-consensus-vault/node_modules/next/dist/server/next-server.js:272:17)
+    at async DevServer.handleRequestImpl (/home/shazbot/team-consensus-vault/node_modules/next/dist/server/base-server.js:818:17)
+    at async /home/shazbot/team-consensus-vault/node_modules/next/dist/server/dev/next-dev-server.js:339:20
+    at async Span.traceAsyncFn (/home/shazbot/team-consensus-vault/node_modules/next/dist/trace/trace.js:154:20)
+    at async DevServer.handleRequest (/home/shazbot/team-consensus-vault/node_modules/next/dist/server/dev/next-dev-server.js:336:24)
+    at async invokeRender (/home/shazbot/team-consensus-vault/node_modules/next/dist/server/lib/router-server.js:179:21)
+    at async handleRequest (/home/shazbot/team-consensus-vault/node_modules/next/dist/server/lib/router-server.js:359:24)
+    at async requestHandlerImpl (/home/shazbot/team-consensus-vault/node_modules/next/dist/server/lib/router-server.js:383:13)
+    at async Server.requestListener (/home/shazbot/team-consensus-vault/node_modules/next/dist/server/lib/start-server.js:141:13)
+ POST /api/glm 400 in 5ms
+ ✓ Compiled in 319ms (203 modules)
+ ○ Compiling / ...
+ ⚠ ./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+Module not found: Can't resolve '@react-native-async-storage/async-storage' in '/home/shazbot/team-consensus-vault/node_modules/@metamask/sdk/dist/browser/es'
+
+Import trace for requested module:
+./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+./node_modules/@wagmi/connectors/dist/esm/metaMask.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./node_modules/@rainbow-me/rainbowkit/dist/index.js
+./src/app/page.tsx
+
+./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+Module not found: Can't resolve '@react-native-async-storage/async-storage' in '/home/shazbot/team-consensus-vault/node_modules/@metamask/sdk/dist/browser/es'
+
+Import trace for requested module:
+./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+./node_modules/@wagmi/connectors/dist/esm/metaMask.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./node_modules/@rainbow-me/rainbowkit/dist/index.js
+./src/app/page.tsx
+
+./node_modules/pino/lib/tools.js
+Module not found: Can't resolve 'pino-pretty' in '/home/shazbot/team-consensus-vault/node_modules/pino/lib'
+
+Import trace for requested module:
+./node_modules/pino/lib/tools.js
+./node_modules/pino/pino.js
+./node_modules/@walletconnect/logger/dist/index.es.js
+./node_modules/@walletconnect/universal-provider/dist/index.es.js
+./node_modules/@walletconnect/ethereum-provider/dist/index.es.js
+./node_modules/@wagmi/connectors/dist/esm/walletConnect.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./node_modules/@rainbow-me/rainbowkit/dist/index.js
+./src/app/page.tsx
+Lit is in dev mode. Not recommended for production! See https://lit.dev/msg/dev-mode for more information.
+ GET / 200 in 20888ms
+ ⚠ ./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+Module not found: Can't resolve '@react-native-async-storage/async-storage' in '/home/shazbot/team-consensus-vault/node_modules/@metamask/sdk/dist/browser/es'
+
+Import trace for requested module:
+./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+./node_modules/@wagmi/connectors/dist/esm/metaMask.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./node_modules/@rainbow-me/rainbowkit/dist/index.js
+./src/app/page.tsx
+
+./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+Module not found: Can't resolve '@react-native-async-storage/async-storage' in '/home/shazbot/team-consensus-vault/node_modules/@metamask/sdk/dist/browser/es'
+
+Import trace for requested module:
+./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+./node_modules/@wagmi/connectors/dist/esm/metaMask.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./node_modules/@rainbow-me/rainbowkit/dist/index.js
+./src/app/page.tsx
+
+./node_modules/pino/lib/tools.js
+Module not found: Can't resolve 'pino-pretty' in '/home/shazbot/team-consensus-vault/node_modules/pino/lib'
+
+Import trace for requested module:
+./node_modules/pino/lib/tools.js
+./node_modules/pino/pino.js
+./node_modules/@walletconnect/logger/dist/index.es.js
+./node_modules/@walletconnect/universal-provider/dist/index.es.js
+./node_modules/@walletconnect/ethereum-provider/dist/index.es.js
+./node_modules/@wagmi/connectors/dist/esm/walletConnect.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./node_modules/@rainbow-me/rainbowkit/dist/index.js
+./src/app/page.tsx
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, lstat '/home/shazbot/team-consensus-vault/.next/server/app/api'
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving '../../../../.next/server/app/api/glm/route' in /home/shazbot/team-consensus-vault/node_modules/next/dist/server for build dependencies doesn't lead to expected result '/home/shazbot/team-consensus-vault/.next/server/app/api/glm/route.js', but to 'Error: Can't resolve '../../../../.next/server/app/api/glm/route' in '/home/shazbot/team-consensus-vault/node_modules/next/dist/server'' instead. Resolving dependencies are ignored for this path.
+<w>  at resolve commonjs file ../../../../.next/server/app/api/glm/route (expected /home/shazbot/team-consensus-vault/.next/server/app/api/glm/route.js)
+<w>  at file dependencies /home/shazbot/team-consensus-vault/node_modules/next/dist/server/require.js
+<w>  at file /home/shazbot/team-consensus-vault/node_modules/next/dist/server/require.js
+<w>  at file dependencies /home/shazbot/team-consensus-vault/node_modules/next/dist/server/load-components.js
+<w>  at file /home/shazbot/team-consensus-vault/node_modules/next/dist/server/load-components.js
+<w>  at file dependencies /home/shazbot/team-consensus-vault/node_modules/next/dist/build/utils.js
+<w>  at file /home/shazbot/team-consensus-vault/node_modules/next/dist/build/utils.js
+<w>  at file dependencies /home/shazbot/team-consensus-vault/node_modules/next/dist/build/webpack/loaders/next-app-loader.js
+<w>  at file /home/shazbot/team-consensus-vault/node_modules/next/dist/build/webpack/loaders/next-app-loader.js
+<w>  at file dependencies /home/shazbot/team-consensus-vault/node_modules/next/dist/compiled/loader-runner/LoaderRunner.js
+<w>  at file /home/shazbot/team-consensus-vault/node_modules/next/dist/compiled/loader-runner/LoaderRunner.js
+<w>  at file dependencies /home/shazbot/team-consensus-vault/node_modules/next/dist/compiled/webpack/bundle5.js
+<w>  at file /home/shazbot/team-consensus-vault/node_modules/next/dist/compiled/webpack/bundle5.js
+<w>  at file dependencies /home/shazbot/team-consensus-vault/node_modules/next/dist/compiled/webpack/webpack.js
+<w>  at file /home/shazbot/team-consensus-vault/node_modules/next/dist/compiled/webpack/webpack.js
+<w>  at file dependencies /home/shazbot/team-consensus-vault/node_modules/next/dist/build/webpack/plugins/define-env-plugin.js
+<w>  at file /home/shazbot/team-consensus-vault/node_modules/next/dist/build/webpack/plugins/define-env-plugin.js
+<w>  at file dependencies /home/shazbot/team-consensus-vault/node_modules/next/dist/build/swc/index.js
+<w>  at file /home/shazbot/team-consensus-vault/node_modules/next/dist/build/swc/index.js
+<w>  at file dependencies /home/shazbot/team-consensus-vault/node_modules/next/dist/build/analysis/parse-module.js
+<w>  at file /home/shazbot/team-consensus-vault/node_modules/next/dist/build/analysis/parse-module.js
+<w>  at file dependencies /home/shazbot/team-consensus-vault/node_modules/next/dist/build/analysis/get-page-static-info.js
+<w>  at file /home/shazbot/team-consensus-vault/node_modules/next/dist/build/analysis/get-page-static-info.js
+<w>  at file dependencies /home/shazbot/team-consensus-vault/node_modules/next/dist/build/webpack/loaders/next-flight-client-module-loader.js
+<w>  at file /home/shazbot/team-consensus-vault/node_modules/next/dist/build/webpack/loaders/next-flight-client-module-loader.js
+<w>  at resolve commonjs /home/shazbot/team-consensus-vault/node_modules/next/dist/build/webpack/loaders/next-flight-client-module-loader.js
+ ⚠ ./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+Module not found: Can't resolve '@react-native-async-storage/async-storage' in '/home/shazbot/team-consensus-vault/node_modules/@metamask/sdk/dist/browser/es'
+
+Import trace for requested module:
+./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+./node_modules/@wagmi/connectors/dist/esm/metaMask.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./node_modules/@rainbow-me/rainbowkit/dist/index.js
+./src/app/page.tsx
+ ⚠ ./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+Module not found: Can't resolve '@react-native-async-storage/async-storage' in '/home/shazbot/team-consensus-vault/node_modules/@metamask/sdk/dist/browser/es'
+
+Import trace for requested module:
+./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+./node_modules/@wagmi/connectors/dist/esm/metaMask.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./node_modules/@rainbow-me/rainbowkit/dist/index.js
+./src/app/page.tsx
+ ⚠ ./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+Module not found: Can't resolve '@react-native-async-storage/async-storage' in '/home/shazbot/team-consensus-vault/node_modules/@metamask/sdk/dist/browser/es'
+
+Import trace for requested module:
+./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+./node_modules/@wagmi/connectors/dist/esm/metaMask.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./node_modules/@rainbow-me/rainbowkit/dist/index.js
+./src/app/page.tsx
+
+./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+Module not found: Can't resolve '@react-native-async-storage/async-storage' in '/home/shazbot/team-consensus-vault/node_modules/@metamask/sdk/dist/browser/es'
+
+Import trace for requested module:
+./node_modules/@metamask/sdk/dist/browser/es/metamask-sdk.js
+./node_modules/@wagmi/connectors/dist/esm/metaMask.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./node_modules/@rainbow-me/rainbowkit/dist/index.js
+./src/components/Providers.tsx
+
+./node_modules/pino/lib/tools.js
+Module not found: Can't resolve 'pino-pretty' in '/home/shazbot/team-consensus-vault/node_modules/pino/lib'
+
+Import trace for requested module:
+./node_modules/pino/lib/tools.js
+./node_modules/pino/pino.js
+./node_modules/@walletconnect/logger/dist/index.es.js
+./node_modules/@walletconnect/universal-provider/dist/index.es.js
+./node_modules/@walletconnect/ethereum-provider/dist/index.es.js
+./node_modules/@wagmi/connectors/dist/esm/walletConnect.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./node_modules/@rainbow-me/rainbowkit/dist/index.js
+./src/components/Providers.tsx
+WalletConnect Core is already initialized. This is probably a mistake and can lead to unexpected behavior. Init() was called 2 times.
+WalletConnect Core is already initialized. This is probably a mistake and can lead to unexpected behavior. Init() was called 2 times.
+Multiple versions of Lit loaded. Loading multiple versions is not recommended. See https://lit.dev/msg/multiple-versions for more information.
+ GET /api/gemini?query=test 404 in 5164ms
+[?25h
