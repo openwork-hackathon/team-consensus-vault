@@ -18,18 +18,56 @@ import {
 const lastRequestTime: Record<string, number> = {};
 const MIN_REQUEST_INTERVAL = 1000; // 1 second between requests per model
 
+// Configurable timeout and retry settings
+export const TIMEOUT_CONFIG = {
+  DEFAULT_TIMEOUT: 30000, // 30 seconds default
+  MAX_TIMEOUT: 60000, // 60 seconds maximum
+  MIN_TIMEOUT: 5000, // 5 seconds minimum
+  RETRY_ATTEMPTS: 2, // Number of retries on failure
+  RETRY_DELAY: 1000, // Delay between retries in ms
+};
+
+// Error types for better error handling
+export enum ConsensusErrorType {
+  TIMEOUT = 'TIMEOUT',
+  API_ERROR = 'API_ERROR',
+  PARSE_ERROR = 'PARSE_ERROR',
+  NETWORK_ERROR = 'NETWORK_ERROR',
+  RATE_LIMIT = 'RATE_LIMIT',
+  MISSING_API_KEY = 'MISSING_API_KEY',
+  INVALID_RESPONSE = 'INVALID_RESPONSE',
+}
+
+export class ConsensusError extends Error {
+  constructor(
+    message: string,
+    public type: ConsensusErrorType,
+    public modelId?: string,
+    public originalError?: unknown
+  ) {
+    super(message);
+    this.name = 'ConsensusError';
+  }
+}
+
 /**
  * Call a single AI model with the analysis prompt
+ * Enhanced with better error handling and retry logic
  */
 async function callModel(
   config: ModelConfig,
   asset: string,
-  context?: string
+  context?: string,
+  retryCount = 0
 ): Promise<ModelResponse> {
   const apiKey = process.env[config.apiKeyEnv];
 
   if (!apiKey) {
-    throw new Error(`Missing API key: ${config.apiKeyEnv}`);
+    throw new ConsensusError(
+      `Missing API key: ${config.apiKeyEnv}`,
+      ConsensusErrorType.MISSING_API_KEY,
+      config.id
+    );
   }
 
   // Rate limiting
@@ -41,11 +79,18 @@ async function callModel(
   }
   lastRequestTime[config.id] = Date.now();
 
-  const userPrompt = `Analyze ${asset} for a trading signal. ${context || 'Provide your expert analysis based on current market conditions.'}`;
+  // Enhanced user prompt with better context and structure
+  const userPrompt = buildEnhancedPrompt(asset, context);
+
+  // Ensure timeout is within acceptable bounds
+  const timeout = Math.min(
+    Math.max(config.timeout, TIMEOUT_CONFIG.MIN_TIMEOUT),
+    TIMEOUT_CONFIG.MAX_TIMEOUT
+  );
 
   // Create abort controller for timeout
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), config.timeout);
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
 
   try {
     let response: Response;
@@ -75,18 +120,47 @@ async function callModel(
         }
       );
 
+      if (!response.ok) {
+        data = await response.json();
+        const geminiData = data as {
+          candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+          error?: { message?: string; code?: number };
+        };
+
+        // Check for rate limiting
+        if (response.status === 429 || geminiData.error?.code === 429) {
+          throw new ConsensusError(
+            'Rate limit exceeded',
+            ConsensusErrorType.RATE_LIMIT,
+            config.id,
+            geminiData.error
+          );
+        }
+
+        throw new ConsensusError(
+          geminiData.error?.message || `Gemini API error: ${response.status}`,
+          ConsensusErrorType.API_ERROR,
+          config.id,
+          geminiData.error
+        );
+      }
+
       data = await response.json();
       const geminiData = data as {
         candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
         error?: { message?: string };
       };
 
-      if (!response.ok) {
-        throw new Error(geminiData.error?.message || `Gemini API error: ${response.status}`);
+      const text = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!text) {
+        throw new ConsensusError(
+          'Empty response from Gemini API',
+          ConsensusErrorType.INVALID_RESPONSE,
+          config.id
+        );
       }
 
-      const text = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || '';
-      return parseModelResponse(text);
+      return parseModelResponse(text, config.id);
     } else if (config.provider === 'anthropic') {
       // Anthropic-compatible API (GLM)
       response = await fetch(`${config.baseUrl}/messages`, {
@@ -105,18 +179,47 @@ async function callModel(
         }),
       });
 
+      if (!response.ok) {
+        data = await response.json();
+        const anthropicData = data as {
+          content?: Array<{ text?: string }>;
+          error?: { message?: string; type?: string };
+        };
+
+        // Check for rate limiting
+        if (response.status === 429 || anthropicData.error?.type === 'rate_limit_error') {
+          throw new ConsensusError(
+            'Rate limit exceeded',
+            ConsensusErrorType.RATE_LIMIT,
+            config.id,
+            anthropicData.error
+          );
+        }
+
+        throw new ConsensusError(
+          anthropicData.error?.message || `API error: ${response.status}`,
+          ConsensusErrorType.API_ERROR,
+          config.id,
+          anthropicData.error
+        );
+      }
+
       data = await response.json();
       const anthropicData = data as {
         content?: Array<{ text?: string }>;
         error?: { message?: string };
       };
 
-      if (!response.ok) {
-        throw new Error(anthropicData.error?.message || `API error: ${response.status}`);
+      const text = anthropicData.content?.[0]?.text;
+      if (!text) {
+        throw new ConsensusError(
+          'Empty response from Anthropic API',
+          ConsensusErrorType.INVALID_RESPONSE,
+          config.id
+        );
       }
 
-      const text = anthropicData.content?.[0]?.text || '';
-      return parseModelResponse(text);
+      return parseModelResponse(text, config.id);
     } else {
       // OpenAI-compatible API (DeepSeek, Kimi, MiniMax)
       response = await fetch(`${config.baseUrl}/chat/completions`, {
@@ -137,45 +240,204 @@ async function callModel(
         }),
       });
 
+      if (!response.ok) {
+        data = await response.json();
+        const openaiData = data as {
+          choices?: Array<{ message?: { content?: string } }>;
+          error?: { message?: string; type?: string; code?: string };
+        };
+
+        // Check for rate limiting
+        if (
+          response.status === 429 ||
+          openaiData.error?.type === 'rate_limit_exceeded' ||
+          openaiData.error?.code === 'rate_limit_exceeded'
+        ) {
+          throw new ConsensusError(
+            'Rate limit exceeded',
+            ConsensusErrorType.RATE_LIMIT,
+            config.id,
+            openaiData.error
+          );
+        }
+
+        throw new ConsensusError(
+          openaiData.error?.message || `API error: ${response.status}`,
+          ConsensusErrorType.API_ERROR,
+          config.id,
+          openaiData.error
+        );
+      }
+
       data = await response.json();
       const openaiData = data as {
         choices?: Array<{ message?: { content?: string } }>;
         error?: { message?: string };
       };
 
-      if (!response.ok) {
-        throw new Error(openaiData.error?.message || `API error: ${response.status}`);
+      const text = openaiData.choices?.[0]?.message?.content;
+      if (!text) {
+        throw new ConsensusError(
+          'Empty response from OpenAI API',
+          ConsensusErrorType.INVALID_RESPONSE,
+          config.id
+        );
       }
 
-      const text = openaiData.choices?.[0]?.message?.content || '';
-      return parseModelResponse(text);
+      return parseModelResponse(text, config.id);
     }
+  } catch (error) {
+    clearTimeout(timeoutId);
+
+    // Handle abort/timeout errors
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new ConsensusError(
+        `Request timed out after ${timeout}ms`,
+        ConsensusErrorType.TIMEOUT,
+        config.id,
+        error
+      );
+    }
+
+    // Handle network errors
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new ConsensusError(
+        'Network error during API call',
+        ConsensusErrorType.NETWORK_ERROR,
+        config.id,
+        error
+      );
+    }
+
+    // Re-throw ConsensusErrors
+    if (error instanceof ConsensusError) {
+      // Retry logic for transient errors
+      if (
+        retryCount < TIMEOUT_CONFIG.RETRY_ATTEMPTS &&
+        (error.type === ConsensusErrorType.NETWORK_ERROR ||
+          error.type === ConsensusErrorType.TIMEOUT)
+      ) {
+        console.warn(
+          `[${config.id}] Retrying after ${error.type} (attempt ${retryCount + 1}/${TIMEOUT_CONFIG.RETRY_ATTEMPTS})`
+        );
+        await new Promise((resolve) => setTimeout(resolve, TIMEOUT_CONFIG.RETRY_DELAY));
+        return callModel(config, asset, context, retryCount + 1);
+      }
+      throw error;
+    }
+
+    // Wrap unknown errors
+    throw new ConsensusError(
+      error instanceof Error ? error.message : 'Unknown error',
+      ConsensusErrorType.API_ERROR,
+      config.id,
+      error
+    );
   } finally {
     clearTimeout(timeoutId);
   }
 }
 
 /**
- * Parse the model's text response into structured format
+ * Build enhanced prompt with better structure and context
  */
-function parseModelResponse(text: string): ModelResponse {
+function buildEnhancedPrompt(asset: string, context?: string): string {
+  const basePrompt = `Analyze ${asset.toUpperCase()} for a trading signal.`;
+
+  if (context && context.trim()) {
+    return `${basePrompt}
+
+Additional Context: ${context}
+
+Instructions:
+1. Consider the provided context alongside your specialized expertise
+2. Focus on actionable insights relevant to current market conditions
+3. Be specific about key levels, metrics, or indicators
+4. Provide a clear, concise reasoning for your signal
+
+Remember: Respond ONLY with valid JSON in the exact format specified.`;
+  }
+
+  return `${basePrompt}
+
+Instructions:
+1. Analyze current market conditions for ${asset.toUpperCase()}
+2. Apply your specialized analytical framework
+3. Identify the most significant factors influencing the market
+4. Provide clear, specific reasoning for your signal
+5. Base confidence on the strength and alignment of your signals
+
+Remember: Respond ONLY with valid JSON in the exact format specified.`;
+}
+
+/**
+ * Parse the model's text response into structured format
+ * Enhanced with better error handling and validation
+ */
+function parseModelResponse(text: string, modelId: string): ModelResponse {
   // Try to extract JSON from the response
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
-    throw new Error('No JSON found in response');
+    throw new ConsensusError(
+      'No JSON found in response',
+      ConsensusErrorType.PARSE_ERROR,
+      modelId
+    );
   }
 
   try {
     const parsed = JSON.parse(jsonMatch[0]);
 
-    // Validate and normalize the response
-    const signal = String(parsed.signal || 'hold').toLowerCase();
-    if (!['buy', 'sell', 'hold'].includes(signal)) {
-      throw new Error(`Invalid signal: ${signal}`);
+    // Validate required fields
+    if (!parsed.signal) {
+      throw new ConsensusError(
+        'Missing required field: signal',
+        ConsensusErrorType.PARSE_ERROR,
+        modelId
+      );
     }
 
-    const confidence = Math.min(100, Math.max(0, Number(parsed.confidence) || 50));
-    const reasoning = String(parsed.reasoning || 'No reasoning provided');
+    // Validate and normalize the signal
+    const signal = String(parsed.signal).toLowerCase().trim();
+    if (!['buy', 'sell', 'hold'].includes(signal)) {
+      throw new ConsensusError(
+        `Invalid signal value: "${signal}". Must be "buy", "sell", or "hold"`,
+        ConsensusErrorType.PARSE_ERROR,
+        modelId
+      );
+    }
+
+    // Validate and normalize confidence
+    const rawConfidence = parsed.confidence;
+    if (rawConfidence === undefined || rawConfidence === null) {
+      throw new ConsensusError(
+        'Missing required field: confidence',
+        ConsensusErrorType.PARSE_ERROR,
+        modelId
+      );
+    }
+
+    const confidence = Math.min(100, Math.max(0, Number(rawConfidence) || 0));
+    if (isNaN(confidence)) {
+      throw new ConsensusError(
+        `Invalid confidence value: "${rawConfidence}". Must be a number between 0-100`,
+        ConsensusErrorType.PARSE_ERROR,
+        modelId
+      );
+    }
+
+    // Validate and normalize reasoning
+    const reasoning = parsed.reasoning
+      ? String(parsed.reasoning).trim()
+      : 'No reasoning provided';
+
+    if (reasoning.length < 10) {
+      throw new ConsensusError(
+        'Reasoning too short (minimum 10 characters)',
+        ConsensusErrorType.PARSE_ERROR,
+        modelId
+      );
+    }
 
     return {
       signal: signal as 'buy' | 'sell' | 'hold',
@@ -183,12 +445,20 @@ function parseModelResponse(text: string): ModelResponse {
       reasoning,
     };
   } catch (e) {
-    throw new Error(`Failed to parse response: ${e}`);
+    if (e instanceof ConsensusError) {
+      throw e;
+    }
+    throw new ConsensusError(
+      `Failed to parse JSON response: ${e instanceof Error ? e.message : 'Unknown error'}`,
+      ConsensusErrorType.PARSE_ERROR,
+      modelId,
+      e
+    );
   }
 }
 
 /**
- * Get analysis from a single model, with error handling and timing
+ * Get analysis from a single model, with enhanced error handling and timing
  */
 export async function getAnalystOpinion(
   modelId: string,
@@ -227,8 +497,32 @@ export async function getAnalystOpinion(
     };
   } catch (error) {
     const responseTime = Date.now() - startTime;
+
+    // Enhanced error logging with structured information
+    if (error instanceof ConsensusError) {
+      console.error(
+        `[${config.id}] ${error.type}:`,
+        error.message,
+        error.originalError ? `(Original: ${error.originalError})` : ''
+      );
+
+      return {
+        result: {
+          id: config.id,
+          name: config.name,
+          sentiment: 'neutral',
+          confidence: 0,
+          reasoning: '',
+          error: `${error.type}: ${error.message}`,
+        },
+        responseTime,
+      };
+    }
+
+    // Fallback for non-ConsensusError exceptions
     const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error(`[${config.id}] Error:`, message);
+    console.error(`[${config.id}] Unexpected error:`, message, error);
+
     return {
       result: {
         id: config.id,
