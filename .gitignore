@@ -86,3 +86,21 @@ demo/audio_segments_v2/
 
 # Test result artifacts
 cvault-*-test-results/
+
+# Lighthouse reports and analysis artifacts
+lighthouse-*.json
+lighthouse-reports/
+LIGHTHOUSE_OPTIMIZATION.md
+extract-lighthouse-details.js
+manual-viewport-test.js
+
+# Demo video files (too large for git)
+demo/*.mp4
+demo/generate-*.sh
+
+# All orchestrator-generated report MDs
+*_OPTIMIZATION.md
+*_IMPLEMENTATION.md
+*_STATUS.md
+*_SUMMARY.md
+*_REPORT.md
