@@ -17,6 +17,7 @@ interface ChatroomStreamState {
   consensusStrength: number;
   cooldownEndsAt: number | null;
   isConnected: boolean;
+  systemError: string | null;
 }
 
 export function useChatroomStream(): ChatroomStreamState {
@@ -27,6 +28,7 @@ export function useChatroomStream(): ChatroomStreamState {
   const [consensusStrength, setConsensusStrength] = useState(0);
   const [cooldownEndsAt, setCooldownEndsAt] = useState<number | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [systemError, setSystemError] = useState<string | null>(null);
 
   const retryCountRef = useRef(0);
   const maxRetries = 5;
@@ -125,6 +127,28 @@ export function useChatroomStream(): ChatroomStreamState {
         }
       });
 
+      es.addEventListener('generation_error', (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          setSystemError(`Generation error: ${data.error}`);
+          // Clear error after 10 seconds
+          setTimeout(() => setSystemError(null), 10000);
+        } catch (e) {
+          console.error('[chatroom] Failed to parse generation_error:', e);
+        }
+      });
+
+      es.addEventListener('system_error', (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          setSystemError(data.message);
+          // Clear error after 10 seconds
+          setTimeout(() => setSystemError(null), 10000);
+        } catch (e) {
+          console.error('[chatroom] Failed to parse system_error:', e);
+        }
+      });
+
       es.onerror = () => {
         setIsConnected(false);
         es.close();
@@ -164,5 +188,6 @@ export function useChatroomStream(): ChatroomStreamState {
     consensusStrength,
     cooldownEndsAt,
     isConnected,
+    systemError,
   };
 }

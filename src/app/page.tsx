@@ -9,6 +9,7 @@ import TradeSignal from '@/components/TradeSignal';
 import SignalHistory, { SignalHistoryEntry } from '@/components/SignalHistory';
 import DepositModal from '@/components/DepositModal';
 import WithdrawModal from '@/components/WithdrawModal';
+import SwapWidget from '@/components/SwapWidget';
 import ToastContainer, { ToastData } from '@/components/ToastContainer';
 import LoadingSkeleton from '@/components/LoadingSkeleton';
 
@@ -30,6 +31,7 @@ export default function Dashboard() {
   const { addDeposit, removeDeposit, totalValueLocked, getDepositsByAddress } = useVault();
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
+  const [isSwapWidgetOpen, setIsSwapWidgetOpen] = useState(false);
   const [toasts, setToasts] = useState<ToastData[]>([]);
   const [autoTradingEnabled, setAutoTradingEnabled] = useState(true);
   const [isClient, setIsClient] = useState(false);
@@ -227,6 +229,12 @@ export default function Dashboard() {
         depositedBalance={userTotalDeposited}
       />
 
+      {/* Swap Widget for OPENWORK */}
+      <SwapWidget
+        isOpen={isSwapWidgetOpen}
+        onClose={() => setIsSwapWidgetOpen(false)}
+      />
+
       <div id="main-content" className="container mx-auto px-4 py-6 lg:py-8 max-w-7xl">
         {/* Vault Stats + Deposit Button */}
         <section
@@ -254,7 +262,7 @@ export default function Dashboard() {
                 </div>
               )}
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-3 flex-wrap">
               <button
                 onClick={() => setIsDepositModalOpen(true)}
                 disabled={!isConnected}
@@ -281,6 +289,16 @@ export default function Dashboard() {
               <span id="withdraw-button-description" className="sr-only">
                 Opens a modal dialog to withdraw cryptocurrency from your vault
               </span>
+              <button
+                onClick={() => setIsSwapWidgetOpen(true)}
+                className="px-6 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors flex items-center gap-2 touch-manipulation min-h-[44px] border-2 border-accent"
+                aria-label="Get OPENWORK tokens"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <span>Get OPENWORK</span>
+              </button>
             </div>
           </div>
         </section>

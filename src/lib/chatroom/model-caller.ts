@@ -8,6 +8,20 @@ const MAX_RETRIES = 2;
 const INITIAL_RETRY_DELAY = 1000;
 const DEFAULT_TIMEOUT = 30000;
 
+// Chatroom-specific error class for better error tracking
+export class ChatroomModelError extends Error {
+  constructor(
+    message: string,
+    public modelId: string,
+    public errorType: 'timeout' | 'rate_limit' | 'api_error' | 'network' | 'parse_error',
+    public retryable: boolean = true,
+    public originalError?: unknown
+  ) {
+    super(message);
+    this.name = 'ChatroomModelError';
+  }
+}
+
 /**
  * Call a model and return raw text (not parsed JSON).
  * Reuses the same provider-switching logic from consensus-engine.ts
@@ -68,22 +82,46 @@ async function callWithRetry(
   } catch (error) {
     clearTimeout(timeoutId);
 
-    // Retry on transient errors
-    if (retryCount < MAX_RETRIES) {
-      const isRetryable =
-        (error instanceof Error && error.name === 'AbortError') ||
-        (error instanceof Error && error.message.includes('rate limit')) ||
-        (error instanceof Error && error.message.includes('429'));
+    // Classify error type
+    let errorType: ChatroomModelError['errorType'] = 'api_error';
+    let retryable = false;
 
-      if (isRetryable) {
-        const delay = INITIAL_RETRY_DELAY * Math.pow(2, retryCount);
-        console.warn(`[chatroom-model] Retrying ${config.id} (attempt ${retryCount + 1}/${MAX_RETRIES}, delay: ${delay}ms)`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-        return callWithRetry(config, apiKey, systemPrompt, userPrompt, maxTokens, retryCount + 1);
+    if (error instanceof Error) {
+      if (error.name === 'AbortError') {
+        errorType = 'timeout';
+        retryable = true;
+      } else if (error.message.includes('rate limit') || error.message.includes('429')) {
+        errorType = 'rate_limit';
+        retryable = true;
+      } else if (error.message.includes('fetch') || error.message.includes('network')) {
+        errorType = 'network';
+        retryable = true;
+      } else if (error.message.includes('Empty response')) {
+        errorType = 'parse_error';
+        retryable = true;
       }
     }
 
-    throw error;
+    // Retry on transient errors
+    if (retryable && retryCount < MAX_RETRIES) {
+      const delay = INITIAL_RETRY_DELAY * Math.pow(2, retryCount);
+      console.warn(`[chatroom-model] Retrying ${config.id} (attempt ${retryCount + 1}/${MAX_RETRIES}, delay: ${delay}ms, type: ${errorType})`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return callWithRetry(config, apiKey, systemPrompt, userPrompt, maxTokens, retryCount + 1);
+    }
+
+    // Convert to ChatroomModelError for better error tracking
+    if (error instanceof ChatroomModelError) {
+      throw error;
+    }
+
+    throw new ChatroomModelError(
+      error instanceof Error ? error.message : 'Unknown error',
+      config.id,
+      errorType,
+      retryable,
+      error
+    );
   }
 }
 

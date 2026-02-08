@@ -72,12 +72,38 @@ export default function AnalystCard({ analyst, index }: AnalystCardProps) {
               ●●●
             </motion.span>
           </div>
-        ) : analyst.error ? (
-          <div className="flex items-center gap-2">
-            <span className="text-red-500 text-lg">⚠</span>
-            <p className="text-xs sm:text-sm text-red-600 dark:text-red-400">
-              {analyst.error}
+        ) : analyst.progress ? (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span className="text-blue-500">⏳</span>
+            <p className="text-xs sm:text-sm">
+              {analyst.progress.message}
+              {analyst.progress.estimatedRemainingTime && (
+                <span className="text-xs opacity-70 ml-1">
+                  (~{Math.round(analyst.progress.estimatedRemainingTime / 1000)}s remaining)
+                </span>
+              )}
             </p>
+          </div>
+        ) : analyst.error ? (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <span className={`text-lg ${analyst.userFacingError?.severity === 'critical' ? 'text-red-500' : 'text-yellow-500'}`}>
+                {analyst.userFacingError?.severity === 'critical' ? '🚨' : '⚠'}
+              </span>
+              <p className="text-xs sm:text-sm text-red-600 dark:text-red-400 font-medium">
+                {analyst.userFacingError?.message || analyst.error}
+              </p>
+            </div>
+            {analyst.userFacingError?.recoveryGuidance && (
+              <p className="text-xs text-muted-foreground pl-6">
+                💡 {analyst.userFacingError.recoveryGuidance}
+              </p>
+            )}
+            {analyst.userFacingError?.retryable && analyst.userFacingError?.estimatedWaitTime && (
+              <p className="text-xs text-blue-600 dark:text-blue-400 pl-6">
+                ⏱️ Estimated wait: {Math.round(analyst.userFacingError.estimatedWaitTime / 1000)}s
+              </p>
+            )}
           </div>
         ) : (
           <motion.p

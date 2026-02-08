@@ -1,6 +1,6 @@
 import { ChatMessage, ChatRoomState, ChatPhase, MessageSentiment } from './types';
 import { PERSONAS, PERSONAS_BY_ID } from './personas';
-import { callModelRaw } from './model-caller';
+import { callModelRaw, ChatroomModelError } from './model-caller';
 import { buildDebatePrompt, buildCooldownPrompt, buildModeratorPrompt } from './prompts';
 import { calculateRollingConsensus } from './consensus-calc';
 
@@ -54,13 +54,32 @@ export async function generateNextMessage(
     promptData = JSON.parse(buildDebatePrompt(persona, history));
   }
 
-  // 4. Call persona's model
-  const rawResponse = await callModelRaw(
-    persona.modelId,
-    promptData.systemPrompt,
-    promptData.userPrompt,
-    250
-  );
+  // 4. Call persona's model with error handling
+  let rawResponse: string;
+  try {
+    rawResponse = await callModelRaw(
+      persona.modelId,
+      promptData.systemPrompt,
+      promptData.userPrompt,
+      250
+    );
+  } catch (error) {
+    // Log detailed error information for debugging
+    if (error instanceof ChatroomModelError) {
+      console.error(`[chatroom-engine] Model call failed for ${persona.handle}:`, {
+        modelId: error.modelId,
+        errorType: error.errorType,
+        retryable: error.retryable,
+        message: error.message,
+      });
+
+      // Generate fallback message indicating technical difficulty
+      rawResponse = `[Technical difficulties - unable to generate response. Error: ${error.errorType}]`;
+    } else {
+      console.error(`[chatroom-engine] Unexpected error calling ${persona.handle}:`, error);
+      rawResponse = '[Technical difficulties - unable to generate response]';
+    }
+  }
 
   // 5. Parse sentiment tag and strip from display content
   let content = rawResponse.trim();
@@ -196,7 +215,15 @@ async function pickNextSpeaker(
       }
     }
   } catch (error) {
-    console.warn('[chatroom-engine] Moderator failed, picking randomly:', error);
+    if (error instanceof ChatroomModelError) {
+      console.warn('[chatroom-engine] Moderator failed (ChatroomModelError):', {
+        errorType: error.errorType,
+        modelId: error.modelId,
+        retryable: error.retryable,
+      });
+    } else {
+      console.warn('[chatroom-engine] Moderator failed (unexpected):', error);
+    }
   }
 
   // Fallback: pick randomly, avoiding recent speakers

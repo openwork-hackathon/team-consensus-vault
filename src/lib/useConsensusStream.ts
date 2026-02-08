@@ -77,6 +77,7 @@ export function useConsensusStream(apiEndpoint: string = '/api/consensus') {
   const [useSSE, setUseSSE] = useState(false);
   const [sseError, setSSEError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [progressUpdates, setProgressUpdates] = useState<Map<string, string>>(new Map());
   const maxRetries = 3;
 
   const calculateConsensus = useCallback((analysts: Analyst[]) => {
@@ -133,21 +134,60 @@ export function useConsensusStream(apiEndpoint: string = '/api/consensus') {
             const data = JSON.parse(event.data);
             setRetryCount(0); // Reset retry count on successful message
 
+            // Handle different event types
+            if (data.type === 'progress') {
+              // Update progress for slow models
+              setProgressUpdates(prev => {
+                const next = new Map(prev);
+                next.set(data.modelId, data.message);
+                return next;
+              });
+              return;
+            }
+
+            if (data.type === 'partial_failure') {
+              // Show partial failure warning
+              setSSEError(`Warning: ${data.message}`);
+              return;
+            }
+
+            if (data.type === 'consensus' || data.type === 'complete') {
+              // Handle consensus/completion events
+              if (data.partialFailures) {
+                setConsensusData(prev => ({
+                  ...prev,
+                  partialFailures: data.partialFailures,
+                }));
+              }
+              return;
+            }
+
+            // Handle analyst result
             setConsensusData(prev => {
               const updatedAnalysts = prev.analysts.map(analyst =>
                 analyst.id === data.id
                   ? {
                       ...analyst,
-                      sentiment: data.sentiment,
-                      confidence: data.confidence,
-                      reasoning: data.reasoning,
+                      sentiment: data.sentiment || analyst.sentiment,
+                      confidence: data.confidence || analyst.confidence,
+                      reasoning: data.reasoning || analyst.reasoning,
                       isTyping: false,
+                      error: data.error,
+                      userFacingError: data.userFacingError,
+                      progress: data.progress,
                     }
                   : analyst
               );
 
               const consensusLevel = calculateConsensus(updatedAnalysts);
               const recommendation = getRecommendation(updatedAnalysts, consensusLevel, prev.threshold);
+
+              // Clear progress for this model
+              setProgressUpdates(prev => {
+                const next = new Map(prev);
+                next.delete(data.id);
+                return next;
+              });
 
               return {
                 ...prev,
@@ -288,5 +328,5 @@ export function useConsensusStream(apiEndpoint: string = '/api/consensus') {
       });
   }, [apiEndpoint]);
 
-  return { ...consensusData, sseError };
+  return { ...consensusData, sseError, progressUpdates };
 }

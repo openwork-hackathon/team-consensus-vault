@@ -129,9 +129,25 @@ export async function GET(request: NextRequest) {
                     }
                   }
 
-                  // Generate message
+                  // Generate message with error handling
                   const currentHistory = await getMessages();
-                  const result = await generateNextMessage(currentHistory, freshState);
+                  let result;
+
+                  try {
+                    result = await generateNextMessage(currentHistory, freshState);
+                  } catch (genError) {
+                    // Log generation error but continue
+                    console.error('[chatroom-stream] Message generation failed:', genError);
+
+                    // Send error event to clients
+                    send('generation_error', {
+                      timestamp: Date.now(),
+                      error: genError instanceof Error ? genError.message : 'Unknown generation error',
+                    });
+
+                    // Continue to next iteration without storing message
+                    throw genError; // Re-throw to trigger finally block
+                  }
 
                   // Store message and state
                   await appendMessage(result.message);
@@ -174,6 +190,13 @@ export async function GET(request: NextRequest) {
                 }
               } catch (error) {
                 console.error('[chatroom-stream] Generation error:', error);
+
+                // Send detailed error to clients for debugging
+                send('system_error', {
+                  timestamp: Date.now(),
+                  message: 'Message generation failed - will retry on next cycle',
+                  severity: 'warning',
+                });
               } finally {
                 await releaseLock(lockId);
               }
