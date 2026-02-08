@@ -99,10 +99,6 @@ Every analyst role has a full fallback chain covering all other models. This mea
 - **The system degrades gracefully** -- even if 2 models are down, 3+ can still produce a valid consensus
 - **Automatic retry with exponential backoff** -- transient errors are retried before triggering fallback
 
-### Gemini Key Rotation
-
-The Gemini (Risk Manager) integration supports a **pool of API keys** via the `GEMINI_API_KEYS` environment variable (comma-separated). When a rate limit is hit, the engine automatically rotates to the next key in the pool before retrying. This provides uninterrupted analysis even under heavy load.
-
 ---
 
 ## Tech Stack
@@ -173,8 +169,6 @@ MINIMAX_API_KEY=your_key
 GLM_API_KEY=your_key
 GEMINI_API_KEY=your_key
 
-# Optional: Gemini key pool for rate limit rotation
-GEMINI_API_KEYS=key1,key2,key3
 ```
 
 ### Run
@@ -248,7 +242,6 @@ API Layer (Next.js Serverless Routes)
   |     |-- callModel(Gemini)     --> Risk Manager
   |     |
   |     |-- Fallback engine (any model substitutes for any role)
-  |     |-- Gemini key rotation (pool-based rate limit handling)
   |     |-- Retry with exponential backoff (2 retries per model)
   |     |-- 30-second timeout per model (AbortController)
   |     |
@@ -289,7 +282,7 @@ Blockchain (Base L2)
 
 ## What We Built in 7 Days
 
-- **Core consensus engine** with 4/5 supermajority voting, fallback chains, retry logic, and key rotation
+- **Core consensus engine** with 4/5 supermajority voting, fallback chains, and retry logic
 - **5 fully integrated AI analysts** spanning 5 providers and 3 API protocols
 - **Real-time streaming UI** with Server-Sent Events showing votes as they arrive
 - **Paper trading engine** with simulated execution and P&L tracking
