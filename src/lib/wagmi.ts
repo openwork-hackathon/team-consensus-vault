@@ -18,3 +18,17 @@ export const config = getDefaultConfig({
   chains: [base],
   ssr: true,
 });
+
+// CONSENSUS Token Configuration
+export const CONSENSUS_TOKEN = {
+  address: '0xF6d67996312152c3AdEB8d7F95EDE8d7D20AB7fa' as `0x${string}`,
+  symbol: 'CONSENSUS',
+  decimals: 18,
+  name: 'CONSENSUS',
+} as const;
+
+// Token URLs
+export const TOKEN_URLS = {
+  mintClub: 'https://mint.club/token/base/0xF6d67996312152c3AdEB8d7F95EDE8d7D20AB7fa',
+  baseScan: 'https://basescan.org/token/0xF6d67996312152c3AdEB8d7F95EDE8d7D20AB7fa',
+} as const;

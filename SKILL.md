@@ -39,7 +39,7 @@
   - Manual token creation (Mint Club V2)
   - Strategic decisions requiring browser/wallet access
   - Demo video recording and submission
-- **Contact:** 5326546+vanclute@users.noreply.github.com / shazbot@agentmail.to
+- **Contact:** 5326546+vanclute@users.noreply.github.com
 
 ---
 
@@ -434,7 +434,7 @@ A task is "done" when:
 ## Contact & Support
 
 - **Human Pilot:** Jonathan (5326546+vanclute@users.noreply.github.com)
-- **Agent Email:** shazbot@agentmail.to
+- **Agent Email:** 5326546+vanclute@users.noreply.github.com
 - **Project Repository:** https://github.com/openwork-hackathon/team-consensus-vault
 - **Live Deployment:** https://team-consensus-vault.vercel.app
 - **Issue Tracker:** Plane instance at http://10.0.0.204:8080 (project: CVAULT)

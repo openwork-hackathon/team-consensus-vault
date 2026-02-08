@@ -159,6 +159,15 @@ User requests analysis for BTC
 - **Wagmi + Viem** — Ethereum interactions
 - **$CONSENSUS Token** — ERC20 governance token
 
+### Deployed Contracts
+
+| Contract | Address | Network | Explorer |
+|----------|---------|---------|----------|
+| **CONSENSUS Token** | `0xF6d67996312152c3AdEB8d7F95EDE8d7D20AB7fa` | Base | [BaseScan](https://basescan.org/token/0xF6d67996312152c3AdEB8d7F95EDE8d7D20AB7fa) |
+| **$OPENWORK (Backing)** | `0x299c30DD5974BF4D5bFE42C340CA40462816AB07` | Base | [BaseScan](https://basescan.org/token/0x299c30DD5974BF4D5bFE42C340CA40462816AB07) |
+
+**Trade CONSENSUS**: [Mint Club](https://mint.club/token/base/0xF6d67996312152c3AdEB8d7F95EDE8d7D20AB7fa)
+
 ### Infrastructure
 - **Vercel** — Deployment and hosting
 - **GitHub Actions** — CI/CD (auto-deploy on push)
@@ -355,32 +364,39 @@ Streams analyst responses as they arrive, updating the UI in real-time.
 
 ## 📸 Screenshots
 
-> **Note for Team:** Add screenshots/GIFs here before final submission to maximize visual impact for judges.
+> **Status:** Screenshots pending manual capture. See [docs/SCREENSHOT_CHECKLIST.md](docs/SCREENSHOT_CHECKLIST.md) for capture instructions.
 
-### Recommended Screenshots:
-1. **Hero/Landing Page** — Shows the 5 AI analyst cards and consensus meter
-2. **Live Voting in Action** — Real-time analyst responses streaming in
-3. **Consensus Reached** — Trade signal displayed with 4/5 vote breakdown
-4. **Wallet Connection** — RainbowKit integration on Base network
-5. **Performance Dashboard** — P&L tracking and trade history (if implemented)
+### Dashboard with Connected Wallet
+<!-- Replace with actual screenshot after capture -->
+![Dashboard](public/screenshots/01-dashboard-connected.png)
+*Connect your wallet to see the 5 AI analyst cards ready for consensus voting*
 
-**Placeholder Structure:**
-```markdown
-![Consensus Vault Dashboard](docs/images/dashboard.png)
-*Five AI analysts analyze BTC independently - consensus meter shows real-time progress*
+### Consensus Query in Progress
+<!-- Replace with actual screenshot after capture -->
+![Voting in Progress](public/screenshots/02-consensus-in-progress.png)
+*Watch AI analysts "think" in real-time — each model analyzes independently*
 
-![Live Voting](docs/images/voting.gif)
-*Watch AI analysts vote in real-time via Server-Sent Events*
+### Consensus Reached (4/5 Agreement)
+<!-- Replace with actual screenshot after capture -->
+![Consensus Reached](public/screenshots/03-consensus-reached.png)
+*Trade signal triggered when 4 out of 5 analysts agree — full transparency on every vote*
 
-![Consensus Signal](docs/images/consensus-signal.png)
-*Trade signal triggered when 4/5 analysts agree (BUY with 82% avg confidence)*
-```
+### Trade Signal Display
+<!-- Replace with actual screenshot after capture -->
+![Trade Signal](public/screenshots/04-trade-signal.png)
+*BUY/SELL/HOLD signal with reasoning summary and confidence scores*
 
-**To add screenshots:**
-1. Take screenshots of the live app at https://team-consensus-vault.vercel.app
-2. Create `docs/images/` directory
-3. Add images and update paths above
-4. Consider using GIFs for animated voting sequences (LICEcap, Kap, or ScreenToGif)
+### Paper Trading Performance
+<!-- Replace with actual screenshot after capture -->
+![Paper Trading](public/screenshots/05-paper-trading-pnl.png)
+*Track simulated trades and P&L performance over time*
+
+### Mobile Responsive View
+<!-- Replace with actual screenshot after capture -->
+![Mobile View](public/screenshots/08-mobile-responsive.png)
+*Fully responsive design works on mobile devices (375px width)*
+
+**Screenshot Capture:** See [SCREENSHOT_CHECKLIST.md](docs/SCREENSHOT_CHECKLIST.md) for detailed capture instructions and specifications
 
 ---
 
@@ -564,8 +580,8 @@ See [CVAULT-22_IMPLEMENTATION.md](CVAULT-22_IMPLEMENTATION.md) for full security
 
 ### Phase 2: Token & Governance (In Progress 🔨)
 - [x] Token specification ($CONSENSUS)
-- [ ] Token creation on Mint Club V2 (blocked - requires human)
-- [ ] Token display in UI
+- [x] Token creation on Mint Club V2
+- [x] Token display in UI
 - [ ] Governance voting interface
 
 ### Phase 3: Vault Functionality (Planned 📋)

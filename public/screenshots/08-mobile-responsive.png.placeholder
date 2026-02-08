@@ -1,0 +1,11 @@
+PLACEHOLDER: Mobile responsive view screenshot
+Replace this file with: 08-mobile-responsive.png
+
+Required elements:
+- Mobile-optimized layout (375px width)
+- All key elements visible and usable
+- Analyst cards stacked vertically
+
+Resolution: 375x812 (iPhone X viewport)
+Instructions: Use browser DevTools device toolbar
+See: docs/SCREENSHOT_CHECKLIST.md for full details

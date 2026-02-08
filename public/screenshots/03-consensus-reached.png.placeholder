@@ -1,0 +1,11 @@
+PLACEHOLDER: Consensus result with 4/5 agreement screenshot
+Replace this file with: 03-consensus-reached.png
+
+Required elements:
+- 4 out of 5 analysts agreeing
+- Confidence scores visible on each card
+- Consensus meter showing threshold indicator
+- Green/success styling
+
+Resolution: 1920x1080
+See: docs/SCREENSHOT_CHECKLIST.md for full details

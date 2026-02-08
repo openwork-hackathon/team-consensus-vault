@@ -1,7 +1,8 @@
 # CONSENSUS Token Information
 
-**Status**: 🔶 PENDING CREATION
+**Status**: ✅ DEPLOYED
 **Task**: [CVAULT-22] Token: Create CONSENSUS via Mint Club V2
+**Deployed At**: 2026-02-08
 
 ---
 
@@ -15,8 +16,9 @@
 | **Backing Asset** | $OPENWORK (`0x299c30DD5974BF4D5bFE42C340CA40462816AB07`) |
 | **Bonding Curve** | Linear |
 | **Creator Royalty** | 0% (no fees) |
-| **Contract Address** | TBD (pending deployment) |
-| **Mint Club URL** | TBD (pending deployment) |
+| **Contract Address** | `0xF6d67996312152c3AdEB8d7F95EDE8d7D20AB7fa` |
+| **Mint Club URL** | https://mint.club/token/base/0xF6d67996312152c3AdEB8d7F95EDE8d7D20AB7fa |
+| **BaseScan URL** | https://basescan.org/token/0xF6d67996312152c3AdEB8d7F95EDE8d7D20AB7fa |
 
 ---
 
@@ -33,15 +35,21 @@
 
 ## Deployment Information
 
-**Status**: Awaiting human execution via Mint Club V2 interface
+**Status**: ✅ DEPLOYED
+
+**Deployment Details**:
+- **Contract Address**: `0xF6d67996312152c3AdEB8d7F95EDE8d7D20AB7fa`
+- **Network**: Base (Chain ID: 8453)
+- **Deployed Via**: Mint Club V2
+- **Deployment Date**: 2026-02-08
 
 **Required Steps**:
 1. ✅ Parameters defined
 2. ✅ Wallet funded (3.1M $OPENWORK)
 3. ✅ Base network configured in wagmi
-4. 🔶 **PENDING**: Create token via Mint Club V2 (requires browser)
+4. ✅ Create token via Mint Club V2
 5. 🔶 **PENDING**: Register with Openwork API
-6. 🔶 **PENDING**: Update project documentation
+6. ✅ Update project documentation
 
 **Guide**: See `TOKEN_CREATION_GUIDE.md` for complete step-by-step instructions.
 
@@ -51,17 +59,17 @@
 
 After token is created, update this file with:
 
-- [ ] Contract address
+- [x] Contract address
 - [ ] Transaction hash
 - [ ] Block number
-- [ ] Mint Club URL
-- [ ] BaseScan URL
-- [ ] Deployment timestamp
+- [x] Mint Club URL
+- [x] BaseScan URL
+- [x] Deployment timestamp
 - [ ] Deployment cost (gas fees)
 - [ ] Test transaction confirmation
 - [ ] Openwork API registration response
-- [ ] Update README.md with token info
-- [ ] Update .env.local with contract address
+- [x] Update README.md with token info
+- [x] Update .env.local with contract address
 - [ ] Update src/lib/wagmi.ts with token constant
 - [ ] Commit changes to git
 
@@ -72,16 +80,16 @@ After token is created, update this file with:
 ### Frontend
 - Wallet connection: ✅ Implemented (RainbowKit + wagmi)
 - Network config: ✅ Base network configured
-- Token display: 🔶 Pending (needs contract address)
+- Token display: ✅ Contract address configured
 - Governance UI: 🔶 Pending (future feature)
 
 ### Backend
 - Deposit tracking: ✅ Implemented (in-memory)
-- Token balance queries: 🔶 Pending (needs contract address)
+- Token balance queries: ✅ Contract address available
 - Openwork API: 🔶 Pending (needs registration)
 
 ### Smart Contracts
-- CONSENSUS token: 🔶 Pending creation
+- CONSENSUS token: ✅ Deployed at `0xF6d67996312152c3AdEB8d7F95EDE8d7D20AB7fa`
 - Vault contract: ⏸️ Deferred (using in-memory for MVP)
 - Governance contract: ⏸️ Deferred (post-hackathon)
 
@@ -115,5 +123,5 @@ After token is created, update this file with:
 
 ---
 
-**Last Updated**: 2026-02-07
-**Next Action**: Human execution required (browser access for Mint Club V2)
+**Last Updated**: 2026-02-08
+**Next Action**: Register token with Openwork API
