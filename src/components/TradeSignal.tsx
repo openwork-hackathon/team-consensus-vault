@@ -37,7 +37,7 @@ export default function TradeSignal({ recommendation, consensusLevel, threshold 
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
           transition={{ duration: 0.4, ease: 'easeOut' }}
-          className={`relative rounded-xl border-2 p-6 bg-gradient-to-br ${signalColors[recommendation]} overflow-hidden`}
+          className={`relative rounded-xl border-2 p-4 sm:p-6 bg-gradient-to-br ${signalColors[recommendation]} overflow-hidden`}
         >
           {/* Pulsing background effect */}
           <motion.div
@@ -47,17 +47,17 @@ export default function TradeSignal({ recommendation, consensusLevel, threshold 
           />
 
           <div className="relative z-10">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3 sm:gap-0">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3">
               <div className="flex items-center gap-3">
                 <motion.span
-                  className="text-4xl sm:text-5xl"
+                  className="text-3xl sm:text-4xl md:text-5xl"
                   animate={{ scale: [1, 1.2, 1] }}
                   transition={{ duration: 1.5, repeat: Infinity }}
                 >
                   {signalIcons[recommendation]}
                 </motion.span>
                 <div>
-                  <h3 className="text-2xl sm:text-3xl font-bold text-white">
+                  <h3 className="text-xl sm:text-2xl md:text-3xl font-bold text-white">
                     {recommendation}
                   </h3>
                   <p className="text-xs sm:text-sm text-white/80">Trade Signal Active</p>
@@ -65,7 +65,7 @@ export default function TradeSignal({ recommendation, consensusLevel, threshold 
               </div>
 
               <div className="text-left sm:text-right">
-                <div className="text-3xl sm:text-4xl font-bold text-white">{consensusLevel}%</div>
+                <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tabular-nums">{consensusLevel}%</div>
                 <div className="text-xs text-white/80">Agreement</div>
               </div>
             </div>
@@ -76,9 +76,9 @@ export default function TradeSignal({ recommendation, consensusLevel, threshold 
 
             {/* Action button */}
             <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="w-full bg-white/20 hover:bg-white/30 active:bg-white/40 backdrop-blur-sm text-white font-semibold py-3 px-6 rounded-lg transition-colors touch-manipulation"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full bg-white/20 hover:bg-white/30 active:bg-white/40 backdrop-blur-sm text-white font-semibold py-3 px-6 rounded-lg transition-colors touch-manipulation min-h-[48px]"
             >
               Execute Trade
             </motion.button>

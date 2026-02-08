@@ -129,6 +129,75 @@
     touch-action: manipulation;
   }
 
+  /* Mobile-specific improvements */
+  @media (max-width: 768px) {
+    /* Prevent horizontal scroll on mobile */
+    body {
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Better touch targets for mobile */
+    button, a {
+      min-height: 44px;
+      min-width: 44px;
+    }
+
+    /* Improve scrollable areas */
+    .scrollable {
+      -webkit-overflow-scrolling: touch;
+      scroll-behavior: smooth;
+    }
+
+    /* Safe area support for notched devices */
+    .safe-bottom {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .safe-top {
+      padding-top: env(safe-area-inset-top);
+    }
+  }
+
+  /* Touch-friendly scrollbar */
+  @media (hover: none) and (pointer: coarse) {
+    * {
+      -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+    }
+
+    /* Custom scrollbar for touch devices */
+    .scrollbar-thin {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+      background-color: rgba(156, 163, 175, 0.5);
+      border-radius: 4px;
+    }
+  }
+
+  /* Swipe gesture support */
+  .swipeable {
+    touch-action: pan-y;
+    user-select: none;
+  }
+
+  /* Prevent text selection on interactive elements */
+  button, a, .interactive {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
   /* High contrast mode support */
   @media (prefers-contrast: high) {
     .bg-card {

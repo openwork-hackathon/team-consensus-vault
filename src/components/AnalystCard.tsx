@@ -35,15 +35,15 @@ export default function AnalystCard({ analyst, index, onRetry }: AnalystCardProp
       aria-busy={analyst.isTyping}
     >
       {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2 sm:gap-3">
+      <div className="flex items-center justify-between mb-3 gap-2">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <div
-            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-base sm:text-lg font-bold flex-shrink-0"
+            className="w-10 h-10 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-base sm:text-lg font-bold flex-shrink-0"
             style={{ backgroundColor: analyst.color, color: '#fff' }}
           >
             {analyst.avatar}
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <h3 className="font-semibold text-xs sm:text-sm truncate">{analyst.name}</h3>
             <div className="flex items-center gap-1 sm:gap-2 text-xs">
               <span className="text-base sm:text-lg">{sentimentIcons[analyst.sentiment]}</span>
@@ -53,9 +53,9 @@ export default function AnalystCard({ analyst, index, onRetry }: AnalystCardProp
         </div>
 
         {/* Confidence */}
-        <div className="text-right flex-shrink-0 ml-2">
+        <div className="text-right flex-shrink-0">
           <div className="text-xl sm:text-2xl font-bold tabular-nums">{analyst.confidence}%</div>
-          <div className="text-xs text-muted-foreground">
+          <div className="text-[10px] sm:text-xs text-muted-foreground">
             <span className="hidden sm:inline">confidence</span>
             <span className="sm:hidden">conf.</span>
           </div>
@@ -81,18 +81,18 @@ export default function AnalystCard({ analyst, index, onRetry }: AnalystCardProp
               {analyst.progress.message}
               {analyst.progress.estimatedRemainingTime && (
                 <span className="text-xs opacity-70 ml-1">
-                  (~{Math.round(analyst.progress.estimatedRemainingTime / 1000)}s remaining)
+                  (~{Math.round(analyst.progress.estimatedRemainingTime / 1000)}s)
                 </span>
               )}
             </p>
           </div>
         ) : analyst.error ? (
           <div className="space-y-2">
-            <div className="flex items-center gap-2">
+            <div className="flex items-start gap-2">
               <span className={`text-lg ${analyst.userFacingError?.severity === 'critical' ? 'text-red-500' : 'text-yellow-500'}`}>
                 {analyst.userFacingError?.severity === 'critical' ? '🚨' : '⚠'}
               </span>
-              <p className="text-xs sm:text-sm text-red-600 dark:text-red-400 font-medium">
+              <p className="text-xs sm:text-sm text-red-600 dark:text-red-400 font-medium flex-1">
                 {analyst.userFacingError?.message || analyst.error}
               </p>
             </div>
@@ -103,7 +103,7 @@ export default function AnalystCard({ analyst, index, onRetry }: AnalystCardProp
             )}
             {analyst.userFacingError?.retryable && analyst.userFacingError?.estimatedWaitTime && (
               <p className="text-xs text-blue-600 dark:text-blue-400 pl-6">
-                ⏱️ Estimated wait: {Math.round(analyst.userFacingError.estimatedWaitTime / 1000)}s
+                ⏱️ Wait: {Math.round(analyst.userFacingError.estimatedWaitTime / 1000)}s
               </p>
             )}
             {/* Retry button */}
@@ -119,7 +119,7 @@ export default function AnalystCard({ analyst, index, onRetry }: AnalystCardProp
           </div>
         ) : (
           <motion.p
-            className="text-xs sm:text-sm leading-relaxed"
+            className="text-xs sm:text-sm leading-relaxed break-words"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}

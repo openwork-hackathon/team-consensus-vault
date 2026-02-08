@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAccount, useBalance } from 'wagmi';
 import { formatEther } from 'viem';
@@ -114,6 +114,32 @@ export default function DepositModal({ isOpen, onClose, onDeposit }: DepositModa
     }
   };
 
+  // Touch handlers for swipe to dismiss
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientY);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientY);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd || isLoading) return;
+    
+    const distance = touchStart - touchEnd;
+    const isSwipeDown = distance < -minSwipeDistance;
+
+    if (isSwipeDown) {
+      onClose();
+    }
+  };
+
   if (!isConnected) {
     return null;
   }
@@ -125,15 +151,18 @@ export default function DepositModal({ isOpen, onClose, onDeposit }: DepositModa
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4 safe-top safe-bottom"
           onClick={handleBackdropClick}
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="bg-card border border-border rounded-xl p-6 w-full max-w-md shadow-2xl"
+            className="bg-card border border-border rounded-t-xl sm:rounded-xl p-4 sm:p-6 w-full sm:max-w-md shadow-2xl max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
           >
             {/* Header */}
             <div className="flex items-center justify-between mb-6">

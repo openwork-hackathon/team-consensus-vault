@@ -32,7 +32,7 @@ function SentimentBadge({ sentiment, confidence }: { sentiment: string; confiden
   const label = labels[sentiment as keyof typeof labels] || sentiment;
 
   return (
-    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium border ${colorClass}`}>
+    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] sm:text-xs font-medium border ${colorClass} touch-manipulation`}>
       {label}
       {confidence !== undefined && (
         <span className="opacity-70">{confidence}%</span>
@@ -50,12 +50,13 @@ export default function ChatMessage({ message }: ChatMessageProps) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="flex gap-2.5 px-3 py-1.5 hover:bg-white/[0.02] group"
+      className="flex gap-2.5 sm:gap-3 px-3 sm:px-4 py-2 sm:py-1.5 hover:bg-white/[0.02] active:bg-white/[0.05] group"
     >
-      {/* Avatar */}
+      {/* Avatar - Larger touch target */}
       <div
-        className="w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0 mt-0.5"
+        className="w-10 h-10 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-base sm:text-sm flex-shrink-0"
         style={{ backgroundColor: color + '30', border: `1.5px solid ${color}50` }}
+        aria-hidden="true"
       >
         {message.avatar}
       </div>
@@ -64,7 +65,7 @@ export default function ChatMessage({ message }: ChatMessageProps) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <span
-            className="font-semibold text-sm"
+            className="font-semibold text-sm sm:text-sm"
             style={{ color }}
           >
             {message.handle}
@@ -79,7 +80,7 @@ export default function ChatMessage({ message }: ChatMessageProps) {
             />
           )}
         </div>
-        <p className="text-sm text-foreground/90 mt-0.5 leading-relaxed">
+        <p className="text-sm sm:text-sm text-foreground/90 mt-0.5 leading-relaxed break-words">
           {message.content}
         </p>
       </div>
