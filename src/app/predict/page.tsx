@@ -4,62 +4,47 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useAccount } from 'wagmi';
 
-import { usePredictionMarketStream } from '@/lib/usePredictionMarketStream';
+import { usePredictionMarket } from '@/hooks/usePredictionMarket';
 import { RoundPhase } from '@/lib/prediction-market/types';
 
+import RoundStatus from '@/components/prediction-market/RoundStatus';
 import BettingPanel from '@/components/prediction-market/BettingPanel';
 import LivePnL from '@/components/prediction-market/LivePnL';
 import SettlementResult from '@/components/prediction-market/SettlementResult';
 import CouncilVotes, { ConsensusSnapshot as CouncilConsensusSnapshot, ModelVote } from '@/components/prediction-market/CouncilVotes';
-import { ConsensusSnapshot as MarketConsensusSnapshot } from '@/lib/prediction-market/types';
 
-// Convert market consensus snapshot to council votes format
-function convertToCouncilSnapshot(snapshot: MarketConsensusSnapshot): CouncilConsensusSnapshot {
-  const modelMap: Record<string, { icon: string; color: string }> = {
-    deepseek: { icon: '🔮', color: '#6366f1' },
-    kimi: { icon: '🌙', color: '#8b5cf6' },
-    minimax: { icon: '⚡', color: '#22c55e' },
-    glm: { icon: '🧠', color: '#10b981' },
-    gemini: { icon: '♊', color: '#eab308' },
-  };
 
-  const models: ModelVote[] = snapshot.votes.map((vote) => {
-    const modelInfo = modelMap[vote.agentId] || { icon: '🤖', color: '#6b7280' };
-    return {
-      modelId: vote.agentId,
-      modelName: vote.agentName,
-      icon: modelInfo.icon,
-      color: modelInfo.color,
-      vote: vote.signal === 'buy' ? 'BUY' : vote.signal === 'sell' ? 'SELL' : 'HOLD',
-      confidence: vote.confidence,
-      isLoading: false,
-    };
-  });
-
-  return {
-    models,
-    timestamp: new Date(snapshot.timestamp).getTime(),
-  };
-}
 
 export default function PredictPage() {
   const [showHowItWorks, setShowHowItWorks] = useState(false);
+  const { address, isConnected: walletConnected } = useAccount();
   
   const {
     round,
-    isConnected,
-    error,
-    currentPrice,
     pool,
-    consensusSnapshot,
-  } = usePredictionMarketStream();
+    latestConsensus,
+    currentPrice,
+    pnl,
+    isConnected: marketConnected,
+    settlement,
+    isInBettingWindow,
+    bettingTimeRemaining,
+    canPlaceBet,
+    placeBet,
+  } = usePredictionMarket();
 
-  const handlePlaceBet = async (amount: number, direction: 'long' | 'short') => {
-    // TODO: Implement actual bet placement API call
-    console.log('Placing bet:', amount, direction);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+  const handlePlaceBet = async (side: 'agree' | 'disagree', amount: number) => {
+    try {
+      // Convert agree/disagree to up/down for the hook
+      const direction = side === 'agree' ? 'up' : 'down';
+      await placeBet(direction, amount);
+      toast.success(`Bet placed: $${amount} on ${side.toUpperCase()}`);
+    } catch (error) {
+      console.error('Failed to place bet:', error);
+      toast.error('Failed to place bet');
+    }
   };
 
   const renderPhaseContent = () => {
@@ -80,28 +65,44 @@ export default function PredictPage() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="flex flex-col items-center justify-center py-20"
+            className="space-y-6"
           >
-            <div className="relative">
-              <div className="w-20 h-20 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-3xl">🔍</span>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex flex-col items-center justify-center py-20"
+            >
+              <div className="relative">
+                <div className="w-20 h-20 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-3xl">🔍</span>
+                </div>
               </div>
-            </div>
-            <p className="mt-6 text-xl font-semibold">Scanning market conditions...</p>
-            <p className="mt-2 text-muted-foreground text-center max-w-md">
-              AI analysts are analyzing market data to identify the best trading opportunities
-            </p>
-            {consensusSnapshot && (
+              <p className="mt-6 text-xl font-semibold">Scanning market conditions...</p>
+              <p className="mt-2 text-muted-foreground text-center max-w-md">
+                AI analysts are analyzing market data to identify the best trading opportunities
+              </p>
+            </motion.div>
+            
+            {/* AI Council Votes Display */}
+            {latestConsensus && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mt-8"
+                className="bg-card rounded-xl border border-border p-6"
               >
-                <CouncilVotes
-                  consensusSnapshot={convertToCouncilSnapshot(consensusSnapshot)}
-                  entrySignal={consensusSnapshot.signal === 'buy' ? 'BUY' : consensusSnapshot.signal === 'sell' ? 'SELL' : null}
-                />
+                <h3 className="text-lg font-bold mb-4">AI Council Consensus</h3>
+                <div className="text-center">
+                  <div className="text-3xl font-bold mb-2">
+                    {latestConsensus.direction === 'up' ? '📈' : '📉'}
+                  </div>
+                  <div className="text-xl font-semibold mb-2">
+                    {latestConsensus.direction === 'up' ? 'BULLISH' : 'BEARISH'}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Level {latestConsensus.level}/100 • {latestConsensus.votes}/{latestConsensus.totalVotes} agents
+                  </div>
+                </div>
               </motion.div>
             )}
           </motion.div>
@@ -112,18 +113,41 @@ export default function PredictPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
+            className="space-y-6"
           >
-            <BettingPanel
-              roundId={round.id}
-              asset={round.asset}
-              direction={round.direction}
-              entryPrice={round.entryPrice}
-              minBet={round.minBet}
-              maxBet={round.maxBet}
-              longOdds={pool.longOdds || 1.5}
-              shortOdds={pool.shortOdds || 2.5}
-              onPlaceBet={handlePlaceBet}
-            />
+            {/* Betting Panel */}
+            {round && pool && (
+              <BettingPanel
+                round={round}
+                pool={pool}
+                onPlaceBet={handlePlaceBet}
+                isConnected={walletConnected && marketConnected}
+                address={address}
+                bettingTimeRemaining={bettingTimeRemaining}
+              />
+            )}
+
+            {/* AI Council Votes Display */}
+            {latestConsensus && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-card rounded-xl border border-border p-6"
+              >
+                <h3 className="text-lg font-bold mb-4">AI Council Consensus</h3>
+                <div className="text-center">
+                  <div className="text-3xl font-bold mb-2">
+                    {latestConsensus.direction === 'up' ? '📈' : '📉'}
+                  </div>
+                  <div className="text-xl font-semibold mb-2">
+                    {latestConsensus.direction === 'up' ? 'BULLISH' : 'BEARISH'}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Level {latestConsensus.level}/100 • {latestConsensus.votes}/{latestConsensus.totalVotes} agents
+                  </div>
+                </div>
+              </motion.div>
+            )}
           </motion.div>
         );
 
@@ -133,7 +157,9 @@ export default function PredictPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
+            className="space-y-6"
           >
+            {/* Live P&L Tracker */}
             <LivePnL
               round={{
                 id: round.id,
@@ -152,11 +178,33 @@ export default function PredictPage() {
               exitVotes={round.phase === RoundPhase.EXIT_SIGNAL ? 4 : 0}
               councilStatus={round.phase === RoundPhase.EXIT_SIGNAL ? 'deliberating' : 'monitoring'}
             />
+
+            {/* AI Council Votes Display */}
+            {latestConsensus && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-card rounded-xl border border-border p-6"
+              >
+                <h3 className="text-lg font-bold mb-4">AI Council Consensus</h3>
+                <div className="text-center">
+                  <div className="text-3xl font-bold mb-2">
+                    {latestConsensus.direction === 'up' ? '📈' : '📉'}
+                  </div>
+                  <div className="text-xl font-semibold mb-2">
+                    {latestConsensus.direction === 'up' ? 'BULLISH' : 'BEARISH'}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Level {latestConsensus.level}/100 • {latestConsensus.votes}/{latestConsensus.totalVotes} agents
+                  </div>
+                </div>
+              </motion.div>
+            )}
           </motion.div>
         );
 
       case RoundPhase.SETTLEMENT:
-        if (round.settlementResult) {
+        if (settlement) {
           return (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -164,9 +212,9 @@ export default function PredictPage() {
             >
               <SettlementResult
                 settlement={{
-                  winningSide: round.settlementResult.winningSide === 'long' ? 'AGREE' : 'DISAGREE',
-                  entryPrice: round.settlementResult.entryPrice,
-                  exitPrice: round.settlementResult.exitPrice,
+                  winningSide: settlement.winningSide === 'long' ? 'AGREE' : 'DISAGREE',
+                  entryPrice: settlement.entryPrice,
+                  exitPrice: settlement.exitPrice,
                   totalPool: pool.totalPool,
                   payoutMultiplier: pool.longOdds || 1.5,
                 }}
@@ -237,9 +285,13 @@ export default function PredictPage() {
 
           {/* Connection Status */}
           <div className="mt-4 flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
+            <div className={`w-2 h-2 rounded-full ${walletConnected ? 'bg-green-500' : 'bg-red-500'}`} />
             <span className="text-xs text-muted-foreground">
-              {isConnected ? 'Connected to prediction market' : 'Connecting...'}
+              {walletConnected ? 'Wallet connected' : 'Wallet not connected'}
+            </span>
+            <div className={`w-2 h-2 rounded-full ${marketConnected ? 'bg-green-500' : 'bg-red-500'}`} />
+            <span className="text-xs text-muted-foreground">
+              {marketConnected ? 'Market connected' : 'Market connecting...'}
             </span>
             {round && (
               <span className="ml-4 text-xs text-muted-foreground">
@@ -253,13 +305,19 @@ export default function PredictPage() {
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
         {/* Error Display */}
-        {error && (
+        {(!walletConnected || !marketConnected) && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             className="mb-6 p-4 bg-red-500/10 border border-red-500/50 rounded-lg"
           >
-            <p className="text-red-500 text-sm">{error}</p>
+            <p className="text-red-500 text-sm">
+              {!walletConnected && !marketConnected 
+                ? 'Wallet and market connection required' 
+                : !walletConnected 
+                  ? 'Wallet connection required to place bets'
+                  : 'Market connection lost. Reconnecting...'}
+            </p>
           </motion.div>
         )}
 
@@ -365,6 +423,22 @@ export default function PredictPage() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Round Status Header - Always Visible */}
+        {round && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            <RoundStatus
+              phase={round.phase}
+              asset={round.asset}
+              entryPrice={round.entryPrice}
+              bettingTimeRemaining={bettingTimeRemaining}
+            />
+          </motion.div>
+        )}
 
         {/* Phase Content */}
         {renderPhaseContent()}
