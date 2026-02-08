@@ -1,0 +1,188 @@
+{
+  "timestamp": "2026-02-08T12:07:49.198Z",
+  "viewport": {
+    "width": 375,
+    "height": 667,
+    "deviceScaleFactor": 2,
+    "isMobile": true,
+    "hasTouch": true
+  },
+  "url": "http://localhost:3000",
+  "tests": {
+    "horizontalOverflow": {
+      "bodyWidth": 375,
+      "htmlWidth": 375,
+      "viewportWidth": 375,
+      "hasOverflow": false,
+      "overflowAmount": 0
+    },
+    "touchTargets": {
+      "total": 2,
+      "passing": 2,
+      "failing": 0,
+      "details": []
+    },
+    "fontSizes": {
+      "total": 69,
+      "passing": 50,
+      "failing": 19,
+      "details": [
+        {
+          "selector": "p",
+          "fontSize": 14,
+          "text": "Five specialized AI models analyzing the",
+          "meetsMinSize": false
+        },
+        {
+          "selector": "p",
+          "fontSize": 14,
+          "text": "Real-time consensus powered by DeepSeek,",
+          "meetsMinSize": false
+        },
+        {
+          "selector": "p",
+          "fontSize": 14,
+          "text": "Trade executes automatically when consen",
+          "meetsMinSize": false
+        },
+        {
+          "selector": "span",
+          "fontSize": 12,
+          "text": "Disagreement",
+          "meetsMinSize": false
+        },
+        {
+          "selector": "div",
+          "fontSize": 12,
+          "text": "Total Value Locked",
+          "meetsMinSize": false
+        },
+        {
+          "selector": "div",
+          "fontSize": 12,
+          "text": "Threshold 80%",
+          "meetsMinSize": false
+        },
+        {
+          "selector": "div",
+          "fontSize": 12,
+          "text": "DisagreementPartialConsensus",
+          "meetsMinSize": false
+        },
+        {
+          "selector": "div",
+          "fontSize": 12,
+          "text": "Disagreement",
+          "meetsMinSize": false
+        },
+        {
+          "selector": "div",
+          "fontSize": 12,
+          "text": "confidenceconf.",
+          "meetsMinSize": false
+        },
+        {
+          "selector": "div",
+          "fontSize": 14,
+          "text": "Analyzing●●●",
+          "meetsMinSize": false
+        }
+      ]
+    },
+    "fixedWidthElements": [
+      {
+        "tag": "table",
+        "class": "w-full text-sm",
+        "width": 656,
+        "property": "width"
+      },
+      {
+        "tag": "thead",
+        "class": "",
+        "width": 656,
+        "property": "width"
+      },
+      {
+        "tag": "tr",
+        "class": "border-b border-border",
+        "width": 656,
+        "property": "width"
+      },
+      {
+        "tag": "tbody",
+        "class": "",
+        "width": 656,
+        "property": "width"
+      },
+      {
+        "tag": "tr",
+        "class": "border-b border-border/50",
+        "width": 656,
+        "property": "width"
+      },
+      {
+        "tag": "tr",
+        "class": "border-b border-border/50",
+        "width": 656,
+        "property": "width"
+      },
+      {
+        "tag": "tr",
+        "class": "border-b border-border/50",
+        "width": 656,
+        "property": "width"
+      },
+      {
+        "tag": "tr",
+        "class": "border-b border-border/50",
+        "width": 656,
+        "property": "width"
+      },
+      {
+        "tag": "tr",
+        "class": "border-b border-border/50",
+        "width": 656,
+        "property": "width"
+      }
+    ],
+    "containerPadding": {
+      "total": 3,
+      "passing": 2,
+      "failing": 1,
+      "details": [
+        {
+          "tag": "main",
+          "class": "min-h-screen bg-background",
+          "paddingLeft": 0,
+          "paddingRight": 0,
+          "hasMinPadding": false
+        }
+      ]
+    }
+  },
+  "issues": [
+    {
+      "severity": "low",
+      "test": "fontSizes",
+      "message": "19 text elements with font size < 16px",
+      "recommendation": "Consider increasing base font size for readability on mobile"
+    },
+    {
+      "severity": "high",
+      "test": "fixedWidthElements",
+      "message": "9 elements with fixed width > viewport",
+      "recommendation": "Use max-width, percentages, or responsive units instead of fixed pixel widths"
+    },
+    {
+      "severity": "medium",
+      "test": "containerPadding",
+      "message": "1 containers with padding < 16px",
+      "recommendation": "Add horizontal padding to prevent content from touching screen edges"
+    }
+  ],
+  "summary": {
+    "passed": 2,
+    "failed": 1,
+    "warnings": 2
+  }
+}

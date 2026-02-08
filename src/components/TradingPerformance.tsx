@@ -181,7 +181,7 @@ export default function TradingPerformance({ className = '' }: TradingPerformanc
                       {trade.status}
                     </span>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="grid grid-cols-2 gap-2 text-sm">
                     <div>
                       <div className="text-muted-foreground">Entry</div>
                       <div className="font-medium">{formatPrice(trade.entryPrice)}</div>
@@ -205,7 +205,7 @@ export default function TradingPerformance({ className = '' }: TradingPerformanc
                       <div className="font-medium">{trade.consensusStrength}</div>
                     </div>
                   </div>
-                  <div className="text-xs text-muted-foreground mt-2">
+                  <div className="text-sm text-muted-foreground mt-2">
                     {new Date(trade.timestamp).toLocaleString()}
                   </div>
                 </div>
@@ -213,8 +213,8 @@ export default function TradingPerformance({ className = '' }: TradingPerformanc
             </div>
 
             {/* Desktop Table Layout */}
-            <div className="hidden sm:block overflow-x-auto">
-              <table className="w-full text-sm">
+            <div className="hidden sm:block overflow-x-auto -mx-2 px-2">
+              <table className="w-full text-sm min-w-[640px]">
                 <thead>
                   <tr className="border-b border-border">
                     <th className="text-left py-2 px-2">Time</th>

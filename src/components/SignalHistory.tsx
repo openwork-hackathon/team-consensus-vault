@@ -11,6 +11,15 @@ export interface SignalHistoryEntry {
   confidence: number;
   reasoning: string;
   asset?: string;
+  // Trade outcome tracking
+  tradeExecuted?: boolean;
+  tradeId?: string;
+  entryPrice?: number;
+  exitPrice?: number;
+  // P&L tracking
+  pnl?: number;
+  pnlPercentage?: number;
+  tradeStatus?: 'pending' | 'open' | 'closed' | 'cancelled';
 }
 
 interface SignalHistoryProps {
@@ -134,9 +143,34 @@ export default function SignalHistory({
                         <span className={`font-bold text-lg ${colors.text}`}>
                           {signal.signalType}
                         </span>
-                        <span className={`text-sm font-semibold ${colors.text} ml-auto`}>
+                        <span className={`text-sm font-semibold ${colors.text}`}>
                           {signal.confidence}%
                         </span>
+                        {/* Trade Outcome & P&L */}
+                        {signal.tradeExecuted && (
+                          <div className="ml-auto flex items-center gap-2">
+                            {signal.pnl !== undefined && (
+                              <span className={`text-sm font-bold ${
+                                signal.pnl >= 0 ? 'text-bullish' : 'text-bearish'
+                              }`}>
+                                {signal.pnl >= 0 ? '+' : ''}${Math.abs(signal.pnl).toFixed(2)}
+                              </span>
+                            )}
+                            {signal.tradeStatus && (
+                              <span className={`text-xs px-2 py-0.5 rounded ${
+                                signal.tradeStatus === 'closed'
+                                  ? signal.pnl && signal.pnl >= 0
+                                    ? 'bg-bullish/20 text-bullish'
+                                    : 'bg-bearish/20 text-bearish'
+                                  : signal.tradeStatus === 'open'
+                                  ? 'bg-primary/20 text-primary'
+                                  : 'bg-muted text-muted-foreground'
+                              }`}>
+                                {signal.tradeStatus}
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
 
                       {/* Query Text */}
@@ -171,13 +205,70 @@ export default function SignalHistory({
                       transition={{ duration: 0.2 }}
                       className="border-t border-border/50"
                     >
-                      <div className="p-4 bg-background/30">
-                        <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">
-                          AI Reasoning
-                        </h4>
-                        <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap">
-                          {signal.reasoning || 'No reasoning provided'}
-                        </p>
+                      <div className="p-4 bg-background/30 space-y-4">
+                        {/* AI Reasoning */}
+                        <div>
+                          <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">
+                            AI Reasoning
+                          </h4>
+                          <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap">
+                            {signal.reasoning || 'No reasoning provided'}
+                          </p>
+                        </div>
+
+                        {/* Trade Outcome Details */}
+                        {signal.tradeExecuted && (
+                          <div className="pt-3 border-t border-border/30">
+                            <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-3">
+                              Trade Outcome
+                            </h4>
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                              <div className="bg-background/50 rounded-lg p-3">
+                                <div className="text-xs text-muted-foreground mb-1">Entry Price</div>
+                                <div className="text-sm font-semibold">
+                                  {signal.entryPrice ? `$${signal.entryPrice.toLocaleString()}` : '-'}
+                                </div>
+                              </div>
+                              <div className="bg-background/50 rounded-lg p-3">
+                                <div className="text-xs text-muted-foreground mb-1">Exit Price</div>
+                                <div className="text-sm font-semibold">
+                                  {signal.exitPrice ? `$${signal.exitPrice.toLocaleString()}` : '-'}
+                                </div>
+                              </div>
+                              <div className="bg-background/50 rounded-lg p-3">
+                                <div className="text-xs text-muted-foreground mb-1">P&L</div>
+                                <div className={`text-sm font-bold ${
+                                  signal.pnl && signal.pnl >= 0 ? 'text-bullish' : 'text-bearish'
+                                }`}>
+                                  {signal.pnl !== undefined ? (
+                                    <>
+                                      {signal.pnl >= 0 ? '+' : ''}${signal.pnl.toFixed(2)}
+                                      {signal.pnlPercentage !== undefined && (
+                                        <span className="text-xs ml-1">
+                                          ({signal.pnlPercentage >= 0 ? '+' : ''}{signal.pnlPercentage.toFixed(1)}%)
+                                        </span>
+                                      )}
+                                    </>
+                                  ) : '-'}
+                                </div>
+                              </div>
+                              <div className="bg-background/50 rounded-lg p-3">
+                                <div className="text-xs text-muted-foreground mb-1">Status</div>
+                                <div className={`text-sm font-semibold ${
+                                  signal.tradeStatus === 'closed'
+                                    ? signal.pnl && signal.pnl >= 0
+                                      ? 'text-bullish'
+                                      : 'text-bearish'
+                                    : signal.tradeStatus === 'open'
+                                    ? 'text-primary'
+                                    : 'text-muted-foreground'
+                                }`}>
+                                  {signal.tradeStatus || 'pending'}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </motion.div>
                   )}

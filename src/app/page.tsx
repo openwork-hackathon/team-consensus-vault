@@ -8,6 +8,7 @@ import ConsensusMeter from '@/components/ConsensusMeter';
 import ConsensusVsContrarian from '@/components/ConsensusVsContrarian';
 import TradeSignal from '@/components/TradeSignal';
 import TradingPerformance from '@/components/TradingPerformance';
+import SignalHistory, { SignalHistoryEntry } from '@/components/SignalHistory';
 import DepositModal from '@/components/DepositModal';
 import WithdrawModal from '@/components/WithdrawModal';
 import ToastContainer, { ToastData } from '@/components/ToastContainer';
@@ -24,6 +25,80 @@ export default function Dashboard() {
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
   const [toasts, setToasts] = useState<ToastData[]>([]);
   const [autoTradingEnabled, setAutoTradingEnabled] = useState(true);
+
+  // Mock signal history data for demonstration
+  const signalHistory: SignalHistoryEntry[] = [
+    {
+      id: '1',
+      timestamp: Date.now() - 1000 * 60 * 30, // 30 minutes ago
+      query: 'BTC analysis on current market conditions',
+      signalType: 'BUY',
+      confidence: 87,
+      reasoning: 'Strong bullish momentum detected across multiple indicators. RSI shows oversold conditions recovering, MACD crossover confirmed, and volume profile supports upward movement. Market sentiment analysis indicates retail FOMO building.',
+      asset: 'BTC/USD',
+      tradeExecuted: true,
+      tradeId: 'trade_001',
+      entryPrice: 45234,
+      exitPrice: 46125,
+      pnl: 891,
+      pnlPercentage: 1.97,
+      tradeStatus: 'closed'
+    },
+    {
+      id: '2',
+      timestamp: Date.now() - 1000 * 60 * 90, // 1.5 hours ago
+      query: 'ETH technical analysis for short term',
+      signalType: 'SELL',
+      confidence: 92,
+      reasoning: 'Bearish divergence spotted on 4H chart. Failed to break resistance at $2,850 level three times. Volume decreasing on bounces, suggesting exhaustion. Short-term correction expected.',
+      asset: 'ETH/USD',
+      tradeExecuted: true,
+      tradeId: 'trade_002',
+      entryPrice: 2847,
+      exitPrice: 2789,
+      pnl: -58,
+      pnlPercentage: -2.04,
+      tradeStatus: 'closed'
+    },
+    {
+      id: '3',
+      timestamp: Date.now() - 1000 * 60 * 180, // 3 hours ago
+      query: 'Market outlook for major cryptocurrencies',
+      signalType: 'HOLD',
+      confidence: 65,
+      reasoning: 'Mixed signals across different timeframes. While daily trend remains bullish, 4H showing signs of consolidation. Waiting for clearer directional bias before taking position. Risk management suggests patience.',
+      asset: 'BTC/USD',
+      tradeExecuted: false,
+      tradeStatus: 'cancelled'
+    },
+    {
+      id: '4',
+      timestamp: Date.now() - 1000 * 60 * 360, // 6 hours ago
+      query: 'Bitcoin momentum analysis',
+      signalType: 'BUY',
+      confidence: 78,
+      reasoning: 'Accumulation phase detected. Whale wallet activity increasing, exchange inflows decreasing, and on-chain metrics show strong hands holding. Next leg up likely to begin soon.',
+      asset: 'BTC/USD',
+      tradeExecuted: true,
+      tradeId: 'trade_003',
+      entryPrice: 44156,
+      exitPrice: 45234,
+      pnl: 1078,
+      pnlPercentage: 2.44,
+      tradeStatus: 'closed'
+    },
+    {
+      id: '5',
+      timestamp: Date.now() - 1000 * 60 * 720, // 12 hours ago
+      query: 'ETH/BTC pair analysis',
+      signalType: 'HOLD',
+      confidence: 71,
+      reasoning: 'ETH/BTC ratio in accumulation zone. Both assets showing independent strength. No clear alpha opportunity between the pairs. Better to wait for divergence.',
+      asset: 'ETH/BTC',
+      tradeExecuted: false,
+      tradeStatus: 'cancelled'
+    }
+  ];
 
   const addToast = useCallback((message: string, type: ToastData['type']) => {
     const id = `${Date.now()}-${Math.random()}`;
@@ -220,7 +295,7 @@ export default function Dashboard() {
         {/* AI Analysts Section */}
         <div className="mb-4">
           <h2 className="text-xl font-bold mb-1">AI Analyst Council</h2>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm sm:text-sm text-muted-foreground">
             Five specialized AI models analyzing the market from different perspectives
           </p>
         </div>
@@ -235,6 +310,16 @@ export default function Dashboard() {
         {/* Trading Performance Section */}
         <TradingPerformance className="mb-6" />
 
+        {/* Signal History Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="mb-6"
+        >
+          <SignalHistory signals={signalHistory} maxEntries={5} />
+        </motion.div>
+
         {/* Footer Info */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -242,10 +327,10 @@ export default function Dashboard() {
           transition={{ delay: 1 }}
           className="mt-8 text-center text-sm text-muted-foreground"
         >
-          <p>
+          <p className="text-sm sm:text-sm">
             Real-time consensus powered by DeepSeek, Kimi, MiniMax, GLM, and Gemini
           </p>
-          <p className="mt-1">
+          <p className="mt-1 text-sm sm:text-sm">
             Trade executes automatically when consensus threshold is reached
           </p>
         </motion.div>
