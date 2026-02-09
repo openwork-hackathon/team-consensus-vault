@@ -12,12 +12,24 @@ export interface Trade {
   direction: 'long' | 'short';
   entryPrice: number;
   exitPrice?: number;
-  consensusStrength: '4/5' | '5/5';
-  consensusSignal: Signal;
+  consensusStrength?: '4/5' | '5/5'; // Optional for prediction market trades
+  consensusSignal?: Signal; // Optional for prediction market trades
+  source: 'consensus' | 'prediction_market'; // Trade origin
   status: 'open' | 'closed';
   pnl?: number;
   pnlPercentage?: number;
   closedAt?: string;
+  
+  // Additional fields for prediction market trades
+  predictionMarketData?: {
+    roundId: string;
+    betId: string;
+    betAmount: number;
+    isWinner: boolean;
+    payoutAmount: number;
+    netProfit: number;
+    roiPercent: number;
+  };
 }
 
 export interface PortfolioMetrics {

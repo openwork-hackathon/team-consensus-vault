@@ -12,6 +12,7 @@
 
 import { ConsensusResponse, Signal } from '../models';
 import { getCurrentPrice } from '../price-service';
+import { getCurrentPool } from './state';
 import {
   RoundState,
   RoundPhase,
@@ -20,6 +21,8 @@ import {
   ConsensusSnapshot,
   PredictionMarketConfig,
   calculateBettingPool,
+  Bet,
+  Payout,
 } from './types';
 
 // ============================================================================
@@ -222,8 +225,12 @@ async function transitionToSettlement(round: Round): Promise<Round> {
   const exitPrice = await getCurrentPrice(round.asset);
   const now = new Date().toISOString();
 
+  // Get current pool with bets
+  const currentPoolData = getCurrentPool();
+  const bets = currentPoolData.bets;
+
   // Calculate settlement result
-  const settlementResult = calculateSettlement(round, round.bettingPool);
+  const settlementResult = calculateSettlement(round, round.bettingPool, bets);
 
   return {
     ...round,
@@ -306,11 +313,13 @@ function calculateConsensusLevel(consensus: ConsensusResponse): number {
  * 
  * @param round - The round to settle
  * @param pool - The betting pool for the round
+ * @param bets - Array of all bets placed in this round
  * @returns Settlement result with winning side and payouts
  */
 export function calculateSettlement(
   round: Round,
-  pool: BettingPool
+  pool: BettingPool,
+  bets: Bet[]
 ): SettlementResult {
   const { entryPrice, exitPrice, direction, asset, id } = round;
 
@@ -348,31 +357,75 @@ export function calculateSettlement(
   const totalPayout = totalPool - platformFee;
   const totalLoss = losingPool;
 
-  // Generate individual payouts (simplified - in production would track individual bets)
-  const payouts: Array<{
-    id: string;
-    betId: string;
-    roundId: string;
-    userAddress: string;
-    betAmount: number;
-    direction: 'long' | 'short';
-    isWinner: boolean;
-    payoutAmount: number;
-    profit: number;
-    netProfit: number;
-    roiPercent: number;
-    processedAt: string;
-  }> = [];
+  // Generate individual payouts
+  const payouts: Payout[] = [];
 
-  // Note: In production, this would iterate through actual bets
-  // For now, we create a placeholder structure
-  if (winningPool > 0) {
-    // Winners split the total pool (minus fees) proportional to their bets
-    const winnerShare = totalPayout / winningPool;
+  // Process each bet and calculate payouts
+  bets.forEach((bet) => {
+    const isWinner = bet.direction === winningSide;
     
-    // This would be populated from actual bets in the pool
-    // For now, placeholder
-  }
+    if (isWinner && winningPool > 0) {
+      // Calculate payout for winners
+      // Each winner gets a proportional share of the total payout based on their bet size
+      const betShareOfWinningPool = bet.amount / winningPool;
+      const payoutAmount = betShareOfWinningPool * totalPayout;
+      const profit = payoutAmount - bet.amount;
+      const netProfit = profit; // Fees already deducted from totalPayout
+      const roiPercent = (profit / bet.amount) * 100;
+
+      // Update bet status and payout fields
+      bet.status = 'won';
+      bet.payout = payoutAmount;
+      bet.profit = profit;
+
+      // Create payout object
+      const payout: Payout = {
+        id: `payout_${bet.id}_${Date.now()}`,
+        betId: bet.id,
+        roundId: round.id,
+        userAddress: bet.userAddress,
+        betAmount: bet.amount,
+        direction: bet.direction,
+        isWinner: true,
+        payoutAmount,
+        profit,
+        netProfit,
+        roiPercent,
+        processedAt: new Date().toISOString(),
+      };
+
+      payouts.push(payout);
+    } else {
+      // Losers get no payout
+      const payoutAmount = 0;
+      const profit = -bet.amount; // Lost the entire bet
+      const netProfit = profit;
+      const roiPercent = -100; // Lost 100% of the bet
+
+      // Update bet status and payout fields
+      bet.status = 'lost';
+      bet.payout = 0;
+      bet.profit = profit;
+
+      // Create payout object for losers
+      const payout: Payout = {
+        id: `payout_${bet.id}_${Date.now()}`,
+        betId: bet.id,
+        roundId: round.id,
+        userAddress: bet.userAddress,
+        betAmount: bet.amount,
+        direction: bet.direction,
+        isWinner: false,
+        payoutAmount,
+        profit,
+        netProfit,
+        roiPercent,
+        processedAt: new Date().toISOString(),
+      };
+
+      payouts.push(payout);
+    }
+  });
 
   return {
     id: `settlement_${id}`,

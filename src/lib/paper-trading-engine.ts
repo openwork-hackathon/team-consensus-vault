@@ -7,6 +7,7 @@ import { Trade, PortfolioMetrics, TradingHistory } from './trading-types';
 import { Signal, ConsensusResponse } from './models';
 import { getCurrentPrice } from './price-service';
 import { getStoredTrades, setStoredTrades, getStoredMetrics, setStoredMetrics } from './storage';
+import { SettlementResult, Payout } from './prediction-market/types';
 
 /**
  * Check if consensus signal triggers a trade (4/5 or 5/5 agreement)
@@ -221,4 +222,120 @@ export async function autoCloseOnReversal(
   }
 
   return closedTradeIds;
+}
+
+/**
+ * Bridge function to record prediction market settlements as paper trades
+ * 
+ * Maps prediction market bet outcomes to paper trading P&L:
+ * - Winning bets → positive P&L (net profit)
+ * - Losing bets → negative P&L (lost bet amount)
+ * 
+ * @param settlementResult - The settlement result from prediction market
+ * @param entryPrice - Entry price of the round
+ * @param exitPrice - Exit price of the round
+ * @param asset - Asset being traded
+ * @returns Array of created paper trade IDs
+ */
+export async function recordPredictionMarketSettlement(
+  settlementResult: SettlementResult,
+  entryPrice: number,
+  exitPrice: number,
+  asset: string
+): Promise<string[]> {
+  const createdTradeIds: string[] = [];
+
+  // Create a paper trade for each payout in the settlement
+  for (const payout of settlementResult.payouts) {
+    try {
+      const trade: Trade = {
+        id: `pm-trade-${payout.id}`,
+        timestamp: payout.processedAt,
+        asset: `${asset}/USD`,
+        direction: payout.direction,
+        entryPrice: entryPrice,
+        exitPrice: exitPrice,
+        source: 'prediction_market',
+        status: 'closed',
+        closedAt: payout.processedAt,
+        pnl: payout.netProfit, // Use net profit for P&L
+        pnlPercentage: payout.roiPercent,
+        predictionMarketData: {
+          roundId: payout.roundId,
+          betId: payout.betId,
+          betAmount: payout.betAmount,
+          isWinner: payout.isWinner,
+          payoutAmount: payout.payoutAmount,
+          netProfit: payout.netProfit,
+          roiPercent: payout.roiPercent,
+        },
+      };
+
+      // Store the trade (append to existing trades)
+      const existingTrades = await getTrades();
+      await setStoredTrades([...existingTrades, trade]);
+      
+      createdTradeIds.push(trade.id);
+    } catch (error) {
+      console.error(`Failed to create paper trade for bet ${payout.betId}:`, error);
+      // Continue processing other payouts even if one fails
+    }
+  }
+
+  // Update metrics after recording all trades
+  if (createdTradeIds.length > 0) {
+    await updateMetrics();
+  }
+
+  return createdTradeIds;
+}
+
+/**
+ * Get paper trading metrics filtered by source
+ * Useful for viewing performance of prediction market vs consensus trades separately
+ */
+export async function getMetricsBySource(source?: 'consensus' | 'prediction_market'): Promise<PortfolioMetrics> {
+  const trades = await getTrades();
+  
+  let filteredTrades = trades;
+  if (source) {
+    filteredTrades = trades.filter(t => t.source === source);
+  }
+  
+  const closedTrades = filteredTrades.filter((t) => t.status === 'closed');
+  const openTrades = filteredTrades.filter((t) => t.status === 'open');
+
+  const winningTrades = closedTrades.filter((t) => (t.pnl || 0) > 0);
+  const losingTrades = closedTrades.filter((t) => (t.pnl || 0) <= 0);
+
+  const totalPnL = closedTrades.reduce((sum, t) => sum + (t.pnl || 0), 0);
+  const avgWin = winningTrades.length > 0
+    ? winningTrades.reduce((sum, t) => sum + (t.pnl || 0), 0) / winningTrades.length
+    : 0;
+  const avgLoss = losingTrades.length > 0
+    ? losingTrades.reduce((sum, t) => sum + (t.pnl || 0), 0) / losingTrades.length
+    : 0;
+
+  const largestWin = winningTrades.length > 0
+    ? Math.max(...winningTrades.map((t) => t.pnl || 0))
+    : 0;
+  const largestLoss = losingTrades.length > 0
+    ? Math.min(...losingTrades.map((t) => t.pnl || 0))
+    : 0;
+
+  const metrics: PortfolioMetrics = {
+    totalTrades: filteredTrades.length,
+    openTrades: openTrades.length,
+    closedTrades: closedTrades.length,
+    winningTrades: winningTrades.length,
+    losingTrades: losingTrades.length,
+    totalPnL,
+    winRate: closedTrades.length > 0 ? (winningTrades.length / closedTrades.length) * 100 : 0,
+    avgWin,
+    avgLoss,
+    largestWin,
+    largestLoss,
+  };
+
+  return metrics;
 }
