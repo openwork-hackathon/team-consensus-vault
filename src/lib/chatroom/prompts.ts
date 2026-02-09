@@ -2,6 +2,7 @@ import { Persona, ChatMessage, MessageSentiment, DebateSummary } from './types';
 import { MarketData, formatMarketDataForPrompt, getMarketTalkingPoints } from './market-data';
 import { PersuasionState, getPersuasionSummary, shouldAcknowledgeOpposingView, generateAcknowledgmentPrompt } from './persuasion';
 import { formatDebateSummaryForPrompt } from './argument-extractor';
+import { DebateContextForConsensus, formatDebateContextForPrompt } from './debate-consensus-bridge';
 
 function formatRecentMessages(messages: ChatMessage[], limit: number = 10): string {
   const recent = messages.slice(-limit);
