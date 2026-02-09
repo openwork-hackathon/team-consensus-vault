@@ -79,6 +79,9 @@ export enum ConsensusErrorType {
   RATE_LIMIT = 'RATE_LIMIT',
   MISSING_API_KEY = 'MISSING_API_KEY',
   INVALID_RESPONSE = 'INVALID_RESPONSE',
+  VALIDATION_ERROR = 'VALIDATION_ERROR',
+  CONFIGURATION_ERROR = 'CONFIGURATION_ERROR',
+  CACHE_ERROR = 'CACHE_ERROR',
 }
 
 export class ConsensusError extends Error {
@@ -195,6 +198,36 @@ function createUserFacingError(error: ConsensusError): UserFacingError {
         message: 'Received empty or malformed response from model',
         severity: 'warning',
         recoveryGuidance: 'The model service returned an unexpected response. This usually resolves automatically.',
+        retryable: true,
+        modelId,
+      };
+      
+    case ConsensusErrorType.VALIDATION_ERROR:
+      return {
+        type: 'validation_error',
+        message: 'Data validation failed - received invalid analysis data',
+        severity: 'warning',
+        recoveryGuidance: 'The model returned data that could not be validated. This is usually a temporary issue. Try again in a few moments.',
+        retryable: true,
+        modelId,
+      };
+      
+    case ConsensusErrorType.CONFIGURATION_ERROR:
+      return {
+        type: 'configuration_error',
+        message: 'Service configuration issue detected',
+        severity: 'critical',
+        recoveryGuidance: 'This is a server configuration problem. Please contact support or try again later.',
+        retryable: false,
+        modelId,
+      };
+      
+    case ConsensusErrorType.CACHE_ERROR:
+      return {
+        type: 'cache_error',
+        message: 'Temporary data access issue',
+        severity: 'warning',
+        recoveryGuidance: 'There was a problem accessing cached data. The system will retry automatically.',
         retryable: true,
         modelId,
       };
@@ -953,7 +986,7 @@ function parseModelResponse(text: string, modelId: string): ModelResponse {
     if (!['buy', 'sell', 'hold'].includes(signal)) {
       throw new ConsensusError(
         `Invalid signal value: "${signal}". Must be "buy", "sell", or "hold"`,
-        ConsensusErrorType.PARSE_ERROR,
+        ConsensusErrorType.VALIDATION_ERROR,
         modelId
       );
     }
@@ -963,7 +996,7 @@ function parseModelResponse(text: string, modelId: string): ModelResponse {
     if (rawConfidence === undefined || rawConfidence === null) {
       throw new ConsensusError(
         'Missing required field: confidence',
-        ConsensusErrorType.PARSE_ERROR,
+        ConsensusErrorType.VALIDATION_ERROR,
         modelId
       );
     }
@@ -972,7 +1005,7 @@ function parseModelResponse(text: string, modelId: string): ModelResponse {
     if (isNaN(confidence)) {
       throw new ConsensusError(
         `Invalid confidence value: "${rawConfidence}". Must be a number between 0-100`,
-        ConsensusErrorType.PARSE_ERROR,
+        ConsensusErrorType.VALIDATION_ERROR,
         modelId
       );
     }
@@ -985,7 +1018,7 @@ function parseModelResponse(text: string, modelId: string): ModelResponse {
     if (reasoning.length < 10) {
       throw new ConsensusError(
         'Reasoning too short (minimum 10 characters)',
-        ConsensusErrorType.PARSE_ERROR,
+        ConsensusErrorType.VALIDATION_ERROR,
         modelId
       );
     }
