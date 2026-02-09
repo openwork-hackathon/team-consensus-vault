@@ -6,29 +6,34 @@ import { motion } from 'framer-motion';
 interface ErrorBoundaryProps {
   children: ReactNode;
   fallback?: (error: Error, reset: () => void) => ReactNode;
+  componentName?: string;
+  onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
 }
 
 interface ErrorBoundaryState {
   hasError: boolean;
   error: Error | null;
+  errorInfo: React.ErrorInfo | null;
 }
 
 export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { hasError: false, error: null, errorInfo: null };
   }
 
-  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+  static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
     return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
+    this.setState({ errorInfo });
+    this.props.onError?.(error, errorInfo);
   }
 
   resetError = () => {
-    this.setState({ hasError: false, error: null });
+    this.setState({ hasError: false, error: null, errorInfo: null });
   };
 
   render() {
@@ -50,7 +55,9 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
               <div className="w-12 h-12 bg-bearish/20 rounded-full flex items-center justify-center">
                 <span className="text-2xl">⚠️</span>
               </div>
-              <h1 className="text-2xl font-bold">Something went wrong</h1>
+              <h1 className="text-2xl font-bold">
+                {this.props.componentName ? `${this.props.componentName} Error` : 'Something went wrong'}
+              </h1>
             </div>
 
             <p className="text-muted-foreground mb-4">

@@ -3,6 +3,7 @@
 import { Analyst } from '@/lib/types';
 import { motion } from 'framer-motion';
 import ModelRetryButton from './ModelRetryButton';
+import LoadingProgress from './LoadingProgress';
 
 interface AnalystCardProps {
   analyst: Analyst;
@@ -65,27 +66,26 @@ export default function AnalystCard({ analyst, index, onRetry }: AnalystCardProp
       {/* Reasoning */}
       <div className="min-h-[60px] sm:min-h-[80px]">
         {analyst.isTyping ? (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span>Analyzing</span>
-            <motion.span
-              animate={{ opacity: [0.3, 1, 0.3] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-            >
-              ●●●
-            </motion.span>
-          </div>
-        ) : analyst.progress ? (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span className="text-blue-500">⏳</span>
-            <p className="text-xs sm:text-sm">
-              {analyst.progress.message}
-              {analyst.progress.estimatedRemainingTime && (
-                <span className="text-xs opacity-70 ml-1">
-                  (~{Math.round(analyst.progress.estimatedRemainingTime / 1000)}s)
-                </span>
-              )}
-            </p>
-          </div>
+          analyst.progress ? (
+            <LoadingProgress
+              modelName={analyst.name}
+              elapsedTime={analyst.progress.elapsedTime}
+              estimatedRemainingTime={analyst.progress.estimatedRemainingTime}
+              status={analyst.progress.status as any}
+              message={analyst.progress.message}
+              compact
+            />
+          ) : (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>Analyzing</span>
+              <motion.span
+                animate={{ opacity: [0.3, 1, 0.3] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              >
+                ●●●
+              </motion.span>
+            </div>
+          )
         ) : analyst.error ? (
           <div className="space-y-2">
             <div className="flex items-start gap-2">

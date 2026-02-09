@@ -262,3 +262,200 @@ Error handling is now **comprehensive and user-friendly** across both consensus 
 ✅ Graceful degradation on complete failures
 
 The system is now **production-ready** with robust error handling that maintains user trust even during failures.
+
+## Additional Enhancements (CVAULT-149)
+
+### New Utilities and Components
+
+#### 1. Error Aggregation (`src/lib/error-aggregator.ts`)
+
+**Purpose**: Prevent duplicate error notifications from overwhelming users.
+
+**Features**:
+- Deduplicates errors within a 5-second window
+- Groups errors by type and severity
+- Tracks affected models
+- Generates aggregated error messages
+
+**Example**:
+```typescript
+import { globalErrorAggregator, shouldShowToastForError } from '@/lib/error-aggregator';
+
+const isNewError = globalErrorAggregator.add(userFacingError, 'deepseek');
+if (isNewError && shouldShowToastForError(userFacingError)) {
+  // Show toast notification
+}
+```
+
+#### 2. Error Toast Hook (`src/hooks/useErrorToasts.ts`)
+
+**Purpose**: Unified toast management with automatic error deduplication.
+
+**Features**:
+- Automatic deduplication of error toasts
+- Context-aware duration based on estimated wait time
+- Separate methods for success/info/warning/error toasts
+- Integration with global error aggregator
+
+**Example**:
+```typescript
+const { toasts, addErrorToast, addSuccessToast, removeToast } = useErrorToasts();
+
+// Automatically deduplicated
+addErrorToast(userFacingError, 'modelId');
+```
+
+#### 3. Loading Progress Component (`src/components/LoadingProgress.tsx`)
+
+**Purpose**: Enhanced loading states with time estimates and visual feedback.
+
+**Features**:
+- Live elapsed time counter
+- Estimated remaining time display
+- Status-based styling (processing → slow → timeout warning)
+- Animated progress bar
+- Compact mode for inline display
+
+**States**:
+- **Processing** (< 15s): Blue indicator, normal status
+- **Slow** (15-30s): Yellow warning, "taking longer than expected"
+- **Timeout Warning** (> 30s): Orange alert, "unusually long"
+
+**Example**:
+```tsx
+<LoadingProgress
+  modelName="DeepSeek Quant"
+  elapsedTime={18000}
+  estimatedRemainingTime={7000}
+  status="slow"
+  compact
+/>
+```
+
+#### 4. Enhanced Error Boundary (`src/components/ErrorBoundary.tsx`)
+
+**Improvements**:
+- Added `componentName` prop for context-specific error messages
+- Added `onError` callback for error tracking/logging
+- Stores `errorInfo` for detailed stack traces
+- Development mode shows technical details
+
+**Example**:
+```tsx
+<ErrorBoundary
+  componentName="Chatroom"
+  onError={(error, errorInfo) => {
+    console.error('Chatroom error:', error);
+  }}
+>
+  <ChatroomComponent />
+</ErrorBoundary>
+```
+
+### Enhanced Components
+
+#### AnalystCard Integration
+
+**Improvements**:
+- Integrates `LoadingProgress` component for slow responses
+- Shows progress with elapsed time and estimates
+- Better visual hierarchy for errors vs progress
+
+**Display Logic**:
+```
+isTyping + progress → LoadingProgress component
+isTyping + no progress → Simple "Analyzing..." animation
+error → Formatted error with guidance and retry button
+completed → Analysis results
+```
+
+### Integration Guidelines
+
+#### When to Show Toasts vs In-Component Errors
+
+**Use Toasts**:
+- Transient errors (rate limits, network blips)
+- Success notifications
+- Background process updates
+- Non-critical warnings
+
+**Use In-Component Errors**:
+- Critical errors blocking functionality
+- Errors requiring user action
+- Detailed error context
+- Configuration issues
+
+#### Error Message Best Practices
+
+**Good Messages**:
+✅ "Rate limit exceeded - please wait before trying again"
+✅ "AI models temporarily unavailable. Please try again."
+✅ "Connection lost - check your internet"
+
+**Bad Messages**:
+❌ "Error 429"
+❌ "Request failed"
+❌ Technical URLs or stack traces
+
+### Testing Checklist
+
+#### Error Toast Behavior
+- [ ] Transient errors show toast notifications
+- [ ] Duplicate errors within 5s are deduplicated
+- [ ] Toast duration matches estimated wait time
+- [ ] Critical errors shown in component, not toast
+
+#### Progress Tracking
+- [ ] Processing state (< 15s) shows blue indicator
+- [ ] Slow state (15-30s) shows yellow warning
+- [ ] Timeout warning (> 30s) shows orange alert
+- [ ] Estimated time updates correctly
+- [ ] Progress bar animates smoothly
+
+#### AnalystCard Display
+- [ ] LoadingProgress shows for slow typing analysts
+- [ ] userFacingError formatted properly
+- [ ] Recovery guidance displayed
+- [ ] Estimated wait time shown for rate limits
+- [ ] Severity affects styling and icon
+
+#### Error Boundary
+- [ ] Catches component errors without crashing app
+- [ ] Shows component-specific error message
+- [ ] Retry button resets error state
+- [ ] Development mode shows stack trace
+
+### Configuration
+
+**Toast Durations** (`useErrorToasts.ts`):
+- Success: 3000ms
+- Info: 3000ms
+- Warning: 4000ms
+- Error: Based on `estimatedWaitTime`, max 10000ms
+
+**Error Deduplication** (`error-aggregator.ts`):
+- Dedup window: 5000ms (5 seconds)
+
+**Progress Thresholds** (`LoadingProgress.tsx`):
+- Slow threshold: 15000ms (15 seconds)
+- Timeout warning: 30000ms (30 seconds)
+
+### Files Modified
+
+**New Files**:
+- `src/lib/error-aggregator.ts` - Error deduplication utility
+- `src/hooks/useErrorToasts.ts` - Toast management hook
+- `src/components/LoadingProgress.tsx` - Enhanced loading component
+
+**Enhanced Files**:
+- `src/components/AnalystCard.tsx` - LoadingProgress integration
+- `src/components/ErrorBoundary.tsx` - Better error context and logging
+
+**Existing Infrastructure** (verified working):
+- `src/lib/consensus-engine.ts` - Already has comprehensive error handling
+- `src/lib/chatroom/error-types.ts` - Already has ChatroomError system
+- `src/components/ErrorMessage.tsx` - Already displays UserFacingError
+- `src/components/PartialFailureBanner.tsx` - Already handles partial failures
+- `src/components/ModelRetryButton.tsx` - Already provides retry UX
+- `src/app/api/consensus/route.ts` - Already streams progress and errors
+
