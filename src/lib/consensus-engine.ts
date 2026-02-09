@@ -1650,6 +1650,10 @@ async function callModel(
  * ```
  */
 function parseModelResponse(text: string, modelId: string): ModelResponse {
+  // Strip model reasoning tags (e.g. DeepSeek <think>...</think>) before parsing
+  text = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+  text = text.replace(/<think>[\s\S]*/gi, '').trim();
+
   if (!text || text.trim().length === 0) {
     throw new ConsensusError(
       'Empty response from model',

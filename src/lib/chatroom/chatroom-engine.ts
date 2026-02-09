@@ -97,8 +97,12 @@ export async function generateNextMessage(
     }
   }
 
-  // 5. Parse sentiment tag and strip from display content
+  // 5. Strip model reasoning tags (e.g. DeepSeek <think>...</think>) and parse sentiment
   let content = rawResponse.trim();
+  // Remove <think>...</think> blocks (DeepSeek chain-of-thought)
+  content = content.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+  // Remove any unclosed <think> block (model hit token limit mid-thought)
+  content = content.replace(/<think>[\s\S]*/gi, '').trim();
   let sentiment: MessageSentiment | undefined;
   let confidence: number | undefined;
 
