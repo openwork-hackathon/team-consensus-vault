@@ -202,7 +202,7 @@ Market Cap: $${marketCapFormatted}
 24h Range: $${formatPrice(data.low24h)} - $${formatPrice(data.high24h)}
 Volatility: ${data.volatility24h?.toFixed(2)}% (24h range)
 Volume/Market Cap: ${(data.volumeToMarketCapRatio || 0).toFixed(3)}
-ATH: $${formatPrice(data.ath)} (${data.athChangePercentage.toFixed(1)}% from ATH)
+ATH: $${formatPrice(data.ath)} (${(Number(data.athChangePercentage) || 0).toFixed(1)}% from ATH)
 Market Profile: ${metrics.priceAction} price, ${metrics.volumeProfile} volume, ${metrics.volatility} volatility
 Last Updated: ${new Date(data.lastUpdated).toLocaleTimeString()}
 === END MARKET DATA ===
@@ -236,10 +236,11 @@ export function getMarketTalkingPoints(data: MarketData): string[] {
   }
 
   // Distance from ATH
-  if (data.athChangePercentage > -20 && data.athChangePercentage < 0) {
-    points.push(`Near ATH: only ${Math.abs(data.athChangePercentage).toFixed(1)}% below all-time high`);
-  } else if (data.athChangePercentage < -50) {
-    points.push(`Deep bear market: ${Math.abs(data.athChangePercentage).toFixed(1)}% from ATH`);
+  const athPct = Number(data.athChangePercentage) || 0;
+  if (athPct > -20 && athPct < 0) {
+    points.push(`Near ATH: only ${Math.abs(athPct).toFixed(1)}% below all-time high`);
+  } else if (athPct < -50) {
+    points.push(`Deep bear market: ${Math.abs(athPct).toFixed(1)}% from ATH`);
   }
 
   // Support/Resistance levels

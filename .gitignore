@@ -1,5 +1,6 @@
 # dependencies
 /node_modules
+/node_modules.old*
 /.pnp
 .pnp.js
 
@@ -29,6 +30,13 @@ yarn-error.log*
 # Model configuration files (may contain encrypted API keys)
 .model-configs.json
 model-configs*.json
+
+# Security and rotation files (NEVER commit)
+*KEYS_TO_ROTATE*
+*SECURITY_AUDIT*
+*_security_*
+*.rotation
+api-keys.*
 
 # vercel
 .vercel
