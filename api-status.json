@@ -1,0 +1,246 @@
+{
+  "test_date": "2026-02-09",
+  "test_method": "static_code_analysis",
+  "total_endpoints": 20,
+  "endpoints": [
+    {
+      "path": "/api/chatroom/stream",
+      "methods": ["GET"],
+      "status": "PARTIAL",
+      "category": "chatroom",
+      "dependencies": ["kv_store", "ai_proxy"],
+      "notes": "SSE streaming, 17 AI personas, MiniMax key expired"
+    },
+    {
+      "path": "/api/chatroom/post",
+      "methods": ["POST"],
+      "status": "PARTIAL",
+      "category": "chatroom",
+      "dependencies": ["kv_store"],
+      "notes": "Human message posting"
+    },
+    {
+      "path": "/api/chatroom/admin",
+      "methods": ["POST"],
+      "status": "PARTIAL",
+      "category": "chatroom",
+      "dependencies": ["kv_store"],
+      "notes": "Admin controls (reset, phase changes)"
+    },
+    {
+      "path": "/api/chatroom/moderate",
+      "methods": ["POST"],
+      "status": "PARTIAL",
+      "category": "chatroom",
+      "dependencies": ["kv_store"],
+      "notes": "Message moderation/deletion"
+    },
+    {
+      "path": "/api/chatroom/summarize",
+      "methods": ["GET"],
+      "status": "PARTIAL",
+      "category": "chatroom",
+      "dependencies": ["kv_store"],
+      "notes": "Debate summary extraction"
+    },
+    {
+      "path": "/api/consensus",
+      "methods": ["GET", "POST"],
+      "status": "PARTIAL",
+      "category": "consensus",
+      "dependencies": ["ai_proxy_or_keys"],
+      "notes": "SSE stream (GET) and JSON (POST), has mock fallback"
+    },
+    {
+      "path": "/api/consensus-detailed",
+      "methods": ["GET", "POST"],
+      "status": "PARTIAL",
+      "category": "consensus",
+      "dependencies": ["ai_proxy_or_keys"],
+      "notes": "Enhanced version with 60s edge cache"
+    },
+    {
+      "path": "/api/consensus-enhanced",
+      "methods": ["GET"],
+      "status": "PARTIAL",
+      "category": "consensus",
+      "dependencies": ["ai_proxy_or_keys"],
+      "notes": "Advanced consensus with circuit breakers"
+    },
+    {
+      "path": "/api/council/evaluate",
+      "methods": ["POST"],
+      "status": "PARTIAL",
+      "category": "council",
+      "dependencies": ["ai_proxy_or_keys"],
+      "notes": "CTO council proposal evaluation"
+    },
+    {
+      "path": "/api/trading/execute",
+      "methods": ["POST"],
+      "status": "PARTIAL",
+      "category": "trading",
+      "dependencies": ["kv_store"],
+      "notes": "Paper trading execution, no-cache headers"
+    },
+    {
+      "path": "/api/trading/close",
+      "methods": ["POST"],
+      "status": "PARTIAL",
+      "category": "trading",
+      "dependencies": ["kv_store"],
+      "notes": "Close positions, no-cache headers"
+    },
+    {
+      "path": "/api/trading/history",
+      "methods": ["GET"],
+      "status": "PARTIAL",
+      "category": "trading",
+      "dependencies": ["kv_store"],
+      "notes": "Trade history retrieval"
+    },
+    {
+      "path": "/api/market-data",
+      "methods": ["GET", "POST"],
+      "status": "WORKING",
+      "category": "market",
+      "dependencies": ["coingecko_api"],
+      "notes": "Real market data, edge runtime, 60s cache"
+    },
+    {
+      "path": "/api/price",
+      "methods": ["GET"],
+      "status": "WORKING",
+      "category": "market",
+      "dependencies": ["coingecko_api"],
+      "notes": "Current price data"
+    },
+    {
+      "path": "/api/prediction-market/bet",
+      "methods": ["POST", "GET"],
+      "status": "PARTIAL",
+      "category": "market",
+      "dependencies": ["kv_store"],
+      "notes": "Betting on price direction, 5s cache on GET"
+    },
+    {
+      "path": "/api/prediction-market/stream",
+      "methods": ["GET"],
+      "status": "PARTIAL",
+      "category": "market",
+      "dependencies": ["kv_store"],
+      "notes": "SSE stream of prediction market updates"
+    },
+    {
+      "path": "/api/health",
+      "methods": ["GET", "HEAD"],
+      "status": "PARTIAL",
+      "category": "utility",
+      "dependencies": ["consensus_engine", "ai_cache"],
+      "notes": "Comprehensive health metrics, may error without deps"
+    },
+    {
+      "path": "/api/cron/stale-trades",
+      "methods": ["GET"],
+      "status": "PARTIAL",
+      "category": "utility",
+      "dependencies": ["kv_store"],
+      "notes": "Cleanup cron job"
+    },
+    {
+      "path": "/api/human-chat/post",
+      "methods": ["POST"],
+      "status": "PARTIAL",
+      "category": "utility",
+      "dependencies": ["kv_store"],
+      "notes": "Human chat posting"
+    },
+    {
+      "path": "/api/human-chat/stream",
+      "methods": ["GET"],
+      "status": "PARTIAL",
+      "category": "utility",
+      "dependencies": ["kv_store"],
+      "notes": "Human chat SSE stream"
+    }
+  ],
+  "status_summary": {
+    "working": 2,
+    "partial": 18,
+    "broken": 0
+  },
+  "category_summary": {
+    "chatroom": 5,
+    "consensus": 3,
+    "council": 1,
+    "trading": 3,
+    "market": 4,
+    "utility": 4
+  },
+  "dependencies": {
+    "coingecko_api": {
+      "status": "available",
+      "required_by": 2,
+      "notes": "Public API, no authentication required"
+    },
+    "kv_store": {
+      "status": "unknown",
+      "required_by": 13,
+      "notes": "Vercel KV configuration needs verification"
+    },
+    "ai_proxy_or_keys": {
+      "status": "partial",
+      "required_by": 4,
+      "notes": "DeepSeek working, MiniMax expired"
+    },
+    "consensus_engine": {
+      "status": "implemented",
+      "required_by": 1,
+      "notes": "Depends on AI models"
+    },
+    "ai_cache": {
+      "status": "implemented",
+      "required_by": 1,
+      "notes": "In-memory caching layer"
+    }
+  },
+  "known_issues": [
+    {
+      "issue": "MiniMax API key expired",
+      "severity": "medium",
+      "impact": "Chatroom personas using MiniMax will fail with 401"
+    },
+    {
+      "issue": "KV store configuration unknown",
+      "severity": "high",
+      "impact": "13 endpoints cannot persist or retrieve state"
+    },
+    {
+      "issue": "Next.js Turbopack cache corruption",
+      "severity": "low",
+      "impact": "Dev server startup issues, resolved by cache clear"
+    }
+  ],
+  "code_quality": {
+    "error_handling": "excellent",
+    "caching": "excellent",
+    "rate_limiting": "implemented",
+    "circuit_breakers": "implemented",
+    "sse_streaming": "excellent",
+    "security": "good_needs_auth_layer"
+  },
+  "deliverables": [
+    "API_STATUS.md",
+    "API_QUICK_REFERENCE.md",
+    "test-api-endpoints.sh",
+    "TESTING_SUMMARY.txt",
+    "api-status.json"
+  ],
+  "recommendations": [
+    "Configure Vercel KV store",
+    "Verify AI proxy server running on localhost:4100",
+    "Rotate MiniMax API key",
+    "Run live test suite when server is stable",
+    "Consider adding authentication layer"
+  ]
+}
