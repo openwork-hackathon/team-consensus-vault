@@ -70,7 +70,7 @@ function rotateGeminiKey(): void {
   }
 }
 
-// Error types for better error handling
+// Enhanced error types for better error handling
 export enum ConsensusErrorType {
   TIMEOUT = 'TIMEOUT',
   API_ERROR = 'API_ERROR',
@@ -82,19 +82,129 @@ export enum ConsensusErrorType {
   VALIDATION_ERROR = 'VALIDATION_ERROR',
   CONFIGURATION_ERROR = 'CONFIGURATION_ERROR',
   CACHE_ERROR = 'CACHE_ERROR',
+  GATEWAY_ERROR = 'GATEWAY_ERROR',
+  AUTHENTICATION_ERROR = 'AUTHENTICATION_ERROR',
+  QUOTA_EXCEEDED = 'QUOTA_EXCEEDED',
+  QUOTA_WARNING = 'QUOTA_WARNING',
 }
 
+// Enhanced error with correlation ID for debugging
 export class ConsensusError extends Error {
+  public readonly correlationId: string;
+  public readonly timestamp: Date;
+  
   constructor(
     message: string,
     public type: ConsensusErrorType,
     public modelId?: string,
-    public originalError?: unknown
+    public originalError?: unknown,
+    public metadata?: Record<string, any>
   ) {
     super(message);
     this.name = 'ConsensusError';
+    this.correlationId = generateCorrelationId();
+    this.timestamp = new Date();
   }
 }
+
+// Generate unique correlation ID for request tracing
+function generateCorrelationId(): string {
+  return `cv-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+}
+
+// Structured logger for consensus engine
+class ConsensusLogger {
+  private static instance: ConsensusLogger;
+  private logs: Array<{
+    timestamp: Date;
+    level: 'info' | 'warn' | 'error';
+    message: string;
+    correlationId?: string;
+    metadata?: Record<string, any>;
+  }> = [];
+
+  static getInstance(): ConsensusLogger {
+    if (!ConsensusLogger.instance) {
+      ConsensusLogger.instance = new ConsensusLogger();
+    }
+    return ConsensusLogger.instance;
+  }
+
+  info(message: string, correlationId?: string, metadata?: Record<string, any>) {
+    this.log('info', message, correlationId, metadata);
+  }
+
+  warn(message: string, correlationId?: string, metadata?: Record<string, any>) {
+    this.log('warn', message, correlationId, metadata);
+  }
+
+  error(message: string, correlationId?: string, metadata?: Record<string, any>) {
+    this.log('error', message, correlationId, metadata);
+  }
+
+  private log(
+    level: 'info' | 'warn' | 'error',
+    message: string,
+    correlationId?: string,
+    metadata?: Record<string, any>
+  ) {
+    const logEntry = {
+      timestamp: new Date(),
+      level,
+      message,
+      correlationId,
+      metadata,
+    };
+
+    this.logs.push(logEntry);
+
+    // Console output for development
+    const timestamp = logEntry.timestamp.toISOString();
+    const corrId = correlationId ? `[${correlationId}]` : '';
+    console.log(`[${timestamp}] ${level.toUpperCase()} ${corrId} ${message}`, metadata || '');
+
+    // Integration point for external logging services (Sentry, etc.)
+    this.sendToExternalServices(level, message, correlationId, metadata);
+  }
+
+  private sendToExternalServices(
+    level: 'info' | 'warn' | 'error',
+    message: string,
+    correlationId?: string,
+    metadata?: Record<string, any>
+  ) {
+    // Sentry integration point
+    if (typeof window !== 'undefined' && (window as any).Sentry) {
+      const sentry = (window as any).Sentry;
+      const extra = {
+        correlationId,
+        modelId: metadata?.modelId,
+        timestamp: new Date().toISOString(),
+        ...metadata,
+      };
+
+      if (level === 'error') {
+        sentry.captureException(new Error(message), { extra });
+      } else {
+        sentry.captureMessage(message, level as any, { extra });
+      }
+    }
+
+    // Additional logging services can be integrated here
+    // e.g., LogRocket, Datadog, etc.
+  }
+
+  getLogs(correlationId?: string) {
+    if (!correlationId) return this.logs;
+    return this.logs.filter(log => log.correlationId === correlationId);
+  }
+
+  clear() {
+    this.logs = [];
+  }
+}
+
+export const logger = ConsensusLogger.getInstance();
 
 /**
  * Create user-facing error messages with recovery guidance
@@ -116,59 +226,91 @@ export class ConsensusError extends Error {
  */
 function createUserFacingError(error: ConsensusError): UserFacingError {
   const { type, message, modelId, originalError } = error;
-  
+
   switch (type) {
     case ConsensusErrorType.RATE_LIMIT:
       return {
         type: 'rate_limit',
         message: 'Rate limit exceeded - please wait before trying again',
         severity: 'warning',
-        recoveryGuidance: 'Wait 30-60 seconds before submitting another request. Consider reducing query frequency.',
+        recoveryGuidance: 'Too many requests in a short period. Wait 60 seconds, then click "Analyze Again" to retry. To prevent this, space out your requests by at least 10 seconds.',
         retryable: true,
         modelId,
-        estimatedWaitTime: 45000, // 45 seconds average
+        estimatedWaitTime: 60000, // 60 seconds for clarity
       };
-      
+
     case ConsensusErrorType.TIMEOUT:
       return {
         type: 'timeout',
         message: 'Request timed out - the model is taking longer than expected',
         severity: 'warning',
-        recoveryGuidance: 'The model may be experiencing high load. Try again in a few moments.',
+        recoveryGuidance: 'This AI model is experiencing high load. Wait 60 seconds, then click "Analyze Again" to retry. If this persists, the analysis will use fallback models automatically.',
         retryable: true,
         modelId,
+        estimatedWaitTime: 60000,
       };
-      
+
     case ConsensusErrorType.NETWORK_ERROR:
       return {
         type: 'network',
-        message: 'AI models temporarily unavailable. Please try again.',
+        message: 'Network connection issue - unable to reach AI service',
         severity: 'warning',
-        recoveryGuidance: 'The AI service is experiencing connection issues. This usually resolves within a few minutes. Click Retry to attempt the request again.',
+        recoveryGuidance: 'Temporary network issue detected. The system will automatically retry in 2-3 minutes. Check your internet connection if this persists. You can also click "Analyze Again" to retry immediately.',
+        retryable: true,
+        modelId,
+        estimatedWaitTime: 120000,
+      };
+
+    case ConsensusErrorType.AUTHENTICATION_ERROR:
+      return {
+        type: 'authentication',
+        message: 'Authentication failed - API key invalid or expired',
+        severity: 'critical',
+        recoveryGuidance: 'This model\'s API credentials are invalid or have expired. The system will automatically attempt to refresh authentication. If this persists for more than 10 minutes, please report this issue with reference ID: ' + error.correlationId,
+        retryable: false,
+        modelId,
+      };
+
+    case ConsensusErrorType.QUOTA_EXCEEDED:
+      return {
+        type: 'quota_exceeded',
+        message: 'API quota exhausted - service temporarily unavailable',
+        severity: 'critical',
+        recoveryGuidance: 'This model has reached its usage quota for today. The system will automatically use alternative models. Service will resume when quota resets (typically midnight UTC). You can continue using other models in the meantime.',
+        retryable: false,
+        modelId,
+      };
+
+    case ConsensusErrorType.QUOTA_WARNING:
+      return {
+        type: 'quota_warning',
+        message: 'Approaching API quota limit',
+        severity: 'warning',
+        recoveryGuidance: 'This model is nearing its usage quota. Service may be limited soon. Consider using the analysis sparingly or waiting for quota reset (typically midnight UTC).',
         retryable: true,
         modelId,
       };
-      
+
     case ConsensusErrorType.MISSING_API_KEY:
       return {
         type: 'configuration',
         message: 'API configuration missing - service unavailable',
         severity: 'critical',
-        recoveryGuidance: 'This is a server configuration issue. Please contact support or try again later.',
+        recoveryGuidance: 'This model is not properly configured on the server. The system will automatically use alternative models. This typically resolves within 24 hours as configurations are updated. Reference ID: ' + error.correlationId,
         retryable: false,
         modelId,
       };
-      
+
     case ConsensusErrorType.PARSE_ERROR:
       return {
         type: 'parse_error',
-        message: 'Received invalid response from model',
+        message: 'Received invalid response format from model',
         severity: 'warning',
-        recoveryGuidance: 'The model returned an unexpected response. This usually resolves automatically.',
+        recoveryGuidance: 'The AI model returned a response in an unexpected format. This is usually temporary. Click "Analyze Again" to retry immediately. The system automatically retries 2 times before failing.',
         retryable: true,
         modelId,
       };
-      
+
     case ConsensusErrorType.API_ERROR:
       if (originalError && typeof originalError === 'object' && 'message' in originalError) {
         const errorMsg = (originalError as { message?: string }).message || '';
@@ -177,7 +319,7 @@ function createUserFacingError(error: ConsensusError): UserFacingError {
             type: 'quota_exceeded',
             message: 'API quota exceeded - service temporarily unavailable',
             severity: 'critical',
-            recoveryGuidance: 'This is a temporary service limitation. Please try again later.',
+            recoveryGuidance: 'This model has exceeded its usage quota. The system will automatically use alternative models. Service typically resumes at midnight UTC. You can continue with other models.',
             retryable: false,
             modelId,
           };
@@ -187,57 +329,101 @@ function createUserFacingError(error: ConsensusError): UserFacingError {
         type: 'api_error',
         message: 'Model service temporarily unavailable',
         severity: 'warning',
-        recoveryGuidance: 'The model service is experiencing issues. Try again in a few minutes.',
+        recoveryGuidance: 'The AI service is experiencing issues. Wait 3-5 minutes, then click "Analyze Again". The system will automatically retry with backup models if available.',
         retryable: true,
         modelId,
+        estimatedWaitTime: 240000, // 4 minutes
       };
-      
+
     case ConsensusErrorType.INVALID_RESPONSE:
       return {
         type: 'invalid_response',
-        message: 'Received empty or malformed response from model',
+        message: 'Received empty or incomplete response from model',
         severity: 'warning',
-        recoveryGuidance: 'The model service returned an unexpected response. This usually resolves automatically.',
+        recoveryGuidance: 'The AI model returned an incomplete response. Click "Analyze Again" to retry. If this happens repeatedly, the system will automatically switch to a backup model.',
         retryable: true,
         modelId,
       };
-      
+
     case ConsensusErrorType.VALIDATION_ERROR:
       return {
         type: 'validation_error',
         message: 'Data validation failed - received invalid analysis data',
         severity: 'warning',
-        recoveryGuidance: 'The model returned data that could not be validated. This is usually a temporary issue. Try again in a few moments.',
+        recoveryGuidance: 'The AI model returned data that failed quality checks. Click "Analyze Again" to retry. The system automatically validates all responses for accuracy and completeness.',
         retryable: true,
         modelId,
       };
-      
+
     case ConsensusErrorType.CONFIGURATION_ERROR:
       return {
         type: 'configuration_error',
         message: 'Service configuration issue detected',
         severity: 'critical',
-        recoveryGuidance: 'This is a server configuration problem. Please contact support or try again later.',
+        recoveryGuidance: 'A server configuration problem was detected. The system will automatically use alternative models. This typically resolves within 24 hours. Reference ID: ' + error.correlationId,
         retryable: false,
         modelId,
       };
-      
+
     case ConsensusErrorType.CACHE_ERROR:
       return {
         type: 'cache_error',
-        message: 'Temporary data access issue',
+        message: 'Temporary data caching issue',
         severity: 'warning',
-        recoveryGuidance: 'There was a problem accessing cached data. The system will retry automatically.',
+        recoveryGuidance: 'Problem accessing cached responses. This doesn\'t affect functionality but may slow down repeat requests. The system will retry automatically. Your request will complete normally.',
         retryable: true,
         modelId,
       };
-      
+
+    case ConsensusErrorType.GATEWAY_ERROR:
+      const httpStatus = error.metadata?.httpStatus;
+      if (httpStatus === 502) {
+        return {
+          type: 'gateway_error',
+          message: 'Bad Gateway - AI service temporarily unavailable',
+          severity: 'warning',
+          recoveryGuidance: 'The AI service gateway is experiencing issues. Wait 3-5 minutes, then click "Analyze Again". The system will automatically retry with backup infrastructure.',
+          retryable: true,
+          modelId,
+          estimatedWaitTime: 240000, // 4 minutes
+        };
+      } else if (httpStatus === 503) {
+        return {
+          type: 'gateway_error',
+          message: 'Service Unavailable - AI service temporarily overloaded',
+          severity: 'warning',
+          recoveryGuidance: 'The AI service is experiencing high demand. Wait 5 minutes, then click "Analyze Again". The system will automatically distribute load across available backup models.',
+          retryable: true,
+          modelId,
+          estimatedWaitTime: 300000, // 5 minutes
+        };
+      } else if (httpStatus === 504) {
+        return {
+          type: 'timeout',
+          message: 'Gateway Timeout - AI service took too long to respond',
+          severity: 'warning',
+          recoveryGuidance: 'The AI service gateway timed out due to high load. Wait 2 minutes, then click "Analyze Again". The system automatically retries with optimized timeouts.',
+          retryable: true,
+          modelId,
+          estimatedWaitTime: 120000, // 2 minutes
+        };
+      }
+      return {
+        type: 'gateway_error',
+        message: 'Gateway error - AI service temporarily unavailable',
+        severity: 'warning',
+        recoveryGuidance: 'The AI service gateway is experiencing issues. Wait 3-5 minutes, then click "Analyze Again". The system will automatically retry with backup infrastructure.',
+        retryable: true,
+        modelId,
+        estimatedWaitTime: 240000, // 4 minutes
+      };
+
     default:
       return {
         type: 'unknown_error',
         message: 'An unexpected error occurred',
         severity: 'warning',
-        recoveryGuidance: 'Please try again. If the issue persists, contact support.',
+        recoveryGuidance: 'An unexpected issue occurred. Click "Analyze Again" to retry. If this happens repeatedly, please report the issue with reference ID: ' + error.correlationId,
         retryable: true,
         modelId,
       };
@@ -266,13 +452,122 @@ function createUserFacingError(error: ConsensusError): UserFacingError {
 function createProgressUpdate(modelId: string, elapsedTime: number, message?: string): ProgressUpdate {
   const isSlow = elapsedTime > 15000; // 15 seconds
   const estimatedRemaining = elapsedTime * 0.5; // Rough estimate
-  
+
   return {
     modelId,
     status: isSlow ? 'slow' : 'processing',
     message: message || (isSlow ? 'Taking longer than expected...' : 'Processing...'),
     elapsedTime,
     estimatedRemainingTime: estimatedRemaining,
+  };
+}
+
+/**
+ * Aggregate multiple errors into a clear, actionable summary
+ *
+ * When multiple models fail, this creates a consolidated error message that:
+ * - Categorizes errors by type (network, auth, rate limit, etc.)
+ * - Provides the most relevant recovery guidance
+ * - Indicates if any retryable vs non-retryable failures
+ * - Includes estimated wait time if applicable
+ *
+ * @param errors - Array of UserFacingError objects from failed models
+ * @returns A single aggregated UserFacingError with combined guidance
+ *
+ * @example
+ * ```ts
+ * const errors = [
+ *   { type: 'rate_limit', severity: 'warning', ... },
+ *   { type: 'timeout', severity: 'warning', ... },
+ * ];
+ * const summary = aggregateErrors(errors);
+ * // summary.message: "Multiple models failed: 2 rate limited"
+ * // summary.recoveryGuidance: "Wait 60 seconds, then retry..."
+ * ```
+ */
+export function aggregateErrors(errors: UserFacingError[]): UserFacingError {
+  if (errors.length === 0) {
+    return {
+      type: 'unknown_error',
+      message: 'No error details available',
+      severity: 'warning',
+      recoveryGuidance: 'An unknown error occurred. Please try again.',
+      retryable: true,
+    };
+  }
+
+  if (errors.length === 1) {
+    return errors[0];
+  }
+
+  // Categorize errors by type
+  const errorCounts: Record<string, number> = {};
+  const errorTypes = new Set<string>();
+  let hasRetryable = false;
+  let hasCritical = false;
+  let maxWaitTime = 0;
+  const affectedModels: string[] = [];
+
+  errors.forEach(error => {
+    errorTypes.add(error.type);
+    errorCounts[error.type] = (errorCounts[error.type] || 0) + 1;
+
+    if (error.retryable) hasRetryable = true;
+    if (error.severity === 'critical') hasCritical = true;
+    if (error.estimatedWaitTime && error.estimatedWaitTime > maxWaitTime) {
+      maxWaitTime = error.estimatedWaitTime;
+    }
+    if (error.modelId) affectedModels.push(error.modelId);
+  });
+
+  // Generate categorized summary
+  const categorySummary: string[] = [];
+  if (errorCounts.rate_limit) {
+    categorySummary.push(`${errorCounts.rate_limit} rate limited`);
+  }
+  if (errorCounts.timeout) {
+    categorySummary.push(`${errorCounts.timeout} timed out`);
+  }
+  if (errorCounts.network || errorCounts.gateway_error) {
+    const networkCount = (errorCounts.network || 0) + (errorCounts.gateway_error || 0);
+    categorySummary.push(`${networkCount} network issues`);
+  }
+  if (errorCounts.authentication || errorCounts.configuration) {
+    const authCount = (errorCounts.authentication || 0) + (errorCounts.configuration || 0);
+    categorySummary.push(`${authCount} configuration issues`);
+  }
+  if (errorCounts.quota_exceeded) {
+    categorySummary.push(`${errorCounts.quota_exceeded} quota exceeded`);
+  }
+
+  const summaryText = categorySummary.length > 0
+    ? categorySummary.join(', ')
+    : `${errors.length} models failed`;
+
+  // Determine primary recovery guidance based on error types
+  let recoveryGuidance: string;
+
+  if (errorCounts.rate_limit && errorCounts.rate_limit >= errors.length / 2) {
+    // Majority are rate limit errors
+    recoveryGuidance = `Multiple models hit rate limits. Wait ${Math.ceil(maxWaitTime / 1000)} seconds, then click "Analyze Again" to retry. Space out future requests by at least 10-15 seconds to avoid this.`;
+  } else if (errorCounts.timeout && errorCounts.timeout >= errors.length / 2) {
+    // Majority are timeouts
+    recoveryGuidance = `Multiple models timed out due to high demand. Wait ${Math.ceil(maxWaitTime / 1000)} seconds, then click "Analyze Again". The system will automatically use faster backup models.`;
+  } else if (hasCritical) {
+    // Has critical errors (auth, config, quota)
+    recoveryGuidance = `Some models have configuration or quota issues and are temporarily unavailable. The system will automatically use available backup models. Click "Analyze Again" to retry with working models only.`;
+  } else {
+    // Mixed errors
+    recoveryGuidance = `Multiple models failed due to various issues. Wait ${maxWaitTime > 0 ? Math.ceil(maxWaitTime / 1000) : 60} seconds, then click "Analyze Again". The system will automatically retry and use backup models where needed.`;
+  }
+
+  return {
+    type: 'multiple_failures',
+    message: `Multiple models failed: ${summaryText}`,
+    severity: hasCritical ? 'critical' : 'warning',
+    recoveryGuidance,
+    retryable: hasRetryable,
+    estimatedWaitTime: maxWaitTime > 0 ? maxWaitTime : undefined,
   };
 }
 
@@ -402,6 +697,88 @@ function updateMetrics(modelId: string, success: boolean, responseTime: number) 
  */
 export function getPerformanceMetrics(): Record<string, RequestMetrics> {
   return { ...metricsPerModel };
+}
+
+/**
+ * Health check interface for monitoring system status
+ */
+export interface ModelHealthStatus {
+  modelId: string;
+  isHealthy: boolean;
+  circuitBreakerStatus: 'closed' | 'open' | 'half-open';
+  failureCount: number;
+  lastFailureTime?: Date;
+  openUntil?: Date;
+  successRate: number;
+  averageResponseTime: number;
+  totalRequests: number;
+}
+
+/**
+ * Get health status for all models including circuit breaker information
+ * This is useful for monitoring dashboards and debugging
+ */
+export function getModelsHealthStatus(): ModelHealthStatus[] {
+  return ANALYST_MODELS.map(config => {
+    const metrics = metricsPerModel[config.id];
+    const circuitState = circuitBreakerStates[config.id];
+
+    // Calculate success rate
+    const totalRequests = metrics?.totalRequests || 0;
+    const successfulRequests = metrics?.successfulRequests || 0;
+    const successRate = totalRequests > 0 ? (successfulRequests / totalRequests) * 100 : 100;
+
+    // Determine circuit breaker status
+    let circuitBreakerStatus: 'closed' | 'open' | 'half-open' = 'closed';
+    if (circuitState?.isOpen) {
+      circuitBreakerStatus = 'open';
+    } else if (circuitState?.failureCount > 0) {
+      circuitBreakerStatus = 'half-open';
+    }
+
+    // Model is healthy if circuit is not open and success rate is reasonable
+    const isHealthy = !circuitState?.isOpen && successRate >= 50;
+
+    return {
+      modelId: config.id,
+      isHealthy,
+      circuitBreakerStatus,
+      failureCount: circuitState?.failureCount || 0,
+      lastFailureTime: circuitState?.lastFailureTime ? new Date(circuitState.lastFailureTime) : undefined,
+      openUntil: circuitState?.openUntil ? new Date(circuitState.openUntil) : undefined,
+      successRate: Math.round(successRate * 100) / 100,
+      averageResponseTime: Math.round(metrics?.averageResponseTime || 0),
+      totalRequests,
+    };
+  });
+}
+
+/**
+ * Get overall system health summary
+ */
+export function getSystemHealthSummary() {
+  const healthStatuses = getModelsHealthStatus();
+  const healthyModels = healthStatuses.filter(h => h.isHealthy).length;
+  const totalModels = healthStatuses.length;
+  
+  const openCircuits = healthStatuses.filter(h => h.circuitBreakerStatus === 'open').length;
+  const halfOpenCircuits = healthStatuses.filter(h => h.circuitBreakerStatus === 'half-open').length;
+  
+  const overallHealth = {
+    status: healthyModels === totalModels ? 'healthy' : 
+            healthyModels >= totalModels * 0.6 ? 'degraded' : 'unhealthy',
+    healthyModels,
+    totalModels,
+    healthyPercentage: Math.round((healthyModels / totalModels) * 100),
+    openCircuits,
+    halfOpenCircuits,
+    timestamp: new Date(),
+  };
+
+  return {
+    overall: overallHealth,
+    models: healthStatuses,
+  };
 }
 
 /**
@@ -568,19 +945,47 @@ async function callModel(
         if (response.status === 401 || response.status === 403) {
           throw new ConsensusError(
             'Authentication failed - API key may be invalid or expired',
-            ConsensusErrorType.MISSING_API_KEY,
+            ConsensusErrorType.AUTHENTICATION_ERROR,
             config.id,
             geminiErrorData.error
           );
         }
 
         if (response.status >= 500) {
-          throw new ConsensusError(
-            `Gemini API server error: ${response.status} - service temporarily unavailable`,
-            ConsensusErrorType.API_ERROR,
-            config.id,
-            geminiErrorData.error
-          );
+          // Enhanced handling for gateway/server errors
+          if (response.status === 502) {
+            throw new ConsensusError(
+              'Bad Gateway - AI service is temporarily unavailable due to server issues',
+              ConsensusErrorType.GATEWAY_ERROR,
+              config.id,
+              geminiErrorData.error,
+              { httpStatus: 502, service: 'gemini' }
+            );
+          } else if (response.status === 503) {
+            throw new ConsensusError(
+              'Service Unavailable - AI service is temporarily overloaded',
+              ConsensusErrorType.GATEWAY_ERROR,
+              config.id,
+              geminiErrorData.error,
+              { httpStatus: 503, service: 'gemini', likelyRecoveryTime: '2-5 minutes' }
+            );
+          } else if (response.status === 504) {
+            throw new ConsensusError(
+              'Gateway Timeout - AI service took too long to respond',
+              ConsensusErrorType.TIMEOUT,
+              config.id,
+              geminiErrorData.error,
+              { httpStatus: 504, service: 'gemini' }
+            );
+          } else {
+            throw new ConsensusError(
+              `Server error ${response.status} - service temporarily unavailable`,
+              ConsensusErrorType.API_ERROR,
+              config.id,
+              geminiErrorData.error,
+              { httpStatus: response.status, service: 'gemini' }
+            );
+          }
         }
 
         // Construct detailed error message
@@ -670,19 +1075,47 @@ async function callModel(
         if (response.status === 401 || response.status === 403) {
           throw new ConsensusError(
             'Authentication failed - API key may be invalid or expired',
-            ConsensusErrorType.MISSING_API_KEY,
+            ConsensusErrorType.AUTHENTICATION_ERROR,
             config.id,
             anthropicErrorData.error
           );
         }
 
         if (response.status >= 500) {
-          throw new ConsensusError(
-            `API server error: ${response.status} - service temporarily unavailable`,
-            ConsensusErrorType.API_ERROR,
-            config.id,
-            anthropicErrorData.error
-          );
+          // Enhanced handling for gateway/server errors
+          if (response.status === 502) {
+            throw new ConsensusError(
+              'Bad Gateway - AI service is temporarily unavailable due to server issues',
+              ConsensusErrorType.GATEWAY_ERROR,
+              config.id,
+              anthropicErrorData.error,
+              { httpStatus: 502, service: config.id, endpoint: '/messages' }
+            );
+          } else if (response.status === 503) {
+            throw new ConsensusError(
+              'Service Unavailable - AI service is temporarily overloaded',
+              ConsensusErrorType.GATEWAY_ERROR,
+              config.id,
+              anthropicErrorData.error,
+              { httpStatus: 503, service: config.id, endpoint: '/messages', likelyRecoveryTime: '2-5 minutes' }
+            );
+          } else if (response.status === 504) {
+            throw new ConsensusError(
+              'Gateway Timeout - AI service took too long to respond',
+              ConsensusErrorType.TIMEOUT,
+              config.id,
+              anthropicErrorData.error,
+              { httpStatus: 504, service: config.id, endpoint: '/messages' }
+            );
+          } else {
+            throw new ConsensusError(
+              `Server error ${response.status} - service temporarily unavailable`,
+              ConsensusErrorType.API_ERROR,
+              config.id,
+              anthropicErrorData.error,
+              { httpStatus: response.status, service: config.id, endpoint: '/messages' }
+            );
+          }
         }
 
         // Construct detailed error message
@@ -778,19 +1211,47 @@ async function callModel(
         if (response.status === 401 || response.status === 403) {
           throw new ConsensusError(
             'Authentication failed - API key may be invalid or expired',
-            ConsensusErrorType.MISSING_API_KEY,
+            ConsensusErrorType.AUTHENTICATION_ERROR,
             config.id,
             openaiErrorData.error
           );
         }
 
         if (response.status >= 500) {
-          throw new ConsensusError(
-            `API server error: ${response.status} - service temporarily unavailable`,
-            ConsensusErrorType.API_ERROR,
-            config.id,
-            openaiErrorData.error
-          );
+          // Enhanced handling for gateway/server errors
+          if (response.status === 502) {
+            throw new ConsensusError(
+              'Bad Gateway - AI service is temporarily unavailable due to server issues',
+              ConsensusErrorType.GATEWAY_ERROR,
+              config.id,
+              openaiErrorData.error,
+              { httpStatus: 502, service: config.id, endpoint: '/chat/completions' }
+            );
+          } else if (response.status === 503) {
+            throw new ConsensusError(
+              'Service Unavailable - AI service is temporarily overloaded',
+              ConsensusErrorType.GATEWAY_ERROR,
+              config.id,
+              openaiErrorData.error,
+              { httpStatus: 503, service: config.id, endpoint: '/chat/completions', likelyRecoveryTime: '2-5 minutes' }
+            );
+          } else if (response.status === 504) {
+            throw new ConsensusError(
+              'Gateway Timeout - AI service took too long to respond',
+              ConsensusErrorType.TIMEOUT,
+              config.id,
+              openaiErrorData.error,
+              { httpStatus: 504, service: config.id, endpoint: '/chat/completions' }
+            );
+          } else {
+            throw new ConsensusError(
+              `Server error ${response.status} - service temporarily unavailable`,
+              ConsensusErrorType.API_ERROR,
+              config.id,
+              openaiErrorData.error,
+              { httpStatus: response.status, service: config.id, endpoint: '/chat/completions' }
+            );
+          }
         }
 
         // Construct detailed error message
@@ -1278,6 +1739,7 @@ export async function runConsensusAnalysis(
     failedCount: number;
     successCount: number;
     errorSummary: string;
+    aggregatedError?: UserFacingError;
   };
 }> {
   const responseTimes = new Map<string, number>();
@@ -1325,17 +1787,30 @@ export async function runConsensusAnalysis(
   // Calculate consensus from all results
   const consensus = calculateConsensus(analysts);
 
-  // Generate partial failure summary
+  // Generate partial failure summary with aggregated error details
   let partialFailures;
   if (failedModels.length > 0) {
     const successCount = analysts.length - failedModels.length;
     const failedCount = failedModels.length;
-    
+
+    // Collect all user-facing errors for aggregation
+    const userFacingErrors: UserFacingError[] = analysts
+      .filter(a => a.error && a.userFacingError)
+      .map(a => a.userFacingError!);
+
+    // Aggregate errors if multiple failures
+    const aggregatedError = userFacingErrors.length > 0
+      ? aggregateErrors(userFacingErrors)
+      : undefined;
+
     partialFailures = {
       failedModels,
       failedCount,
       successCount,
-      errorSummary: `${failedCount} out of ${analysts.length} models failed. ${successCount} models provided successful analysis.`,
+      errorSummary: aggregatedError
+        ? aggregatedError.message
+        : `${failedCount} out of ${analysts.length} models failed. ${successCount} models provided successful analysis.`,
+      aggregatedError, // Include the full aggregated error for frontend use
     };
   }
 

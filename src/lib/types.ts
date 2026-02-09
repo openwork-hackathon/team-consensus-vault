@@ -51,5 +51,6 @@ export interface ConsensusData {
     failedCount: number;
     successCount: number;
     errorSummary: string;
+    aggregatedError?: UserFacingError; // Aggregated error details for display
   };
 }
