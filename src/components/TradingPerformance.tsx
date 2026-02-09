@@ -214,7 +214,7 @@ export default function TradingPerformance({ className = '' }: TradingPerformanc
 
             {/* Desktop Table Layout */}
             <div className="hidden sm:block overflow-x-auto -mx-2 px-2">
-              <table className="w-full text-sm min-w-[640px]">
+              <table className="w-full text-sm min-w-[500px] lg:min-w-[640px]">
                 <thead>
                   <tr className="border-b border-border">
                     <th className="text-left py-2 px-2">Time</th>
@@ -222,8 +222,8 @@ export default function TradingPerformance({ className = '' }: TradingPerformanc
                     <th className="text-left py-2 px-2">Direction</th>
                     <th className="text-right py-2 px-2">Entry</th>
                     <th className="text-right py-2 px-2">Exit</th>
-                    <th className="text-right py-2 px-2">P&L</th>
-                    <th className="text-center py-2 px-2">Consensus</th>
+                    <th className="text-right py-2 px-2 hidden md:table-cell">P&L</th>
+                    <th className="text-center py-2 px-2 hidden lg:table-cell">Consensus</th>
                     <th className="text-center py-2 px-2">Status</th>
                   </tr>
                 </thead>
@@ -243,7 +243,7 @@ export default function TradingPerformance({ className = '' }: TradingPerformanc
                       <td className="py-2 px-2 text-right whitespace-nowrap">
                         {trade.exitPrice ? formatPrice(trade.exitPrice) : '-'}
                       </td>
-                      <td className="py-2 px-2 text-right font-medium whitespace-nowrap">
+                      <td className="py-2 px-2 text-right font-medium whitespace-nowrap hidden md:table-cell">
                         {trade.pnl !== undefined ? (
                           <span className={trade.pnl >= 0 ? 'text-bullish' : 'text-bearish'}>
                             {formatPnL(trade.pnl)}
@@ -255,7 +255,7 @@ export default function TradingPerformance({ className = '' }: TradingPerformanc
                           '-'
                         )}
                       </td>
-                      <td className="py-2 px-2 text-center">
+                      <td className="py-2 px-2 text-center hidden lg:table-cell">
                         <span className="text-xs bg-primary/20 px-2 py-1 rounded">
                           {trade.consensusStrength}
                         </span>

@@ -88,14 +88,22 @@ export default function Navigation({
           <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
             {showMarketInfo && (
               <>
-                {/* Compact market info for medium screens (640px-1024px) - single condensed element */}
-                <div className="text-right hidden sm:block lg:hidden" role="complementary" aria-label="Market information">
+                {/* Compact market info for small tablets (640px-768px) - ultra condensed */}
+                <div className="text-right hidden sm:block md:hidden" role="complementary" aria-label="Market information">
                   <div className="font-semibold text-sm" aria-label="BTC price 45,234 dollars">
                     BTC $45,234
                   </div>
                 </div>
-                
-                {/* Full market info for large screens (>= 1024px) */}
+
+                {/* Medium market info for tablets (768px-1024px) - single column with labels */}
+                <div className="text-right hidden md:block lg:hidden" role="complementary" aria-label="Market information">
+                  <div className="text-xs text-muted-foreground">BTC/USD</div>
+                  <div className="font-semibold text-bullish text-sm" aria-label="Current BTC price 45,234 dollars">
+                    $45,234
+                  </div>
+                </div>
+
+                {/* Full market info for large screens (>= 1024px) - two columns */}
                 <div className="text-right hidden lg:block" role="complementary" aria-label="Market information">
                   <div className="text-xs text-muted-foreground">Asset</div>
                   <div className="font-semibold text-sm" aria-label="BTC/USD pair">BTC/USD</div>
