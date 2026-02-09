@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { runConsensusAnalysis } from '@/lib/consensus-engine';
 import { AnalystResult, ANALYST_MODELS, ModelConfig, ModelResponse } from '@/lib/models';
-import { 
-  checkRateLimit, 
-  createRateLimitResponse, 
+import {
+  checkRateLimit,
+  createRateLimitResponse,
   addRateLimitHeaders,
-  CONSENSUS_RATE_LIMIT 
+  CONSENSUS_RATE_LIMIT
 } from '@/lib/rate-limit';
 import { createApiLogger } from '@/lib/api-logger';
 import type { ProgressUpdate } from '@/lib/types';
 import { proxyFetch, isProxyConfigured, ProxyError, isRetryableProxyError } from '@/lib/proxy-fetch';
+import { withAICaching, AI_CACHE_TTL } from '@/lib/ai-cache';
 
 // Use mock data when API keys aren't available (development mode)
 const USE_MOCK = process.env.NODE_ENV === 'development' && !process.env.DEEPSEEK_API_KEY;
@@ -424,19 +425,29 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Call all 5 models in parallel with individual timeout handling
+    // Call all 5 models in parallel with individual timeout handling and caching
     const modelResults = await Promise.allSettled(
       ANALYST_MODELS.map(async (config) => {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 30000);
 
         try {
-          const result = await callModelWithQuery(config, query, controller.signal);
+          // Use AI caching to avoid duplicate API calls for identical queries
+          const { result, cached, responseTimeMs } = await withAICaching(
+            config.id,
+            query, // Use query as the "asset" parameter for cache key
+            undefined, // No additional context
+            () => callModelWithQuery(config, query, controller.signal),
+            { ttlSeconds: AI_CACHE_TTL.MODEL_RESPONSE, trackPerformance: true }
+          );
+
           clearTimeout(timeoutId);
           return {
             model: config.id,
             response: result.reasoning,
             status: 'success' as const,
+            cached,
+            responseTimeMs,
           };
         } catch (error) {
           clearTimeout(timeoutId);
@@ -473,6 +484,11 @@ export async function POST(request: NextRequest) {
       (r) => r.status === 'success'
     ).length;
 
+    // Calculate cache statistics
+    const cachedCount = individual_responses.filter(
+      (r) => 'cached' in r && r.cached
+    ).length;
+
     // Generate consensus from successful responses
     const successfulResponses = individual_responses
       .filter((r) => r.status === 'success')
@@ -491,6 +507,8 @@ export async function POST(request: NextRequest) {
       metadata: {
         total_time_ms,
         models_succeeded,
+        cached_count: cachedCount,
+        cache_hit_rate: models_succeeded > 0 ? cachedCount / models_succeeded : 0,
       },
     });
 

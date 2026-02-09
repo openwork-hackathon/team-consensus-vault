@@ -26,6 +26,8 @@ import {
 } from './models';
 import type { UserFacingError, ProgressUpdate } from './types';
 import { proxyFetch, isProxyConfigured, ProxyError, ProxyErrorType, isRetryableProxyError } from './proxy-fetch';
+import { withAICaching, consensusDeduplicator, getPerformanceMetrics as getAIPerformanceMetrics, AI_CACHE_TTL } from './ai-cache';
+import { recordTiming, recordCacheEvent } from './performance-metrics';
 
 // Rate limiting - track last request time per model
 const lastRequestTime: Record<string, number> = {};
@@ -1072,13 +1074,27 @@ export async function getAnalystOpinion(
 
   sendProgress('processing', 'Starting analysis...');
 
-  // Try primary model first
+  // Try primary model first with caching
   try {
     sendProgress('processing', 'Analyzing market data...');
-    const response = await callModel(primaryConfig, asset, context);
-    const responseTime = Date.now() - startTime;
-    updateMetrics(primaryConfig.id, true, responseTime);
-    sendProgress('completed', 'Analysis complete');
+    
+    // Use AI caching to avoid duplicate API calls
+    const { result: response, cached, responseTimeMs } = await withAICaching(
+      primaryConfig.id,
+      asset,
+      context,
+      () => callModel(primaryConfig, asset, context),
+      { ttlSeconds: AI_CACHE_TTL.MODEL_RESPONSE, trackPerformance: true }
+    );
+    
+    const totalResponseTime = Date.now() - startTime;
+    updateMetrics(primaryConfig.id, true, totalResponseTime);
+    
+    if (cached) {
+      sendProgress('completed', 'Analysis complete (cached)');
+    } else {
+      sendProgress('completed', 'Analysis complete');
+    }
 
     return {
       result: {
@@ -1088,7 +1104,7 @@ export async function getAnalystOpinion(
         confidence: response.confidence,
         reasoning: response.reasoning,
       },
-      responseTime,
+      responseTime: totalResponseTime,
     };
   } catch (primaryError) {
     const primaryTime = Date.now() - startTime;
