@@ -25,6 +25,8 @@ export function useAutoTrading(
     const currentRecommendation = consensusData.recommendation;
     const consensusLevel = consensusData.consensusLevel;
 
+    console.log(`[useAutoTrading] Checking: recommendation=${currentRecommendation}, consensusLevel=${consensusLevel}, threshold=${consensusData.threshold}, lastExecuted=${lastExecutedRecommendation}`);
+
     // Skip if we already executed for this recommendation or if below threshold
     if (
       currentRecommendation === lastExecutedRecommendation ||
@@ -32,6 +34,7 @@ export function useAutoTrading(
       isExecuting ||
       currentRecommendation === 'HOLD'
     ) {
+      console.log(`[useAutoTrading] Skipping: ${currentRecommendation === lastExecutedRecommendation ? 'already executed' : ''} ${consensusLevel < consensusData.threshold ? 'below threshold' : ''} ${isExecuting ? 'is executing' : ''} ${currentRecommendation === 'HOLD' ? 'is HOLD' : ''}`);
       return;
     }
 
@@ -43,6 +46,7 @@ export function useAutoTrading(
     // Execute trade
     const executeTrade = async () => {
       setIsExecuting(true);
+      console.log(`[useAutoTrading] Executing trade for: ${currentRecommendation}`);
 
       try {
         const response = await fetch('/api/trading/execute', {
@@ -54,18 +58,18 @@ export function useAutoTrading(
         const data = await response.json();
 
         if (data.success) {
-          console.log('Paper trade executed:', data.trade);
+          console.log('[useAutoTrading] Paper trade executed:', data.trade);
           setLastExecutedRecommendation(currentRecommendation);
           setLastTradeId(data.trade.id);
           onTradeSuccess?.(data.trade);
         } else {
           const errorMsg = data.message || data.error || 'Unknown error';
-          console.warn('Trade execution failed:', errorMsg);
+          console.warn('[useAutoTrading] Trade execution failed:', errorMsg);
           onTradeError?.(errorMsg);
         }
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : 'Network error';
-        console.error('Error executing paper trade:', error);
+        console.error('[useAutoTrading] Error executing paper trade:', error);
         onTradeError?.(errorMsg);
       } finally {
         setIsExecuting(false);

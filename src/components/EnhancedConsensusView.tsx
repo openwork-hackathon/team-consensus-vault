@@ -1,12 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Loader2, TrendingUp, TrendingDown, Minus, Users, Brain } from 'lucide-react';
 
 interface AnalystResult {
   id: string;
@@ -65,10 +59,8 @@ export default function EnhancedConsensusView() {
     setResult(null);
 
     try {
-      const params = new URLSearchParams({
-        asset,
-        ...(context && { context }),
-      });
+      const params = new URLSearchParams({ asset });
+      if (context) params.append('context', context);
 
       const response = await fetch(`/api/consensus-enhanced?${params}`);
 
@@ -86,274 +78,249 @@ export default function EnhancedConsensusView() {
     }
   };
 
+  const getSentimentIcon = (sentiment?: string) => {
+    if (!sentiment) return '○';
+    if (sentiment === 'bullish' || sentiment === 'buy') return '↑';
+    if (sentiment === 'bearish' || sentiment === 'sell') return '↓';
+    return '—';
+  };
+
+  const getSentimentColor = (sentiment?: string) => {
+    if (!sentiment) return 'text-gray-500';
+    if (sentiment === 'bullish' || sentiment === 'buy') return 'text-green-600';
+    if (sentiment === 'bearish' || sentiment === 'sell') return 'text-red-600';
+    return 'text-yellow-600';
+  };
+
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Brain className="w-5 h-5" />
-            Enhanced Consensus Analysis
-          </CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Combining 17-persona chatroom debate with 5-agent trading council analysis
-          </p>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="asset">Asset Symbol</Label>
-              <Input
-                id="asset"
-                value={asset}
-                onChange={(e) => setAsset(e.target.value.toUpperCase())}
-                placeholder="BTC"
-                className="font-mono"
-              />
-            </div>
-            <div>
-              <Label htmlFor="context">Additional Context (optional)</Label>
-              <Input
-                id="context"
-                value={context}
-                onChange={(e) => setContext(e.target.value)}
-                placeholder="e.g., Recent halving event"
-              />
-            </div>
+    <div className="container mx-auto p-6 space-y-6 max-w-7xl">
+      {/* Header */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <h1 className="text-2xl font-bold mb-2 flex items-center gap-2">
+          🧠 Enhanced Consensus Analysis
+        </h1>
+        <p className="text-gray-600 text-sm">
+          Combining 17-persona chatroom debate with 5-agent trading council analysis
+        </p>
+
+        {/* Input Form */}
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="asset" className="block text-sm font-medium text-gray-700 mb-2">
+              Asset Symbol
+            </label>
+            <input
+              id="asset"
+              type="text"
+              value={asset}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAsset(e.target.value.toUpperCase())}
+              placeholder="BTC"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono"
+            />
           </div>
+          <div>
+            <label htmlFor="context" className="block text-sm font-medium text-gray-700 mb-2">
+              Additional Context (optional)
+            </label>
+            <input
+              id="context"
+              type="text"
+              value={context}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setContext(e.target.value)}
+              placeholder="e.g., Recent halving event"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+            />
+          </div>
+        </div>
 
-          <Button onClick={handleAnalyze} disabled={loading} className="w-full">
-            {loading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Analyzing...
-              </>
-            ) : (
-              'Run Enhanced Analysis'
-            )}
-          </Button>
+        <button
+          onClick={handleAnalyze}
+          disabled={loading}
+          className="mt-4 w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-3 px-4 rounded-md transition-colors"
+        >
+          {loading ? '⏳ Analyzing...' : '▶ Run Enhanced Analysis'}
+        </button>
 
-          {error && (
-            <div className="p-4 bg-destructive/10 border border-destructive rounded-lg">
-              <p className="text-sm text-destructive">{error}</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        {error && (
+          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-sm text-red-700">❌ {error}</p>
+          </div>
+        )}
+      </div>
 
       {result && (
         <>
           {/* Alignment Overview */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span>System Alignment</span>
-                <Badge
-                  variant={
-                    result.alignment.agreement === 'strong'
-                      ? 'default'
-                      : result.alignment.agreement === 'moderate'
-                      ? 'secondary'
-                      : 'destructive'
-                  }
-                >
-                  {result.alignment.score}% Alignment
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                {result.alignment.commentary}
-              </p>
-              {result.chatroom && (
-                <div className="mt-2 p-3 bg-muted rounded-lg">
-                  <p className="text-xs text-muted-foreground">
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold">System Alignment</h2>
+              <span
+                className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  result.alignment.agreement === 'strong'
+                    ? 'bg-green-100 text-green-800'
+                    : result.alignment.agreement === 'moderate'
+                    ? 'bg-blue-100 text-blue-800'
+                    : 'bg-red-100 text-red-800'
+                }`}
+              >
+                {result.alignment.score}% Alignment
+              </span>
+            </div>
+            <p className="text-gray-700">{result.alignment.commentary}</p>
+            {result.chatroom && (
+              <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-600">{result.chatroom.summary}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Two-column layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Trading Council */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                🧠 Trading Council (5 Analysts)
+              </h2>
+
+              {/* Council Signal */}
+              <div className="p-4 bg-gray-50 rounded-lg mb-4">
+                <div className="flex items-center gap-3">
+                  <span
+                    className={`text-3xl ${getSentimentColor(result.council.signal)}`}
+                  >
+                    {getSentimentIcon(result.council.signal)}
+                  </span>
+                  <div>
+                    <p className="font-bold text-lg">{result.council.recommendation}</p>
+                    <p className="text-sm text-gray-600">
+                      {result.council.consensusLevel}% consensus
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Analyst Breakdown */}
+              <h3 className="text-sm font-semibold text-gray-700 mb-2">Analyst Votes:</h3>
+              <div className="space-y-3">
+                {result.council.analysts.map((analyst) => (
+                  <div key={analyst.id} className="p-3 border border-gray-200 rounded-lg">
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-sm font-medium">{analyst.name}</p>
+                      <span
+                        className={`px-2 py-1 rounded text-xs font-medium ${
+                          analyst.sentiment === 'bullish'
+                            ? 'bg-green-100 text-green-800'
+                            : analyst.sentiment === 'bearish'
+                            ? 'bg-red-100 text-red-800'
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}
+                      >
+                        {analyst.sentiment} ({analyst.confidence}%)
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-600">{analyst.reasoning}</p>
+                    {analyst.error && (
+                      <p className="text-xs text-red-600 mt-1">⚠️ {analyst.error}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Chatroom Consensus */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                👥 Chatroom Debate (17 Personas)
+              </h2>
+
+              {result.chatroom ? (
+                <>
+                  {/* Chatroom Signal */}
+                  <div className="p-4 bg-gray-50 rounded-lg mb-4">
+                    <div className="flex items-center gap-3">
+                      <span
+                        className={`text-3xl ${getSentimentColor(result.chatroom.direction || undefined)}`}
+                      >
+                        {getSentimentIcon(result.chatroom.direction || undefined)}
+                      </span>
+                      <div>
+                        <p className="font-bold text-lg">
+                          {result.chatroom.direction?.toUpperCase() || 'NEUTRAL'}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {result.chatroom.strength}% strength
+                        </p>
+                      </div>
+                    </div>
+                    <span
+                      className={`mt-2 inline-block px-2 py-1 rounded text-xs font-medium ${
+                        result.chatroom.isSignificant
+                          ? 'bg-blue-100 text-blue-800'
+                          : 'bg-gray-100 text-gray-800'
+                      }`}
+                    >
+                      {result.chatroom.isSignificant ? 'Significant' : 'Low confidence'}
+                    </span>
+                  </div>
+
+                  {/* Chatroom Details */}
+                  <h3 className="text-sm font-semibold text-gray-700 mb-2">Debate Status:</h3>
+                  <div className="p-3 border border-gray-200 rounded-lg space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Phase:</span>
+                      <span className="font-medium">{result.chatroom.phase}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Messages:</span>
+                      <span className="font-medium">{result.chatroom.messageCount}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Consensus Strength:</span>
+                      <span className="font-medium">{result.chatroom.strength}%</span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-600 p-3 bg-gray-50 rounded-lg mt-3">
                     {result.chatroom.summary}
+                  </p>
+                </>
+              ) : (
+                <div className="p-6 bg-gray-50 rounded-lg text-center">
+                  <p className="text-sm text-gray-600">
+                    ⚠️ Chatroom consensus not available. The debate may still be in early
+                    stages or in cooldown.
                   </p>
                 </div>
               )}
-            </CardContent>
-          </Card>
-
-          {/* Two-column layout for Council and Chatroom */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Trading Council Results */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Brain className="w-5 h-5" />
-                  Trading Council (5 Analysts)
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Council Signal */}
-                <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
-                  <div className="flex items-center gap-2">
-                    {result.council.signal === 'buy' && (
-                      <TrendingUp className="w-5 h-5 text-green-500" />
-                    )}
-                    {result.council.signal === 'sell' && (
-                      <TrendingDown className="w-5 h-5 text-red-500" />
-                    )}
-                    {result.council.signal === 'hold' && (
-                      <Minus className="w-5 h-5 text-yellow-500" />
-                    )}
-                    <div>
-                      <p className="font-semibold">{result.council.recommendation}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {result.council.consensusLevel}% consensus
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Analyst Breakdown */}
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium">Analyst Votes:</h4>
-                  {result.council.analysts.map((analyst) => (
-                    <div
-                      key={analyst.id}
-                      className="p-3 border rounded-lg space-y-1"
-                    >
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium">{analyst.name}</p>
-                        <Badge
-                          variant={
-                            analyst.sentiment === 'bullish'
-                              ? 'default'
-                              : analyst.sentiment === 'bearish'
-                              ? 'destructive'
-                              : 'secondary'
-                          }
-                        >
-                          {analyst.sentiment} ({analyst.confidence}%)
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        {analyst.reasoning}
-                      </p>
-                      {analyst.error && (
-                        <p className="text-xs text-destructive">{analyst.error}</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Chatroom Consensus */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="w-5 h-5" />
-                  Chatroom Debate (17 Personas)
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {result.chatroom ? (
-                  <>
-                    {/* Chatroom Consensus */}
-                    <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
-                      <div className="flex items-center gap-2">
-                        {result.chatroom.direction === 'bullish' && (
-                          <TrendingUp className="w-5 h-5 text-green-500" />
-                        )}
-                        {result.chatroom.direction === 'bearish' && (
-                          <TrendingDown className="w-5 h-5 text-red-500" />
-                        )}
-                        {result.chatroom.direction === 'neutral' && (
-                          <Minus className="w-5 h-5 text-yellow-500" />
-                        )}
-                        <div>
-                          <p className="font-semibold">
-                            {result.chatroom.direction?.toUpperCase() || 'NEUTRAL'}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {result.chatroom.strength}% strength
-                          </p>
-                        </div>
-                      </div>
-                      <Badge
-                        variant={
-                          result.chatroom.isSignificant ? 'default' : 'secondary'
-                        }
-                      >
-                        {result.chatroom.isSignificant
-                          ? 'Significant'
-                          : 'Low confidence'}
-                      </Badge>
-                    </div>
-
-                    {/* Chatroom Details */}
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-medium">Debate Status:</h4>
-                      <div className="p-3 border rounded-lg space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Phase:</span>
-                          <span className="font-medium">
-                            {result.chatroom.phase}
-                          </span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Messages:</span>
-                          <span className="font-medium">
-                            {result.chatroom.messageCount}
-                          </span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">
-                            Consensus Strength:
-                          </span>
-                          <span className="font-medium">
-                            {result.chatroom.strength}%
-                          </span>
-                        </div>
-                      </div>
-                      <p className="text-xs text-muted-foreground p-3 bg-muted rounded-lg">
-                        {result.chatroom.summary}
-                      </p>
-                    </div>
-                  </>
-                ) : (
-                  <div className="p-4 bg-muted rounded-lg text-center">
-                    <p className="text-sm text-muted-foreground">
-                      Chatroom consensus not available. The debate may still be in
-                      early stages or in cooldown.
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            </div>
           </div>
 
           {/* Metadata Footer */}
-          <Card>
-            <CardContent className="pt-6">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                <div>
-                  <p className="text-muted-foreground">Asset</p>
-                  <p className="font-mono font-semibold">{result.metadata.asset}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Timestamp</p>
-                  <p className="font-mono">
-                    {new Date(result.metadata.timestamp).toLocaleTimeString()}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Chatroom Status</p>
-                  <p className="font-medium">
-                    {result.metadata.chatroomAvailable ? 'Active' : 'Inactive'}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Context Used</p>
-                  <p className="font-medium">
-                    {result.metadata.contextUsed ? 'Yes' : 'No'}
-                  </p>
-                </div>
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div>
+                <p className="text-gray-600">Asset</p>
+                <p className="font-mono font-semibold">{result.metadata.asset}</p>
               </div>
-            </CardContent>
-          </Card>
+              <div>
+                <p className="text-gray-600">Timestamp</p>
+                <p className="font-mono">
+                  {new Date(result.metadata.timestamp).toLocaleTimeString()}
+                </p>
+              </div>
+              <div>
+                <p className="text-gray-600">Chatroom Status</p>
+                <p className="font-medium">
+                  {result.metadata.chatroomAvailable ? '✅ Active' : '⭕ Inactive'}
+                </p>
+              </div>
+              <div>
+                <p className="text-gray-600">Context Used</p>
+                <p className="font-medium">
+                  {result.metadata.contextUsed ? '✅ Yes' : '⭕ No'}
+                </p>
+              </div>
+            </div>
+          </div>
         </>
       )}
     </div>

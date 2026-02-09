@@ -102,7 +102,11 @@ export default function TradeSignal({ recommendation, consensusLevel, threshold,
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="w-full bg-white/20 hover:bg-white/30 active:bg-white/40 backdrop-blur-sm text-white font-semibold py-3 px-6 rounded-lg transition-colors touch-manipulation min-h-[48px]"
+              className={`w-full backdrop-blur-sm text-white font-semibold py-3 px-6 rounded-lg transition-colors touch-manipulation min-h-[48px] ${
+                onExecuteTrade 
+                  ? 'bg-white/20 hover:bg-white/30 active:bg-white/40' 
+                  : 'bg-white/10 cursor-not-allowed opacity-70'
+              }`}
               aria-label={`Execute ${recommendation} trade`}
               onClick={onExecuteTrade}
               disabled={!onExecuteTrade}

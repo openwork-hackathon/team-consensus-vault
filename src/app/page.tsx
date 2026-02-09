@@ -17,6 +17,7 @@ import PartialFailureBanner from '@/components/PartialFailureBanner';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount } from 'wagmi';
 import { useVault } from '@/contexts/VaultContext';
+import { TokenBalance } from '@/components/TokenBalance';
 
 // Lazy load heavy components to reduce initial bundle size
 const ConsensusVsContrarian = lazy(() => 
@@ -345,15 +346,21 @@ export default function Dashboard() {
                 </div>
               </div>
               {isConnected && (
-                <div role="status" aria-live="polite">
-                  <div className="text-xs text-muted-foreground mb-1">Your Deposits</div>
-                  <div 
-                    className="text-2xl font-bold text-bullish" 
-                    aria-label={`${userTotalDeposited} ETH deposited`}
-                  >
-                    {userTotalDeposited} ETH
+                <>
+                  <div role="status" aria-live="polite">
+                    <div className="text-xs text-muted-foreground mb-1">Your Deposits</div>
+                    <div 
+                      className="text-2xl font-bold text-bullish" 
+                      aria-label={`${userTotalDeposited} ETH deposited`}
+                    >
+                      {userTotalDeposited} ETH
+                    </div>
                   </div>
-                </div>
+                  <div role="status" aria-live="polite" className="hidden sm:block">
+                    <div className="text-xs text-muted-foreground mb-1">CONSENSUS Balance</div>
+                    <TokenBalance className="text-2xl font-bold text-accent" showRefresh={false} showSymbol={true} />
+                  </div>
+                </>
               )}
             </div>
             <div className="flex gap-3 flex-wrap">

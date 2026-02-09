@@ -17,6 +17,26 @@ export interface ChatMessage {
     message: string;
     recoveryGuidance: string;
   };
+  // CVAULT-185: Track if message acknowledges opposing view
+  acknowledgesOpposingView?: boolean;
+  // CVAULT-185: Market data referenced in message
+  marketDataRefs?: string[];
+}
+
+// CVAULT-185: Persuasion state per persona
+export interface PersonaPersuasionState {
+  currentStance: MessageSentiment;
+  convictionLevel: 'strong' | 'moderate' | 'weak' | 'wavering';
+  convictionScore: number; // 0-100
+  stanceChanges: number;
+  lastStanceChangeAt?: number;
+}
+
+// CVAULT-185: Extended chat room state with persuasion tracking
+export interface ChatRoomStateWithPersuasion extends ChatRoomState {
+  persuasionStates: Record<string, PersonaPersuasionState>;
+  debateTopic?: string;
+  marketDataSnapshot?: string;
 }
 
 export interface ChatRoomState {
@@ -41,6 +61,8 @@ export interface Persona {
   modelId: string;
   personalityPrompt: string;
   color: string;
+  conviction_threshold: number; // 0-100: how much opposing evidence needed to shift position
+  stubbornness: number; // 0-100: higher = more resistant to persuasion
 }
 
 export type ChatSSEEventType =

@@ -21,12 +21,17 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { asset = 'BTC/USD' } = body;
 
+    console.log(`[trading/execute] Request to execute trade for: ${asset}`);
+
     // Get current consensus
     const consensusData = await runDetailedConsensusAnalysis(asset);
+
+    console.log(`[trading/execute] Consensus: status=${consensusData.consensus_status}, signal=${consensusData.consensus_signal}, votes=${JSON.stringify(consensusData.vote_counts)}`);
 
     // Check if consensus is strong enough to trade
     if (!shouldExecuteTrade(consensusData)) {
       const responseTime = Date.now() - startTime;
+      console.log(`[trading/execute] Consensus threshold not met: ${consensusData.consensus_status !== 'CONSENSUS_REACHED' ? 'no consensus' : 'signal is hold or null'}`);
       const response = NextResponse.json(
         {
           success: false,

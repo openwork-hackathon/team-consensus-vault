@@ -1,394 +1,396 @@
 # Chatroom-to-Trading-Council Integration
 
-**Status:** ✅ Implemented (CVAULT-177)
-**Created:** 2026-02-08
+**Status:** Implemented (CVAULT-177)
+**Updated:** 2026-02-08
 
 ## Overview
 
 This integration connects the 17-persona chatroom consensus system to the 5-agent trading council, creating a two-tier analysis framework for Consensus Vault.
 
-### Architecture
+## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                      CONSENSUS VAULT                            │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  ┌────────────────────┐         ┌────────────────────┐        │
-│  │  17-PERSONA        │         │   5-AGENT          │        │
-│  │  CHATROOM          │────────▶│   TRADING COUNCIL  │        │
-│  │                    │         │                    │        │
-│  │  • DeepSeek        │         │  • Momentum Hunter │        │
-│  │  • Kimi (x3)       │         │  • Whale Watcher   │        │
-│  │  • MiniMax (x3)    │  Bridge │  • Sentiment Scout │        │
-│  │  • GLM (x5)        │         │  • Chain Analyst   │        │
-│  │  • Gemini (x5)     │         │  • Risk Manager    │        │
-│  │                    │         │                    │        │
-│  │  Output:           │         │  Output:           │        │
-│  │  - Direction       │         │  - Signal          │        │
-│  │  - Strength 0-100  │         │  - Confidence      │        │
-│  │  - Phase           │         │  - Supermajority   │        │
-│  └────────────────────┘         └────────────────────┘        │
-│           │                               │                    │
-│           └───────────┬───────────────────┘                    │
-│                       ▼                                        │
-│            ┌─────────────────────┐                            │
-│            │  ALIGNMENT SCORING  │                            │
-│            │  - Score 0-100      │                            │
-│            │  - Commentary       │                            │
-│            └─────────────────────┘                            │
-│                                                                │
-└─────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│                         CHATROOM SYSTEM                             │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │  17 AI Personas (DeepSeek, Kimi, MiniMax, GLM, Gemini)       │   │
+│  │  - Rolling consensus with exponential decay                   │   │
+│  │  - Phases: DEBATE → CONSENSUS (80%) → COOLDOWN               │   │
+│  │  - Outputs: direction (bullish/bearish/neutral) + strength   │   │
+│  └──────────────────────────┬───────────────────────────────────┘   │
+│                             │                                       │
+│                             ▼                                       │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │  /api/chatroom/stream (SSE)                                  │   │
+│  │  - Emits: consensus_update { direction, strength }           │   │
+│  └──────────────────────────┬───────────────────────────────────┘   │
+└─────────────────────────────┼───────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                    CHATROOM-COUNCIL BRIDGE                          │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │  chatroom-council-bridge.ts                                  │   │
+│  │  - Rate limiting: 5 min minimum between council triggers     │   │
+│  │  - Threshold: 80%+ consensus strength required               │   │
+│  │  - Filters out neutral consensus                             │   │
+│  │  - Builds context string for council                         │   │
+│  └──────────────────────────┬───────────────────────────────────┘   │
+│                             │                                       │
+│  ┌──────────────────────────┴───────────────────────────────────┐   │
+│  │  useChatroomCouncilBridge.ts (React Hook)                    │   │
+│  │  - Monitors chatroom consensus                               │   │
+│  │  - Auto-trigger option for automatic council evaluation      │   │
+│  │  - Exposes triggerCouncil() for manual triggering            │   │
+│  └──────────────────────────┬───────────────────────────────────┘   │
+└─────────────────────────────┼───────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                      TRADING COUNCIL                                │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │  /api/council/evaluate                                       │   │
+│  │  - Receives: asset, chatroomContext, triggeredBy             │   │
+│  │  - Adds chatroom context to analyst prompts                  │   │
+│  └──────────────────────────┬───────────────────────────────────┘   │
+│                             │                                       │
+│                             ▼                                       │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │  5 Analyst Models                                            │   │
+│  │  - Momentum Hunter (DeepSeek) - Technical Analysis           │   │
+│  │  - Whale Watcher (Kimi) - Large Holder Movements             │   │
+│  │  - Sentiment Scout (MiniMax) - Social Sentiment              │   │
+│  │  - On-Chain Oracle (GLM) - On-Chain Metrics                  │   │
+│  │  - Risk Manager (Gemini) - Risk Assessment                   │   │
+│  └──────────────────────────┬───────────────────────────────────┘   │
+│                             │                                       │
+│                             ▼                                       │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │  Consensus Engine                                            │   │
+│  │  - 4/5 (80%) agreement required for recommendation           │   │
+│  │  - Outputs: BUY | SELL | HOLD                                │   │
+│  └──────────────────────────┬───────────────────────────────────┘   │
+└─────────────────────────────┼───────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                      AUTO-TRADING HOOK                              │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │  useAutoTrading.ts                                           │   │
+│  │  - Monitors council consensus                                │   │
+│  │  - Executes paper trades when 4/5 threshold met              │   │
+│  │  - Calls /api/trading/execute                                │   │
+│  └──────────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
 ## Components
 
-### 1. Bridge Layer (`/src/lib/chatroom-consensus-bridge.ts`)
+### 1. Bridge Core (`/src/lib/chatroom-council-bridge.ts`)
 
-**Purpose:** Connects chatroom consensus to trading council context
+**Purpose:** Connects chatroom consensus to trading council via event-based trigger
 
 **Key Functions:**
 
-- `getChatroomConsensus()` - Fetch current 17-persona consensus
-- `prepareCouncilContext()` - Format chatroom data as trading context
-- `calculateAlignmentScore()` - Measure agreement between systems
-- `isChatroomConsensusSignificant()` - Filter weak signals
+| Function | Purpose |
+|----------|---------|
+| `shouldTriggerCouncil()` | Checks if council evaluation is allowed |
+| `buildCouncilContext()` | Formats chatroom consensus as analyst context |
+| `handleChatroomConsensusUpdate()` | Receives consensus updates from chatroom |
+| `recordCouncilResult()` | Stores council results for state tracking |
+| `onCouncilTrigger()` | Subscribe to trigger events |
+| `onCouncilResult()` | Subscribe to result events |
+| `getBridgeState()` | Get current bridge state for debugging |
 
-**Data Flow:**
+**Rate Limiting:**
 
 ```typescript
-ChatroomState → calculateRollingConsensus() → ChatroomConsensusSnapshot
-    → prepareCouncilContext() → Enhanced Context String
-        → runConsensusAnalysis() → Trading Council Analysis
+const MIN_COUNCIL_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+const CONSENSUS_STRENGTH_THRESHOLD = 80;       // Minimum strength
 ```
 
-### 2. Enhanced Consensus API (`/src/app/api/consensus-enhanced/route.ts`)
+### 2. React Hook (`/src/lib/useChatroomCouncilBridge.ts`)
 
-**Endpoint:** `GET /api/consensus-enhanced?asset=BTC&context=...`
+**Purpose:** Provides React integration for UI components
 
-**Response Structure:**
+**Returns:**
 
-```json
+```typescript
 {
-  "council": {
-    "signal": "buy" | "sell" | "hold",
-    "recommendation": "BUY",
-    "consensusLevel": 85,
-    "analysts": [...]
-  },
-  "chatroom": {
-    "direction": "bullish" | "bearish" | "neutral",
-    "strength": 82,
-    "phase": "CONSENSUS" | "DEBATE" | "COOLDOWN",
-    "messageCount": 47,
-    "summary": "Strong bullish consensus...",
-    "isSignificant": true
-  },
-  "alignment": {
-    "score": 88,
-    "commentary": "✅ Strong agreement...",
-    "agreement": "strong" | "moderate" | "weak" | "disagreement"
+  isCouncilPending: boolean;          // Evaluation pending
+  isEvaluating: boolean;              // Currently calling API
+  timeUntilNextCouncilAllowed: number; // Countdown in ms
+  lastChatroomConsensus: {...};       // Current chatroom state
+  lastCouncilResult: {...};           // Last council result
+  canTriggerCouncil: boolean;         // Whether trigger is allowed
+  blockedReason: string | null;       // Why trigger is blocked
+  triggerCouncil: () => Promise<void>; // Manual trigger function
+}
+```
+
+**Options:**
+
+```typescript
+{
+  asset?: string;              // Asset to analyze (default: 'BTC')
+  autoTrigger?: boolean;       // Auto-trigger when conditions met
+  onCouncilTrigger?: (ctx) => void;  // Trigger callback
+  onCouncilResult?: (result) => void; // Result callback
+}
+```
+
+### 3. API Endpoint (`/src/app/api/council/evaluate/route.ts`)
+
+**Endpoint:** `POST /api/council/evaluate`
+
+**Request Body:**
+
+```typescript
+{
+  asset: string;              // Asset to analyze (default: 'BTC')
+  chatroomContext?: {         // Optional chatroom context
+    direction: 'bullish' | 'bearish' | 'neutral';
+    strength: number;         // 0-100
+  };
+  triggeredBy?: 'chatroom' | 'manual';  // Source of trigger
+}
+```
+
+**Response:**
+
+```typescript
+{
+  success: boolean;
+  consensus: ConsensusData;   // Council consensus
+  analysts: Analyst[];        // Individual analyst results
+  metadata: {
+    totalTimeMs: number;
+    modelCount: number;
+    successCount: number;
+    triggeredBy: 'chatroom' | 'manual';
+    chatroomContext?: {...};
   }
 }
 ```
 
-### 3. UI Component (`/src/components/EnhancedConsensusView.tsx`)
+## Data Flow
 
-**Features:**
+### 1. Chatroom Consensus Generation
 
-- Side-by-side display of chatroom and council results
-- Real-time alignment scoring
-- Visual indicators for consensus strength
-- Analyst and persona vote breakdowns
+The chatroom continuously generates messages from 17 AI personas. Each debate-phase message includes:
+- `sentiment`: bullish | bearish | neutral
+- `confidence`: 0-100
 
-**Route:** `/enhanced-consensus`
+The `calculateRollingConsensus()` function computes a rolling consensus using exponential decay:
+- Window size: 15 messages
+- Decay factor: 0.85 per message age
+- Confidence weighting
 
-## How It Works
+### 2. Bridge Trigger Logic
 
-### Step 1: Chatroom Generates Consensus
-
-17 AI personas debate crypto markets in real-time:
-
-- **DEBATE phase:** Personas argue with sentiment + confidence tags
-- **CONSENSUS phase:** Rolling calculation detects 80%+ agreement
-- **COOLDOWN phase:** System rests before next debate
-
-Output: `{ direction: 'bullish', strength: 85 }`
-
-### Step 2: Bridge Formats Context
-
-The bridge layer:
-
-1. Fetches chatroom consensus from KV store
-2. Formats as human-readable summary
-3. Combines with user context (if provided)
-4. Passes to trading council as enhanced context
-
-Example context string:
-
-```
-**Community Consensus:** Consensus reached: strong bullish consensus
-(85% agreement) from 17-persona crypto chatroom debate.
-
-**Additional Context:** Recent Bitcoin halving event approaching
-```
-
-### Step 3: Trading Council Analyzes
-
-5 specialist analysts process the enhanced context:
-
-- **Momentum Hunter** (DeepSeek) - Technical analysis
-- **Whale Watcher** (Kimi) - Large holder movements
-- **Sentiment Scout** (MiniMax) - Social sentiment
-- **Chain Analyst** (GLM) - On-chain metrics
-- **Risk Manager** (Gemini) - Risk assessment
-
-Each analyst sees the chatroom consensus as additional market intelligence.
-
-### Step 4: Alignment Scoring
-
-The system measures agreement between chatroom and council:
+The bridge monitors chatroom consensus and triggers council evaluation when:
 
 ```typescript
-alignmentScore = calculateAlignmentScore(
-  chatroomConsensus,
-  councilSignal,
-  councilConfidence
-);
+// All conditions must be met:
+1. direction !== 'neutral'           // Actionable direction
+2. strength >= 80                    // Strong consensus
+3. timeSinceLastTrigger >= 5min     // Rate limit respected
+4. consensusNotAlreadyProcessed     // Not duplicate
 ```
 
-**Scoring:**
+### 3. Council Context Injection
 
-- **80-100:** Strong agreement (both bullish/bearish, high confidence)
-- **60-79:** Moderate agreement (same direction, varying confidence)
-- **40-59:** Weak agreement (mixed signals)
-- **0-39:** Disagreement (opposite directions)
+When triggered, the bridge builds a context string:
+
+```typescript
+`Market Sentiment Context: The 17-persona AI chatroom has reached
+${strength}% consensus with a ${direction} outlook. This crowd
+sentiment signal should be considered alongside your technical,
+on-chain, and risk analysis.`
+```
+
+This context is passed to the trading council, influencing (but not determining) their analysis.
+
+### 4. Council Evaluation
+
+The 5 analysts run in parallel with the enhanced context. Each analyst:
+1. Receives their specialized system prompt
+2. Receives the asset + chatroom context
+3. Returns: signal (buy/sell/hold), confidence (0-100), reasoning
+
+### 5. Consensus & Trading
+
+If 4/5 analysts agree on a direction with sufficient confidence:
+- `recommendation` is set (BUY | SELL | HOLD)
+- `consensusLevel` reflects agreement strength
+- Auto-trading hook can execute paper trades
 
 ## Usage Examples
 
-### Example 1: Both Systems Agree
+### Manual Council Trigger (React)
 
-**Chatroom:** `bullish` @ 85% strength
-**Council:** `BUY` @ 88% consensus
-**Alignment:** 91% (Strong agreement ✅)
+```tsx
+import { useChatroomCouncilBridge } from '@/lib/useChatroomCouncilBridge';
 
-**Interpretation:** High confidence signal - both community debate and expert analysis align.
+function TradingDashboard() {
+  const {
+    canTriggerCouncil,
+    blockedReason,
+    triggerCouncil,
+    isEvaluating,
+    lastCouncilResult,
+  } = useChatroomCouncilBridge(
+    chatroomDirection,  // from chatroom state
+    chatroomStrength,   // from chatroom state
+    {
+      asset: 'BTC',
+      onCouncilResult: (result) => {
+        console.log('Council result:', result.recommendation);
+      },
+    }
+  );
 
-### Example 2: Systems Disagree
-
-**Chatroom:** `bearish` @ 72% strength
-**Council:** `BUY` @ 65% consensus
-**Alignment:** 32% (Disagreement ❌)
-
-**Interpretation:** Conflicting signals - proceed with caution. Community sentiment doesn't match expert analysis.
-
-### Example 3: Chatroom Insignificant
-
-**Chatroom:** `neutral` @ 45% strength
-**Council:** `HOLD` @ 58% consensus
-**Alignment:** 50% (Neutral alignment)
-
-**Interpretation:** No strong chatroom signal. Council recommendation stands alone.
-
-## API Integration
-
-### Fetch Enhanced Consensus
-
-```typescript
-const response = await fetch(
-  '/api/consensus-enhanced?asset=BTC&context=Recent%20halving'
-);
-const data = await response.json();
-
-console.log('Council signal:', data.council.signal);
-console.log('Chatroom direction:', data.chatroom?.direction);
-console.log('Alignment:', data.alignment.score);
+  return (
+    <button
+      onClick={triggerCouncil}
+      disabled={!canTriggerCouncil || isEvaluating}
+    >
+      {isEvaluating ? 'Evaluating...' : 'Trigger Council'}
+    </button>
+  );
+}
 ```
 
-### Access Individual Components
+### Auto-Trigger Mode
+
+```tsx
+const bridge = useChatroomCouncilBridge(
+  chatroomDirection,
+  chatroomStrength,
+  {
+    autoTrigger: true,  // Auto-trigger when conditions met
+    onCouncilTrigger: (ctx) => {
+      console.log('Auto-triggered by chatroom consensus:', ctx);
+    },
+    onCouncilResult: (result) => {
+      // result.recommendation: 'BUY' | 'SELL' | 'HOLD' | null
+    },
+  }
+);
+```
+
+### Direct API Call
 
 ```typescript
-// Chatroom consensus only
-import { getChatroomConsensus } from '@/lib/chatroom-consensus-bridge';
-const consensus = await getChatroomConsensus();
+// Call the council evaluation API directly
+const response = await fetch('/api/council/evaluate', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    asset: 'BTC',
+    chatroomContext: {
+      direction: 'bullish',
+      strength: 85,
+    },
+    triggeredBy: 'chatroom',
+  }),
+});
 
-// Trading council only
-import { runConsensusAnalysis } from '@/lib/consensus-engine';
-const { analysts, consensus: councilConsensus } = await runConsensusAnalysis(
-  'BTC'
-);
+const data = await response.json();
+console.log('Council recommendation:', data.consensus.recommendation);
 ```
 
 ## Design Decisions
 
-### 1. Chatroom as Context, Not Vote
+### 1. Event-Based vs Weighted Input
+
+**Decision:** Event-based trigger (chatroom triggers council evaluation)
+
+**Rationale:**
+- The trading council has its own sophisticated analysis
+- Chatroom consensus is "market sentiment", one factor among many
+- Continuous streaming would overwhelm the council API
+- Rate limiting is natural with event-based approach
+
+### 2. Chatroom as Context, Not Vote
 
 **Decision:** Chatroom consensus is provided as context to the trading council, not as a 6th vote.
 
 **Rationale:**
-
 - Maintains 4/5 supermajority threshold integrity
 - Analysts interpret chatroom sentiment alongside their expertise
 - Preserves existing consensus logic
 - Allows analysts to disagree with community if fundamentals dictate
 
-### 2. Optional Integration
+### 3. 80% Threshold
 
-**Decision:** Chatroom data is optional - trading council works without it.
-
-**Rationale:**
-
-- Chatroom may be in cooldown or have insufficient data
-- Early deployment phase may lack chatroom messages
-- Trading council remains functional standalone
-- Graceful degradation if chatroom fails
-
-### 3. Alignment Scoring for Transparency
-
-**Decision:** Expose alignment score between both systems.
+**Decision:** Only trigger on 80%+ chatroom consensus
 
 **Rationale:**
+- Matches the trading council's own 4/5 threshold
+- Weak consensus isn't worth querying the council
+- Reduces API costs
 
-- Users see when systems agree/disagree
-- Provides confidence signal beyond single consensus
-- Helps users weight their own decisions
-- Educational - shows different analysis methods
+### 4. 5-Minute Rate Limit
 
-## Testing
+**Decision:** Minimum 5 minutes between council triggers
 
-### Unit Tests
+**Rationale:**
+- Chatroom generates messages every 60-90 seconds
+- Market conditions don't change that fast
+- API cost management
+- Prevents UI noise
 
-```bash
-# Test bridge functions
-npm test src/lib/chatroom-consensus-bridge.test.ts
+## Configuration
 
-# Test API endpoint
-npm test src/app/api/consensus-enhanced/route.test.ts
-```
+| Setting | Value | Location |
+|---------|-------|----------|
+| Min council interval | 5 minutes | `chatroom-council-bridge.ts` |
+| Consensus threshold | 80% | `chatroom-council-bridge.ts` |
+| Council agreement threshold | 4/5 (80%) | `consensus-engine.ts` |
+| Chatroom decay factor | 0.85 | `consensus-calc.ts` |
+| Chatroom window size | 15 messages | `consensus-calc.ts` |
 
-### Manual Testing
+## Files
 
-```bash
-# 1. Start chatroom (generate some messages)
-curl http://localhost:3000/api/chatroom/stream
-
-# 2. Run enhanced consensus
-curl http://localhost:3000/api/consensus-enhanced?asset=BTC
-
-# 3. Check alignment scoring
-# Expected: JSON with council, chatroom, and alignment sections
-```
-
-## Performance Considerations
-
-### Caching
-
-- Chatroom consensus: Cached in KV store (Redis)
-- Trading council: Cached via AI response memoization (60s TTL)
-- Alignment calculation: Computed on-demand (fast operation)
-
-### Latency
-
-- Chatroom fetch: ~10-50ms (KV store read)
-- Council analysis: ~2-5s (5 parallel AI calls)
-- Total response time: ~2-5s
-
-### Rate Limiting
-
-- Inherits existing consensus API rate limits (10 req/min per IP)
-- Chatroom reads don't count against rate limit
-
-## Future Enhancements
-
-### 1. Weighted Consensus (TIER3)
-
-Add chatroom consensus as a weighted 6th vote:
-
-```typescript
-const weightedVotes = [
-  ...analystVotes,
-  { signal: chatroomDirection, weight: chatroomStrength / 100 },
-];
-```
-
-### 2. Real-Time Updates (TIER3)
-
-Stream chatroom consensus changes to UI via SSE:
-
-```typescript
-const eventSource = new EventSource('/api/chatroom/stream');
-eventSource.addEventListener('consensus_update', (event) => {
-  updateAlignmentScore(event.data);
-});
-```
-
-### 3. Historical Alignment Tracking (TIER3)
-
-Track alignment score over time to identify:
-
-- When systems typically agree/disagree
-- Which market conditions cause divergence
-- Accuracy of aligned vs. divergent signals
-
-### 4. Persona-to-Analyst Mapping (TIER3)
-
-Map specific chatroom personas to trading council analysts:
-
-- Technical analysts personas → Momentum Hunter influence
-- Whale discussion → Whale Watcher influence
-- Social buzz → Sentiment Scout influence
+| File | Purpose |
+|------|---------|
+| `src/lib/chatroom-council-bridge.ts` | Core bridge logic, state, listeners |
+| `src/lib/useChatroomCouncilBridge.ts` | React hook for UI integration |
+| `src/app/api/council/evaluate/route.ts` | API endpoint for council evaluation |
+| `src/lib/chatroom/consensus-calc.ts` | Chatroom rolling consensus algorithm |
+| `src/lib/consensus-engine.ts` | Trading council evaluation logic |
+| `src/lib/useAutoTrading.ts` | Auto-trading execution hook |
 
 ## Troubleshooting
 
-### Chatroom Consensus Returns Null
+### Council Never Triggers
 
-**Causes:**
+**Check:**
+1. Chatroom direction is not neutral
+2. Chatroom strength is >= 80%
+3. At least 5 minutes since last trigger
+4. Same consensus hasn't already been processed
 
-- Chatroom in cooldown phase
-- Insufficient messages (< 5)
-- Low consensus strength (< 20%)
+### API Returns Error
 
-**Solution:** This is expected behavior. UI shows "Chatroom not available."
+**Check:**
+1. All 5 model API keys are configured
+2. Rate limits not exceeded on model APIs
+3. Proxy is properly configured
 
-### Alignment Score Always 50%
+### Auto-Trigger Not Working
 
-**Causes:**
+**Check:**
+1. `autoTrigger: true` is set in hook options
+2. Chatroom state is being passed to hook
+3. `canTriggerCouncil` is true
 
-- Chatroom consensus is null
-- One system returns neutral
+## Future Enhancements
 
-**Solution:** Verify chatroom has recent messages and strong consensus.
-
-### API Returns 500 Error
-
-**Causes:**
-
-- Redis/KV connection failure
-- Trading council API failure
-
-**Solution:**
-
-1. Check KV store health: `curl /api/health`
-2. Check API keys in `.env`
-3. Review logs: `kubectl logs -l app=consensus-vault`
-
-## Related Files
-
-```
-/src/lib/chatroom-consensus-bridge.ts          # Bridge layer
-/src/app/api/consensus-enhanced/route.ts       # API endpoint
-/src/components/EnhancedConsensusView.tsx      # UI component
-/src/app/enhanced-consensus/page.tsx           # Page route
-/src/lib/chatroom/consensus-calc.ts            # Chatroom logic
-/src/lib/consensus-engine.ts                   # Council logic
-```
-
-## Conclusion
-
-This integration creates a multi-layered consensus system:
-
-1. **Community Layer:** 17 AI personas debate → directional consensus
-2. **Expert Layer:** 5 specialist analysts → trading signals
-3. **Alignment Layer:** Measure agreement → confidence signal
-
-Users get the best of both worlds: crowd wisdom + expert analysis.
+1. **Confidence Weighting**: Weight chatroom context by strength in council prompts
+2. **Persona Breakdown**: Pass individual persona votes to council (17 micro-signals)
+3. **Historical Tracking**: Store chatroom→council trigger history for analysis
+4. **Feedback Loop**: Track if council agreed with chatroom (calibration)
+5. **Asset Detection**: Detect which asset chatroom is discussing
+6. **Alignment Scoring**: Measure agreement between chatroom and council for UI

@@ -2,12 +2,14 @@
 
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useEffect } from 'react';
+import { TokenBalance } from './TokenBalance';
 
 /**
  * Custom Connect Button with improved accessibility
  * - Better color contrast for WCAG 2.1 AA compliance (4.5:1 minimum)
  * - ARIA labels for screen readers
  * - Proper touch targets (44px minimum)
+ * - Real-time CONSENSUS token balance display
  */
 export default function CustomConnectButton() {
   // Fix RainbowKit button contrast issues by injecting custom styles
@@ -132,11 +134,16 @@ export default function CustomConnectButton() {
                   >
                     <span className="truncate max-w-[150px]">{account.displayName}</span>
                     {account.displayBalance && (
-                      <span className="ml-2 text-white/90" aria-label={`Balance: ${account.displayBalance}`}>
+                      <span className="ml-2 text-white/90" aria-label={`ETH Balance: ${account.displayBalance}`}>
                         ({account.displayBalance})
                       </span>
                     )}
                   </button>
+
+                  {/* CONSENSUS Token Balance Display */}
+                  <div className="hidden md:flex items-center px-3 py-2 bg-card border border-border rounded-lg min-h-[44px]">
+                    <TokenBalance compact showRefresh={false} />
+                  </div>
                 </div>
               );
             })()}

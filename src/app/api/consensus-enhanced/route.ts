@@ -67,16 +67,17 @@ export async function GET(request: NextRequest) {
       await runConsensusAnalysis(asset, combinedContext || userContext);
 
     // Step 4: Calculate alignment between chatroom and council
+    const councilSignal = consensus.signal || 'hold';
     const alignmentScore = calculateAlignmentScore(
       chatroomConsensus,
-      consensus.signal,
+      councilSignal,
       consensus.consensusLevel
     );
 
     const alignmentCommentary = generateAlignmentCommentary(
       alignmentScore,
       chatroomConsensus,
-      consensus.signal
+      councilSignal
     );
 
     // Step 5: Build response
