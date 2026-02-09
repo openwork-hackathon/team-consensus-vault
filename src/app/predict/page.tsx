@@ -14,6 +14,7 @@ import BettingPanel from '@/components/prediction-market/BettingPanel';
 import LivePnL from '@/components/prediction-market/LivePnL';
 import SettlementResult from '@/components/prediction-market/SettlementResult';
 import CouncilVotes, { ConsensusSnapshot as CouncilConsensusSnapshot, ModelVote } from '@/components/prediction-market/CouncilVotes';
+import { NoRoundsEmptyState, DisconnectedEmptyState, WalletNotConnectedEmptyState } from '@/components/EmptyState';
 
 
 
@@ -48,6 +49,21 @@ export default function PredictPage() {
   };
 
   const renderPhaseContent = () => {
+    // Show disconnected state if not connected
+    if (!marketConnected) {
+      return (
+        <DisconnectedEmptyState onRetry={() => window.location.reload()} />
+      );
+    }
+
+    // Show wallet connection prompt if wallet not connected
+    if (!walletConnected) {
+      return (
+        <WalletNotConnectedEmptyState />
+      );
+    }
+
+    // Show loading state while connecting
     if (!round) {
       return (
         <div className="flex flex-col items-center justify-center py-20">

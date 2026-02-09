@@ -270,13 +270,13 @@ export default function BettingPanel({
         </div>
 
         {/* Quick Amount Buttons */}
-        <div className="grid grid-cols-4 gap-2" role="group" aria-label="Quick bet amount buttons">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2" role="group" aria-label="Quick bet amount buttons">
           {[100, 250, 500, 1000].map((amount) => (
             <button
               key={amount}
               onClick={() => handleQuickAmount(amount)}
               disabled={!isConnected || isPlacing}
-              className="px-3 py-2 text-sm border border-border rounded-md hover:bg-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-3 sm:py-2 text-sm border border-border rounded-md hover:bg-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
               aria-label={`Set bet amount to ${amount} dollars`}
             >
               ${amount}
