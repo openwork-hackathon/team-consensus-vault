@@ -453,7 +453,7 @@ export default function ConsensusVsContrarian({
         
         {/* Chart Container with proper overflow handling for mobile */}
         <div className="w-full overflow-hidden">
-          <div className="w-full bg-muted/20 rounded-lg p-1 sm:p-2 overflow-hidden h-48 sm:h-64 lg:h-72">
+          <div className="w-full bg-muted/20 rounded-lg p-1 sm:p-2 overflow-hidden h-40 sm:h-56 md:h-64 lg:h-72">
             <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <AreaChart
                 data={historicalData}

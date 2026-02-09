@@ -1,18 +1,18 @@
 {
-  "timestamp": "2026-02-09T06:06:06.639Z",
+  "timestamp": "2026-02-09T06:07:42.735Z",
   "totalChecks": 8,
-  "passedChecks": 8,
+  "passedChecks": 6,
   "results": [
     {
       "status": "PASS",
       "check": "Mobile-responsive chart padding"
     },
     {
-      "status": "PASS",
+      "status": "FAIL",
       "check": "Reduced mobile chart margins"
     },
     {
-      "status": "PASS",
+      "status": "FAIL",
       "check": "Smaller mobile font sizes"
     },
     {
