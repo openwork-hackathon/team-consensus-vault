@@ -28,12 +28,31 @@ export default function Navigation({
     { href: '/rounds', label: 'Rounds', shortLabel: '🔄' },
   ];
 
+  // Handle keyboard navigation for mobile menu
+  const handleMenuKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape' && isMobileMenuOpen) {
+      setIsMobileMenuOpen(false);
+      // Return focus to menu button after closing
+      const menuButton = document.querySelector('[aria-controls="mobile-navigation"]') as HTMLElement;
+      menuButton?.focus();
+    }
+  };
+
   return (
-    <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40 safe-top" role="banner">
-      <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
-        <div className="flex items-center justify-between gap-2">
-          {/* Logo and Title */}
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+    <>
+      {/* Skip to main content link for keyboard users */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+      >
+        Skip to main content
+      </a>
+
+      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40 safe-top" role="banner">
+        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4" onKeyDown={handleMenuKeyDown}>
+          <div className="flex items-center justify-between gap-2">
+            {/* Logo and Title */}
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
             <span
               className="text-xl sm:text-2xl md:text-3xl flex-shrink-0"
               role="img"
@@ -91,8 +110,9 @@ export default function Navigation({
               className="lg:hidden p-2 rounded-lg hover:bg-accent transition-colors touch-manipulation min-h-[44px] min-w-[44px]"
               aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
               aria-expanded={isMobileMenuOpen}
+              aria-controls="mobile-navigation"
             >
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                 {isMobileMenuOpen ? (
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 ) : (
@@ -105,15 +125,17 @@ export default function Navigation({
 
         {/* Mobile/Tablet Navigation */}
         <nav 
+          id="mobile-navigation"
           className={`lg:hidden ${isMobileMenuOpen ? 'block' : 'hidden'} mt-3 pt-3 border-t border-border`}
           aria-label="Mobile navigation"
         >
-          <div className="grid grid-cols-4 gap-2 sm:gap-3">
+          <div className="grid grid-cols-4 gap-2 sm:gap-3" role="list">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 onClick={() => setIsMobileMenuOpen(false)}
+                role="listitem"
                 className={`flex flex-col items-center gap-1 p-2 sm:p-3 rounded-lg transition-colors touch-manipulation min-h-[64px] ${
                   pathname === link.href
                     ? 'bg-primary text-primary-foreground'
@@ -127,7 +149,8 @@ export default function Navigation({
             ))}
           </div>
         </nav>
-      </div>
-    </header>
+        </div>
+      </header>
+    </>
   );
 }

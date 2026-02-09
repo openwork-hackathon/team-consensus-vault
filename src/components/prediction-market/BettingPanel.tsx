@@ -140,9 +140,11 @@ export default function BettingPanel({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="w-full max-w-2xl mx-auto bg-card rounded-xl border border-border p-6 space-y-6"
+      role="region"
+      aria-label="Prediction market betting panel"
     >
       {/* Signal Display Header */}
-      <div className="text-center space-y-3">
+      <div className="text-center space-y-3" role="status" aria-live="polite">
         <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full">
           <span className="text-lg">🤖</span>
           <span className="font-semibold text-primary">AI Council Signal</span>
@@ -163,17 +165,20 @@ export default function BettingPanel({
       </div>
 
       {/* Countdown Timer */}
-      <div className="bg-background/50 rounded-lg p-4 border border-border">
+      <div className="bg-background/50 rounded-lg p-4 border border-border" role="timer" aria-live="polite" aria-atomic="true">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-lg">⏰</span>
+            <span className="text-lg" aria-hidden="true">⏰</span>
             <span className="font-medium">Betting Window Closes In</span>
           </div>
-          <div className={`text-2xl font-bold ${timeRemaining < 60 ? 'text-red-500' : 'text-foreground'}`}>
+          <div
+            className={`text-2xl font-bold ${timeRemaining < 60 ? 'text-red-500' : 'text-foreground'}`}
+            aria-label={`Time remaining: ${formatTimeRemaining(timeRemaining)}`}
+          >
             {formatTimeRemaining(timeRemaining)}
           </div>
         </div>
-        <div className="mt-2 h-2 bg-secondary rounded-full overflow-hidden">
+        <div className="mt-2 h-2 bg-secondary rounded-full overflow-hidden" role="progressbar" aria-valuenow={(timeRemaining / bettingTimeRemaining) * 100} aria-valuemin={0} aria-valuemax={100} aria-label="Betting time remaining">
           <motion.div
             className="h-full bg-primary"
             initial={{ width: '100%' }}
@@ -184,18 +189,18 @@ export default function BettingPanel({
       </div>
 
       {/* Live Odds Display */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="bg-green-500/10 rounded-lg p-4 text-center border border-green-500/20">
+      <div className="grid grid-cols-2 gap-4" role="region" aria-label="Live betting pools">
+        <div className="bg-green-500/10 rounded-lg p-4 text-center border border-green-500/20" role="status" aria-live="polite">
           <div className="text-xs text-muted-foreground mb-1">AGREE Pool</div>
-          <div className="text-2xl font-bold text-green-500">{formatCurrency(pool.totalLong)}</div>
-          <div className="text-sm text-muted-foreground mt-1">{pool.longBetCount} bets</div>
-          <div className="text-lg font-bold text-green-500 mt-2">{pool.longOdds.toFixed(2)}x payout</div>
+          <div className="text-2xl font-bold text-green-500" aria-label={`Agree pool total: ${formatCurrency(pool.totalLong)}`}>{formatCurrency(pool.totalLong)}</div>
+          <div className="text-sm text-muted-foreground mt-1" aria-label={`${pool.longBetCount} bets placed`}>{pool.longBetCount} bets</div>
+          <div className="text-lg font-bold text-green-500 mt-2" aria-label={`${pool.longOdds.toFixed(2)} times payout multiplier`}>{pool.longOdds.toFixed(2)}x payout</div>
         </div>
-        <div className="bg-red-500/10 rounded-lg p-4 text-center border border-red-500/20">
+        <div className="bg-red-500/10 rounded-lg p-4 text-center border border-red-500/20" role="status" aria-live="polite">
           <div className="text-xs text-muted-foreground mb-1">DISAGREE Pool</div>
-          <div className="text-2xl font-bold text-red-500">{formatCurrency(pool.totalShort)}</div>
-          <div className="text-sm text-muted-foreground mt-1">{pool.shortBetCount} bets</div>
-          <div className="text-lg font-bold text-red-500 mt-2">{pool.shortOdds.toFixed(2)}x payout</div>
+          <div className="text-2xl font-bold text-red-500" aria-label={`Disagree pool total: ${formatCurrency(pool.totalShort)}`}>{formatCurrency(pool.totalShort)}</div>
+          <div className="text-sm text-muted-foreground mt-1" aria-label={`${pool.shortBetCount} bets placed`}>{pool.shortBetCount} bets</div>
+          <div className="text-lg font-bold text-red-500 mt-2" aria-label={`${pool.shortOdds.toFixed(2)} times payout multiplier`}>{pool.shortOdds.toFixed(2)}x payout</div>
         </div>
       </div>
 
@@ -231,17 +236,23 @@ export default function BettingPanel({
             <input
               id="bet-amount"
               type="text"
+              inputMode="decimal"
               value={betAmount}
               onChange={handleAmountChange}
               placeholder="100"
               className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary text-lg"
               disabled={!isConnected || isPlacing}
+              aria-describedby="bet-amount-description bet-amount-constraints"
+              aria-invalid={betAmount ? parseFloat(betAmount) < 100 : false}
             />
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+            <span id="bet-amount-description" className="sr-only">
+              Enter the amount in USD you want to bet on the AI council signal.
+            </span>
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden="true">
               USD
             </div>
           </div>
-          <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
+          <div id="bet-amount-constraints" className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
             <span>Min: {formatCurrency(100)}</span>
             <span>Max: {formatCurrency(10000)}</span>
           </div>
@@ -250,6 +261,8 @@ export default function BettingPanel({
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               className="mt-2 text-sm text-red-500"
+              role="alert"
+              aria-live="assertive"
             >
               Minimum bet amount is $100
             </motion.p>
@@ -257,13 +270,14 @@ export default function BettingPanel({
         </div>
 
         {/* Quick Amount Buttons */}
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-4 gap-2" role="group" aria-label="Quick bet amount buttons">
           {[100, 250, 500, 1000].map((amount) => (
             <button
               key={amount}
               onClick={() => handleQuickAmount(amount)}
               disabled={!isConnected || isPlacing}
               className="px-3 py-2 text-sm border border-border rounded-md hover:bg-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label={`Set bet amount to ${amount} dollars`}
             >
               ${amount}
             </button>
@@ -293,22 +307,23 @@ export default function BettingPanel({
       )}
 
       {/* Action Buttons */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-4" role="group" aria-label="Place bet buttons">
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => handlePlaceBet('agree')}
           disabled={!isValidAmount || isPlacing || !isConnected}
           className="px-6 py-4 bg-green-500 hover:bg-green-600 disabled:bg-muted disabled:cursor-not-allowed text-white rounded-lg font-bold text-lg transition-colors flex items-center justify-center gap-2"
+          aria-label={`Place ${betAmount ? formatCurrency(parseFloat(betAmount)) : ''} bet on AGREE`}
         >
           {isPlacing ? (
             <>
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" aria-hidden="true" />
               <span>Placing...</span>
             </>
           ) : (
             <>
-              <span>✓</span>
+              <span aria-hidden="true">✓</span>
               <span>AGREE</span>
             </>
           )}
@@ -319,15 +334,16 @@ export default function BettingPanel({
           onClick={() => handlePlaceBet('disagree')}
           disabled={!isValidAmount || isPlacing || !isConnected}
           className="px-6 py-4 bg-red-500 hover:bg-red-600 disabled:bg-muted disabled:cursor-not-allowed text-white rounded-lg font-bold text-lg transition-colors flex items-center justify-center gap-2"
+          aria-label={`Place ${betAmount ? formatCurrency(parseFloat(betAmount)) : ''} bet on DISAGREE`}
         >
           {isPlacing ? (
             <>
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" aria-hidden="true" />
               <span>Placing...</span>
             </>
           ) : (
             <>
-              <span>✗</span>
+              <span aria-hidden="true">✗</span>
               <span>DISAGREE</span>
             </>
           )}

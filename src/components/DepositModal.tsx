@@ -15,6 +15,9 @@ export default function DepositModal({ isOpen, onClose, onDeposit }: DepositModa
   const [amount, setAmount] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const modalRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const amountInputRef = useRef<HTMLInputElement>(null);
 
   const { address, isConnected } = useAccount();
   const { data: balance } = useBalance({
@@ -27,8 +30,51 @@ export default function DepositModal({ isOpen, onClose, onDeposit }: DepositModa
       setAmount('');
       setError('');
       setIsLoading(false);
+    } else {
+      // Focus on close button when modal opens for accessibility
+      setTimeout(() => closeButtonRef.current?.focus(), 100);
     }
   }, [isOpen]);
+
+  // Trap focus within modal when open
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleTab = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+
+      const modal = modalRef.current;
+      if (!modal) return;
+
+      const focusableElements = modal.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      const firstElement = focusableElements[0] as HTMLElement;
+      const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+
+      if (e.shiftKey && document.activeElement === firstElement) {
+        e.preventDefault();
+        lastElement.focus();
+      } else if (!e.shiftKey && document.activeElement === lastElement) {
+        e.preventDefault();
+        firstElement.focus();
+      }
+    };
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !isLoading) {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleTab);
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('keydown', handleTab);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isOpen, isLoading, onClose]);
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -153,8 +199,12 @@ export default function DepositModal({ isOpen, onClose, onDeposit }: DepositModa
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4 safe-top safe-bottom"
           onClick={handleBackdropClick}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="deposit-modal-title"
         >
           <motion.div
+            ref={modalRef}
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -166,8 +216,9 @@ export default function DepositModal({ isOpen, onClose, onDeposit }: DepositModa
           >
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold">Deposit to Vault</h2>
+              <h2 id="deposit-modal-title" className="text-2xl font-bold">Deposit to Vault</h2>
               <button
+                ref={closeButtonRef}
                 onClick={onClose}
                 disabled={isLoading}
                 className="text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 touch-manipulation p-2 -m-2"
@@ -180,7 +231,7 @@ export default function DepositModal({ isOpen, onClose, onDeposit }: DepositModa
             </div>
 
             {/* Balance Display */}
-            <div className="mb-6 p-4 bg-background rounded-lg border border-border">
+            <div className="mb-6 p-4 bg-background rounded-lg border border-border" role="status" aria-live="polite">
               <div className="text-xs text-muted-foreground mb-1">Available Balance</div>
               <div className="text-lg font-semibold">
                 {balance ? `${parseFloat(formatEther(balance.value)).toFixed(6)} ${balance.symbol}` : '0.00 ETH'}
@@ -190,24 +241,31 @@ export default function DepositModal({ isOpen, onClose, onDeposit }: DepositModa
             {/* Form */}
             <form onSubmit={handleSubmit}>
               <div className="mb-4">
-                <label htmlFor="amount" className="block text-sm font-medium mb-2">
+                <label htmlFor="deposit-amount" className="block text-sm font-medium mb-2">
                   Amount to Deposit
                 </label>
                 <div className="relative">
                   <input
-                    id="amount"
+                    ref={amountInputRef}
+                    id="deposit-amount"
                     type="text"
+                    inputMode="decimal"
                     value={amount}
                     onChange={handleAmountChange}
                     placeholder="0.0"
                     disabled={isLoading}
                     className="w-full px-4 py-3 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed text-lg"
+                    aria-describedby="deposit-amount-description"
                   />
+                  <span id="deposit-amount-description" className="sr-only">
+                    Enter the amount of ETH you want to deposit. Minimum is 0.0001 ETH.
+                  </span>
                   <button
                     type="button"
                     onClick={handleMaxClick}
                     disabled={isLoading || !balance}
                     className="absolute right-3 top-1/2 -translate-y-1/2 px-3 py-1.5 text-xs font-semibold bg-primary text-primary-foreground rounded hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation"
+                    aria-label="Set maximum deposit amount"
                   >
                     MAX
                   </button>
@@ -217,14 +275,16 @@ export default function DepositModal({ isOpen, onClose, onDeposit }: DepositModa
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="mt-2 text-sm text-bearish flex items-center gap-1"
+                    role="alert"
+                    aria-live="assertive"
                   >
-                    <span>⚠</span> {error}
+                    <span aria-hidden="true">⚠</span> <span>{error}</span>
                   </motion.p>
                 )}
               </div>
 
               {/* Info */}
-              <div className="mb-6 p-3 bg-accent/10 border border-accent/20 rounded-lg">
+              <div className="mb-6 p-3 bg-accent/10 border border-accent/20 rounded-lg" role="note">
                 <p className="text-xs text-muted-foreground">
                   Your deposit will be used for AI-powered consensus trading. Funds are managed by the vault contract and can be withdrawn at any time.
                 </p>

@@ -27,7 +27,7 @@ export default function RoundsPage() {
     <main className="min-h-screen bg-background" role="main" aria-label="Prediction Market Rounds">
       <ToastContainer toasts={toasts} onRemove={removeToast} />
 
-      <div className="container mx-auto px-4 py-6 lg:py-8 max-w-7xl">
+      <div id="main-content" className="container mx-auto px-4 py-6 lg:py-8 max-w-7xl">
         {/* Header */}
         <section className="mb-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">

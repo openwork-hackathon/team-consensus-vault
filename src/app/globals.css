@@ -69,6 +69,30 @@
     @apply outline-2 outline-offset-2 outline-primary;
   }
 
+  /* Ensure all interactive elements have visible focus */
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible,
+  [tabindex]:focus-visible {
+    outline: 2px solid hsl(var(--primary));
+    outline-offset: 2px;
+  }
+
+  /* High contrast focus for better visibility */
+  @media (prefers-contrast: high) {
+    a:focus-visible,
+    button:focus-visible,
+    input:focus-visible,
+    textarea:focus-visible,
+    select:focus-visible,
+    [tabindex]:focus-visible {
+      outline-width: 3px;
+      outline-offset: 3px;
+    }
+  }
+
   /* Skip link for accessibility */
   .sr-only {
     position: absolute;

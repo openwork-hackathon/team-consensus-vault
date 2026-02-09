@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAccount } from 'wagmi';
 
@@ -19,10 +19,15 @@ export default function WithdrawModal({ isOpen, onClose, onWithdraw, depositedBa
   const [error, setError] = useState('');
   const [cooldownRemaining, setCooldownRemaining] = useState(0);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   const { isConnected } = useAccount();
 
   // Reset form when modal opens/closes
+  // Store the element that triggered the modal
+  const previousActiveElement = useRef<HTMLElement | null>(null);
+
   useEffect(() => {
     if (!isOpen) {
       setAmount('');
@@ -30,8 +35,58 @@ export default function WithdrawModal({ isOpen, onClose, onWithdraw, depositedBa
       setIsLoading(false);
       setShowConfirmation(false);
       setCooldownRemaining(0);
+      // Return focus to the element that opened the modal
+      if (previousActiveElement.current) {
+        previousActiveElement.current.focus();
+        previousActiveElement.current = null;
+      }
+    } else {
+      // Store current active element before opening modal
+      previousActiveElement.current = document.activeElement as HTMLElement;
+      // Focus on close button when modal opens for accessibility
+      setTimeout(() => closeButtonRef.current?.focus(), 100);
     }
   }, [isOpen]);
+
+  // Trap focus within modal when open
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleTab = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+
+      const modal = modalRef.current;
+      if (!modal) return;
+
+      const focusableElements = modal.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      const firstElement = focusableElements[0] as HTMLElement;
+      const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+
+      if (e.shiftKey && document.activeElement === firstElement) {
+        e.preventDefault();
+        lastElement.focus();
+      } else if (!e.shiftKey && document.activeElement === lastElement) {
+        e.preventDefault();
+        firstElement.focus();
+      }
+    };
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !isLoading) {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleTab);
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('keydown', handleTab);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isOpen, isLoading, onClose]);
 
   // Cooldown timer
   useEffect(() => {
@@ -145,8 +200,13 @@ export default function WithdrawModal({ isOpen, onClose, onWithdraw, depositedBa
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
           onClick={handleBackdropClick}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="withdraw-modal-title"
+          aria-describedby="withdraw-modal-description"
         >
           <motion.div
+            ref={modalRef}
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -155,8 +215,9 @@ export default function WithdrawModal({ isOpen, onClose, onWithdraw, depositedBa
           >
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold">Withdraw from Vault</h2>
+              <h2 id="withdraw-modal-title" className="text-2xl font-bold">Withdraw from Vault</h2>
               <button
+                ref={closeButtonRef}
                 onClick={onClose}
                 disabled={isLoading}
                 className="text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 touch-manipulation p-2 -m-2"
@@ -169,15 +230,15 @@ export default function WithdrawModal({ isOpen, onClose, onWithdraw, depositedBa
             </div>
 
             {/* Balance Display */}
-            <div className="mb-6 p-4 bg-background rounded-lg border border-border">
+            <div className="mb-6 p-4 bg-background rounded-lg border border-border" role="status" aria-live="polite">
               <div className="text-xs text-muted-foreground mb-1">Your Deposited Balance</div>
-              <div className="text-lg font-semibold">
+              <div className="text-lg font-semibold" aria-label={`Your deposited balance is ${depositedBalance} ETH`}>
                 {depositedBalance} ETH
               </div>
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} aria-describedby="withdraw-modal-description">
               <div className="mb-4">
                 <label htmlFor="withdraw-amount" className="block text-sm font-medium mb-2">
                   Amount to Withdraw
@@ -186,17 +247,24 @@ export default function WithdrawModal({ isOpen, onClose, onWithdraw, depositedBa
                   <input
                     id="withdraw-amount"
                     type="text"
+                    inputMode="decimal"
                     value={amount}
                     onChange={handleAmountChange}
                     placeholder="0.0"
                     disabled={isLoading}
                     className="w-full px-4 py-3 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed text-lg"
+                    aria-describedby="withdraw-amount-description"
+                    aria-invalid={!!error}
                   />
+                  <span id="withdraw-amount-description" className="sr-only">
+                    Enter the amount of ETH you want to withdraw from the vault.
+                  </span>
                   <button
                     type="button"
                     onClick={handleMaxClick}
                     disabled={isLoading || parseFloat(depositedBalance) <= 0}
                     className="absolute right-3 top-1/2 -translate-y-1/2 px-3 py-1.5 text-xs font-semibold bg-primary text-primary-foreground rounded hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation"
+                    aria-label="Set maximum withdrawal amount"
                   >
                     MAX
                   </button>
@@ -206,14 +274,16 @@ export default function WithdrawModal({ isOpen, onClose, onWithdraw, depositedBa
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="mt-2 text-sm text-bearish flex items-center gap-1"
+                    role="alert"
+                    aria-live="assertive"
                   >
-                    <span>⚠</span> {error}
+                    <span aria-hidden="true">⚠</span> <span>{error}</span>
                   </motion.p>
                 )}
               </div>
 
               {/* Info */}
-              <div className="mb-6 p-3 bg-accent/10 border border-accent/20 rounded-lg">
+              <div id="withdraw-modal-description" className="mb-6 p-3 bg-accent/10 border border-accent/20 rounded-lg" role="note">
                 <p className="text-xs text-muted-foreground">
                   Withdraw your deposited funds from the vault. Your withdrawal will be processed instantly.
                 </p>

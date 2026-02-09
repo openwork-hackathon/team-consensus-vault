@@ -56,13 +56,17 @@ export default function ChatRoom({
   };
 
   return (
-    <div className="bg-card rounded-xl border border-border overflow-hidden flex flex-col">
+    <div className="bg-card rounded-xl border border-border overflow-hidden flex flex-col" role="region" aria-label="AI Debate Chatroom">
       {/* Phase indicator bar */}
       <PhaseIndicator phase={phase} cooldownEndsAt={cooldownEndsAt} />
 
       {/* Connection status */}
       {!isConnected && (
-        <div className="px-3 py-2 sm:py-1 bg-yellow-500/10 border-b border-yellow-500/20 text-xs sm:text-xs text-yellow-400">
+        <div
+          className="px-3 py-2 sm:py-1 bg-yellow-500/10 border-b border-yellow-500/20 text-xs sm:text-xs text-yellow-400"
+          role="status"
+          aria-live="polite"
+        >
           Reconnecting...
         </div>
       )}
@@ -72,7 +76,11 @@ export default function ChatRoom({
         ref={scrollRef}
         onScroll={handleScroll}
         className="h-[400px] sm:h-[500px] md:h-[600px] overflow-y-auto overflow-x-hidden py-2 space-y-0.5 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent scrollable"
-        style={{ 
+        role="log"
+        aria-live="polite"
+        aria-atomic="false"
+        aria-label="Chat messages"
+        style={{
           WebkitOverflowScrolling: 'touch',
           overscrollBehavior: 'contain'
         }}
@@ -115,14 +123,14 @@ export default function ChatRoom({
       </AnimatePresence>
 
       {/* Footer */}
-      <div className="px-3 py-2 sm:py-2 border-t border-border flex items-center justify-between text-xs sm:text-[11px]">
-        <span className="text-muted-foreground">
+      <div className="px-3 py-2 sm:py-2 border-t border-border flex items-center justify-between text-xs sm:text-[11px]" role="status" aria-live="polite">
+        <span className="text-muted-foreground" aria-label={`${messages.length} messages in chat`}>
           {messages.length} messages
         </span>
-        <span className="text-muted-foreground hidden sm:inline">
+        <span className="text-muted-foreground hidden sm:inline" aria-label="17 AI personalities debating the market">
           17 AI personalities debating the market
         </span>
-        <span className="text-muted-foreground sm:hidden">
+        <span className="text-muted-foreground sm:hidden" aria-label="17 AI debating">
           17 AI debating
         </span>
       </div>

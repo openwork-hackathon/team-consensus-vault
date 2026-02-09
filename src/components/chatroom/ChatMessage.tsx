@@ -31,11 +31,19 @@ function SentimentBadge({ sentiment, confidence }: { sentiment: string; confiden
   const colorClass = colors[sentiment as keyof typeof colors] || colors.neutral;
   const label = labels[sentiment as keyof typeof labels] || sentiment;
 
+  const ariaLabel = confidence !== undefined
+    ? `${label} sentiment with ${confidence}% confidence`
+    : `${label} sentiment`;
+
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] sm:text-xs font-medium border ${colorClass} touch-manipulation`}>
+    <span
+      className={`inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] sm:text-xs font-medium border ${colorClass} touch-manipulation`}
+      role="status"
+      aria-label={ariaLabel}
+    >
       {label}
       {confidence !== undefined && (
-        <span className="opacity-70">{confidence}%</span>
+        <span className="opacity-70" aria-hidden="true">{confidence}%</span>
       )}
     </span>
   );
@@ -45,12 +53,16 @@ export default function ChatMessage({ message }: ChatMessageProps) {
   const persona = PERSONAS_BY_ID[message.personaId];
   const color = persona?.color || '#888';
 
+  const messageAriaLabel = `${message.handle} says: ${message.content}. Sentiment: ${message.sentiment || 'none'}. ${formatTime(message.timestamp)}`;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
       className="flex gap-2.5 sm:gap-3 px-3 sm:px-4 py-2 sm:py-1.5 hover:bg-white/[0.02] active:bg-white/[0.05] group"
+      role="article"
+      aria-label={messageAriaLabel}
     >
       {/* Avatar - Larger touch target */}
       <div

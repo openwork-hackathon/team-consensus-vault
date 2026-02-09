@@ -249,7 +249,7 @@ export default function PredictPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <main className="min-h-screen bg-background" role="main" aria-label="Prediction Market">
       <ToastContainer
         position="top-right"
         autoClose={5000}
@@ -265,7 +265,7 @@ export default function PredictPage() {
 
       {/* Header */}
       <div className="border-b border-border bg-card/50 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-6">
+        <div id="main-content" className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold">Prediction Market</h1>
@@ -445,6 +445,6 @@ export default function PredictPage() {
         {/* Phase Content */}
         {renderPhaseContent()}
       </div>
-    </div>
+    </main>
   );
 }
