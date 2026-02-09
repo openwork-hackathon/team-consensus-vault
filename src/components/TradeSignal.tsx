@@ -6,9 +6,10 @@ interface TradeSignalProps {
   recommendation: 'BUY' | 'SELL' | 'HOLD' | null;
   consensusLevel: number;
   threshold: number;
+  isForced?: boolean;
 }
 
-export default function TradeSignal({ recommendation, consensusLevel, threshold }: TradeSignalProps) {
+export default function TradeSignal({ recommendation, consensusLevel, threshold, isForced }: TradeSignalProps) {
   const isActive = consensusLevel >= threshold && recommendation !== null;
 
   const signalColors = {
@@ -68,10 +69,19 @@ export default function TradeSignal({ recommendation, consensusLevel, threshold 
                   {signalIcons[recommendation]}
                 </motion.span>
                 <div>
-                  <h3 className="text-xl sm:text-2xl md:text-3xl font-bold text-white">
-                    {recommendation}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-white/80">Trade Signal Active</p>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-xl sm:text-2xl md:text-3xl font-bold text-white">
+                      {recommendation}
+                    </h3>
+                    {isForced && (
+                      <span className="px-2 py-0.5 text-xs font-medium bg-white/20 text-white/90 rounded-full border border-white/30">
+                        DEMO
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs sm:text-sm text-white/80">
+                    {isForced ? 'Forced Signal (Demo Mode)' : 'Trade Signal Active'}
+                  </p>
                 </div>
               </div>
 

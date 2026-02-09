@@ -16,6 +16,7 @@ interface LatestConsensus {
   votes: number;
   totalVotes: number;
   timestamp: string;
+  forced?: boolean;
 }
 
 interface PredictionMarketState {
@@ -46,6 +47,7 @@ export function usePredictionMarket(): PredictionMarketState {
   const [pnl, setPnl] = useState<number | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [settlement, setSettlement] = useState<SettlementResult | null>(null);
+
 
   // Track user's bets to prevent multiple bets per round
   const [userBets, setUserBets] = useState<Set<string>>(new Set());
@@ -155,6 +157,7 @@ export function usePredictionMarket(): PredictionMarketState {
         votes: data.votes,
         totalVotes: data.totalVotes,
         timestamp: data.timestamp,
+        forced: data.forced,
       };
       setLatestConsensus(consensus);
       console.log('[prediction-market] Consensus updated:', data);
@@ -306,7 +309,6 @@ export function usePredictionMarket(): PredictionMarketState {
     pnl,
     isConnected,
     settlement,
-    
     // Derived state
     isInBettingWindow,
     bettingTimeRemaining,

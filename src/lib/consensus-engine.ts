@@ -232,7 +232,7 @@ export const logger = ConsensusLogger.getInstance();
  * // userError.retryAvailableAt: Date object
  * ```
  */
-function createUserFacingError(error: ConsensusError): UserFacingError {
+export function createUserFacingError(error: ConsensusError): UserFacingError {
   const { type, message, modelId, originalError } = error;
 
   switch (type) {
@@ -528,7 +528,13 @@ function createUserFacingError(error: ConsensusError): UserFacingError {
  */
 function createProgressUpdate(modelId: string, elapsedTime: number, message?: string): ProgressUpdate {
   const isSlow = elapsedTime > 15000; // 15 seconds
-  const estimatedRemaining = elapsedTime * 0.5; // Rough estimate
+
+  // Use actual model performance metrics for better estimate
+  const metrics = metricsPerModel[modelId];
+  const avgResponseTime = metrics?.averageResponseTime || 10000; // Default 10s if no history
+
+  // Calculate remaining time based on historical average, but don't go negative
+  const estimatedRemaining = Math.max(0, avgResponseTime - elapsedTime);
 
   return {
     modelId,
@@ -1617,6 +1623,10 @@ async function callModel(
     throw wrappedError;
   } finally {
     clearTimeout(timeoutId);
+    // Ensure AbortController is cleaned up to prevent memory leaks
+    if (!controller.signal.aborted) {
+      controller.abort();
+    }
   }
 }
 

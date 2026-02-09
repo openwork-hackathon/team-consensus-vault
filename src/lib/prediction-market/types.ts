@@ -154,6 +154,9 @@ export interface ConsensusSnapshot {
   
   /** Minimum confidence threshold for consensus */
   threshold: number;
+  
+  /** Whether this signal was forced (demo mode) vs organic consensus */
+  forced?: boolean;
 }
 
 /**

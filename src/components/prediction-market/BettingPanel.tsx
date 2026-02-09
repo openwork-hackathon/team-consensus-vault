@@ -189,7 +189,7 @@ export default function BettingPanel({
             <span className="font-medium">Betting Window Closes In</span>
           </div>
           <div
-            className={`text-2xl font-bold ${timeRemaining < 60 ? 'text-red-500' : 'text-foreground'}`}
+            className={`text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold ${timeRemaining < 60 ? 'text-red-500' : 'text-foreground'}`}
             aria-label={`Time remaining: ${formatTimeRemaining(timeRemaining)}`}
           >
             {formatTimeRemaining(timeRemaining)}

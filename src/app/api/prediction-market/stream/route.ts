@@ -80,6 +80,7 @@ if (!getCurrentRound()) {
       rationale: '',
       averageConfidence: 0,
       threshold: 75,
+      forced: false,
     },
   };
   setCurrentRound(initialRound);
@@ -254,6 +255,7 @@ async function handleScanningPhase(send: (eventType: string, data: unknown) => v
   send('consensus_update', {
     ...consensusData,
     scanningPoll: scanningPolls,
+    forced: false, // Normal consensus, not forced
   });
 
   // Check if we have consensus or need to force it for demo
@@ -275,6 +277,7 @@ async function handleScanningPhase(send: (eventType: string, data: unknown) => v
         rationale: 'Strong consensus across multiple analysts for bullish momentum',
         averageConfidence: 85,
         threshold: 75,
+        forced: false, // Organic consensus
       },
       consensusLevel: 85,
       consensusVotes: 4,
@@ -291,6 +294,14 @@ async function handleScanningPhase(send: (eventType: string, data: unknown) => v
     // Force BUY signal for demo progression
     console.log('[prediction-market-stream] Forcing BUY signal for demo after', scanningPolls, 'polls');
     
+    // Send consensus update with forced flag
+    send('consensus_update', {
+      ...consensusData,
+      scanningPoll: scanningPolls,
+      forced: true, // Forced signal for demo
+      rationale: 'Demo mode: Forced BUY signal to progress demonstration',
+    });
+    
     const updatedRound = {
       ...currentRound,
       consensusSnapshot: {
@@ -305,6 +316,7 @@ async function handleScanningPhase(send: (eventType: string, data: unknown) => v
         rationale: 'Demo mode: Forced BUY signal to progress demonstration',
         averageConfidence: 80,
         threshold: 75,
+        forced: true, // Forced signal for demo
       },
       consensusLevel: 80,
       consensusVotes: 4,
@@ -427,7 +439,8 @@ async function handlePositionOpenPhase(send: (eventType: string, data: unknown) 
     };
     setCurrentRound(updatedRound);
     
-    await transitionToPhase(RoundPhase.EXIT_SIGNAL, send);
+    // Transition to EXIT_SIGNAL phase with forced flag
+    await transitionToPhase(RoundPhase.EXIT_SIGNAL, send, true); // true = forced exit
     return;
   }
   
@@ -520,7 +533,7 @@ async function handleSettlementPhase(send: (eventType: string, data: unknown) =>
 /**
  * Transition to a new phase and send phase_change event
  */
-async function transitionToPhase(newPhase: RoundPhase, send: (eventType: string, data: unknown) => void) {
+async function transitionToPhase(newPhase: RoundPhase, send: (eventType: string, data: unknown) => void, forced: boolean = false) {
   const currentRound = getCurrentRound();
   if (!currentRound) return;
 
@@ -529,7 +542,7 @@ async function transitionToPhase(newPhase: RoundPhase, send: (eventType: string,
   // Update phase using shared state
   updateRoundPhase(newPhase);
   
-  console.log(`[prediction-market-stream] Phase change: ${oldPhase} → ${newPhase}`);
+  console.log(`[prediction-market-stream] Phase change: ${oldPhase} → ${newPhase}${forced ? ' (forced)' : ''}`);
   
   // Send phase change event
   send('phase_change', {
@@ -537,6 +550,7 @@ async function transitionToPhase(newPhase: RoundPhase, send: (eventType: string,
     from: oldPhase,
     to: newPhase,
     timestamp: new Date().toISOString(),
+    forced: forced, // Flag if this phase change was forced by demo mode
   });
   
   // Send updated round state
