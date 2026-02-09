@@ -236,12 +236,12 @@ export default function ConsensusVsContrarian({
   }
 
   return (
-    <div className="bg-card rounded-xl p-4 sm:p-6 border border-border space-y-6 w-full max-w-full overflow-hidden">
+    <div className="bg-card rounded-xl p-3 sm:p-6 border border-border space-y-4 sm:space-y-6 w-full max-w-full overflow-hidden" style={{maxWidth: '100vw', boxSizing: 'border-box'}}>
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <h2 className="text-lg sm:text-xl md:text-2xl font-bold truncate">Consensus vs Contrarian</h2>
-          <p className="text-sm text-muted-foreground">
+          <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold truncate">Consensus vs Contrarian</h2>
+          <p className="text-xs sm:text-sm text-muted-foreground">
             Market sentiment analysis based on TVL distribution
           </p>
         </div>
@@ -258,7 +258,7 @@ export default function ConsensusVsContrarian({
       </div>
 
       {/* TVL Comparison Panel - Side by Side Display */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 w-full" style={{minWidth: 0}}>
         {/* Consensus Card */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
@@ -267,22 +267,22 @@ export default function ConsensusVsContrarian({
           className="bg-bullish/10 border border-bullish/20 rounded-lg p-3 sm:p-4 relative overflow-hidden"
         >
           <div className="absolute top-0 right-0 w-16 h-16 sm:w-20 sm:h-20 bg-bullish/5 rounded-full -mr-8 -mt-8 sm:-mr-10 sm:-mt-10" />
-          <div className="flex items-center justify-between mb-2 relative z-10">
-            <h3 className="font-semibold text-bullish flex items-center gap-1 sm:gap-2 text-sm sm:text-base">
-              <span className="text-base sm:text-lg">🤝</span>
-              $CVAULT
+          <div className="flex items-center justify-between mb-1 sm:mb-2 relative z-10">
+            <h3 className="font-semibold text-bullish flex items-center gap-1 text-xs sm:text-sm sm:gap-2">
+              <span className="text-sm sm:text-lg">🤝</span>
+              <span className="truncate">$CVAULT</span>
             </h3>
-            <span className="text-xs font-medium text-bullish bg-bullish/20 px-2 py-1 rounded-full whitespace-nowrap">
+            <span className="text-xs font-medium text-bullish bg-bullish/20 px-1.5 sm:px-2 py-1 rounded-full whitespace-nowrap text-xs">
               Consensus
             </span>
           </div>
-          <div className="text-2xl sm:text-3xl font-bold text-bullish mb-1 relative z-10">
+          <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-bullish mb-1 relative z-10">
             ${cvaultTVL.toLocaleString()}
           </div>
-          <div className="text-sm text-muted-foreground relative z-10">
+          <div className="text-xs sm:text-sm text-muted-foreground relative z-10">
             {consensusPercentage}% of total TVL
           </div>
-          <div className="mt-2 text-xs text-bullish/80 relative z-10">
+          <div className="mt-1 sm:mt-2 text-xs text-bullish/80 relative z-10">
             Capital following AI consensus
           </div>
         </motion.div>
@@ -295,22 +295,22 @@ export default function ConsensusVsContrarian({
           className="bg-bearish/10 border border-bearish/20 rounded-lg p-3 sm:p-4 relative overflow-hidden"
         >
           <div className="absolute top-0 right-0 w-16 h-16 sm:w-20 sm:h-20 bg-bearish/5 rounded-full -mr-8 -mt-8 sm:-mr-10 sm:-mt-10" />
-          <div className="flex items-center justify-between mb-2 relative z-10">
-            <h3 className="font-semibold text-bearish flex items-center gap-1 sm:gap-2 text-sm sm:text-base">
-              <span className="text-base sm:text-lg">⚡</span>
-              $DISSENT
+          <div className="flex items-center justify-between mb-1 sm:mb-2 relative z-10">
+            <h3 className="font-semibold text-bearish flex items-center gap-1 text-xs sm:text-sm sm:gap-2">
+              <span className="text-sm sm:text-lg">⚡</span>
+              <span className="truncate">$DISSENT</span>
             </h3>
-            <span className="text-xs font-medium text-bearish bg-bearish/20 px-2 py-1 rounded-full whitespace-nowrap">
+            <span className="text-xs font-medium text-bearish bg-bearish/20 px-1.5 sm:px-2 py-1 rounded-full whitespace-nowrap text-xs">
               Contrarian
             </span>
           </div>
-          <div className="text-2xl sm:text-3xl font-bold text-bearish mb-1 relative z-10">
+          <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-bearish mb-1 relative z-10">
             ${dissentTVL.toLocaleString()}
           </div>
-          <div className="text-sm text-muted-foreground relative z-10">
+          <div className="text-xs sm:text-sm text-muted-foreground relative z-10">
             {contrarianPercentage}% of total TVL
           </div>
-          <div className="mt-2 text-xs text-bearish/80 relative z-10">
+          <div className="mt-1 sm:mt-2 text-xs text-bearish/80 relative z-10">
             Capital betting against AI
           </div>
         </motion.div>
@@ -337,19 +337,19 @@ export default function ConsensusVsContrarian({
         </div>
         
         {/* Main Index Display */}
-        <div className="text-center py-3 sm:py-4 bg-gradient-to-b from-muted/50 to-transparent rounded-lg">
+        <div className="text-center py-2 sm:py-3 lg:py-4 bg-gradient-to-b from-muted/50 to-transparent rounded-lg">
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-primary mb-2">
-              {consensusPercentage}% <span className="text-base sm:text-lg md:text-xl font-medium text-muted-foreground">Trust AI</span>
+            <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-primary mb-1 sm:mb-2">
+              {consensusPercentage}% <span className="text-sm sm:text-base md:text-lg lg:text-xl font-medium text-muted-foreground">Trust AI</span>
             </div>
-            <div className="text-sm font-medium text-muted-foreground mb-1">
+            <div className="text-xs sm:text-sm font-medium text-muted-foreground mb-1">
               {getRatioText()}
             </div>
-            <div className="text-xs text-muted-foreground max-w-md mx-auto px-2">
+            <div className="text-xs text-muted-foreground max-w-sm sm:max-w-md mx-auto px-2">
               {getSentimentDescription()}
             </div>
           </motion.div>
@@ -453,17 +453,17 @@ export default function ConsensusVsContrarian({
         
         {/* Chart Container with proper overflow handling for mobile */}
         <div className="w-full overflow-hidden">
-          <div className="w-full bg-muted/20 rounded-lg p-2 overflow-hidden h-48 sm:h-64 lg:h-72">
+          <div className="w-full bg-muted/20 rounded-lg p-1 sm:p-2 overflow-hidden h-48 sm:h-64 lg:h-72">
             <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <AreaChart
                 data={historicalData}
                 margin={{
-                  top: 5,
-                  right: 5,
-                  left: isMobile ? -15 : -20,
+                  top: isMobile ? 2 : 5,
+                  right: isMobile ? 2 : 5,
+                  left: isMobile ? -20 : -20,
                   bottom: 0
                 }}
-                barCategoryGap="10%"
+                barCategoryGap={isMobile ? "5%" : "10%"}
               >
                 <defs>
                   <linearGradient id="cvaultGradient" x1="0" y1="0" x2="0" y2="1">
@@ -478,19 +478,20 @@ export default function ConsensusVsContrarian({
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
                 <XAxis 
                   dataKey="timestamp" 
-                  tick={{ fontSize: isMobile ? 8 : 11, fill: 'hsl(var(--muted-foreground))' }}
+                  tick={{ fontSize: isMobile ? 7 : 11, fill: 'hsl(var(--muted-foreground))' }}
                   tickFormatter={(value) => {
                     const date = new Date(value);
                     return isMobile 
-                      ? date.toLocaleDateString('en-US', { month: 'short' })
+                      ? date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
                       : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                   }}
                   axisLine={{ stroke: 'hsl(var(--border))' }}
                   tickLine={{ stroke: 'hsl(var(--border))' }}
-                  interval={isMobile ? 'equidistantPreserveStart' : 'preserveStartEnd'}
+                  interval={isMobile ? 0 : 'preserveStartEnd'}
+                  tickMargin={isMobile ? 2 : 5}
                 />
                 <YAxis 
-                  tick={{ fontSize: isMobile ? 8 : 11, fill: 'hsl(var(--muted-foreground))' }}
+                  tick={{ fontSize: isMobile ? 7 : 11, fill: 'hsl(var(--muted-foreground))' }}
                   tickFormatter={(value) => {
                     const valInK = value / 1000;
                     if (isMobile && valInK >= 100) {
@@ -500,7 +501,8 @@ export default function ConsensusVsContrarian({
                   }}
                   axisLine={{ stroke: 'hsl(var(--border))' }}
                   tickLine={{ stroke: 'hsl(var(--border))' }}
-                  width={isMobile ? 30 : 40}
+                  width={isMobile ? 25 : 40}
+                  tickMargin={isMobile ? 2 : 5}
                 />
                 <RechartsTooltip content={<CustomTooltip />} />
                 <Area
@@ -508,7 +510,7 @@ export default function ConsensusVsContrarian({
                   dataKey="cvault"
                   name="Consensus TVL"
                   stroke="#22c55e"
-                  strokeWidth={isMobile ? 1.5 : 2}
+                  strokeWidth={isMobile ? 1 : 2}
                   fill="url(#cvaultGradient)"
                 />
                 <Area
@@ -516,7 +518,7 @@ export default function ConsensusVsContrarian({
                   dataKey="dissent"
                   name="Contrarian TVL"
                   stroke="#ef4444"
-                  strokeWidth={isMobile ? 1.5 : 2}
+                  strokeWidth={isMobile ? 1 : 2}
                   fill="url(#dissentGradient)"
                 />
               </AreaChart>

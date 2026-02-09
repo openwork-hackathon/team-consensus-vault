@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Chart Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 10px;
+            font-family: Arial, sans-serif;
+        }
+        
+        .mobile-viewport {
+            border: 2px solid #ccc;
+            margin-bottom: 20px;
+            background: #f9f9f9;
+        }
+        
+        .viewport-header {
+            background: #333;
+            color: white;
+            padding: 10px;
+            font-weight: bold;
+        }
+        
+        .viewport-content {
+            padding: 10px;
+            min-height: 200px;
+            overflow-x: auto;
+        }
+        
+        .no-overflow {
+            outline: 2px solid green;
+        }
+        
+        .has-overflow {
+            outline: 2px solid red;
+            background: #ffe6e6;
+        }
+        
+        /* Simulate the component styles */
+        .chart-container {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e5e5e5;
+            padding: 12px;
+            space-y: 24px;
+        }
+        
+        .chart-section {
+            width: 100%;
+            overflow: hidden;
+            background: #f5f5f5;
+            border-radius: 8px;
+            padding: 4px;
+            height: 192px; /* mobile h-48 = 192px */
+        }
+        
+        .chart-svg {
+            width: 100%;
+            height: 100%;
+            min-width: 0;
+        }
+        
+        .info-text {
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+            padding: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>ConsensusVsContrarian Mobile Overflow Test</h1>
+    
+    <div class="mobile-viewport">
+        <div class="viewport-header">iPhone SE (375px)</div>
+        <div class="viewport-content" id="viewport-375">
+            <div class="chart-container">
+                <h3 style="margin: 0 0 16px 0; font-size: 16px;">Historical Chart</h3>
+                <div class="chart-section no-overflow">
+                    <svg class="chart-svg" viewBox="0 0 367 184" preserveAspectRatio="xMidYMid meet">
+                        <!-- Simulated responsive chart that should fit -->
+                        <rect width="367" height="184" fill="#f5f5f5"/>
+                        <text x="183.5" y="20" text-anchor="middle" font-size="8" fill="#666">Sentiment History</text>
+                        <text x="10" y="50" font-size="7" fill="#666">$0K</text>
+                        <text x="10" y="90" font-size="7" fill="#666">$100K</text>
+                        <text x="10" y="130" font-size="7" fill="#666">$200K</text>
+                        <text x="10" y="170" font-size="7" fill="#666">$300K</text>
+                        <!-- Sample data points -->
+                        <circle cx="50" cy="140" r="2" fill="#22c55e"/>
+                        <circle cx="80" cy="120" r="2" fill="#ef4444"/>
+                        <circle cx="110" cy="110" r="2" fill="#22c55e"/>
+                        <circle cx="140" cy="100" r="2" fill="#ef4444"/>
+                        <circle cx="170" cy="95" r="2" fill="#22c55e"/>
+                        <circle cx="200" cy="90" r="2" fill="#ef4444"/>
+                        <circle cx="230" cy="85" r="2" fill="#22c55e"/>
+                        <circle cx="260" cy="80" r="2" fill="#ef4444"/>
+                        <circle cx="290" cy="75" r="2" fill="#22c55e"/>
+                        <circle cx="320" cy="70" r="2" fill="#ef4444"/>
+                        <!-- X-axis labels -->
+                        <text x="50" y="180" text-anchor="middle" font-size="7" fill="#666">Jan</text>
+                        <text x="110" y="180" text-anchor="middle" font-size="7" fill="#666">Feb</text>
+                        <text x="170" y="180" text-anchor="middle" font-size="7" fill="#666">Mar</text>
+                        <text x="230" y="180" text-anchor="middle" font-size="7" fill="#666">Apr</text>
+                        <text x="290" y="180" text-anchor="middle" font-size="7" fill="#666">May</text>
+                        <text x="320" y="180" text-anchor="middle" font-size="7" fill="#666">Jun</text>
+                    </svg>
+                </div>
+                <div class="info-text">
+                    Hover over the chart to see detailed TVL and ratio information
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mobile-viewport">
+        <div class="viewport-header">iPhone 12 (390px)</div>
+        <div class="viewport-content" id="viewport-390">
+            <div class="chart-container">
+                <h3 style="margin: 0 0 16px 0; font-size: 16px;">Historical Chart</h3>
+                <div class="chart-section no-overflow">
+                    <svg class="chart-svg" viewBox="0 0 382 184" preserveAspectRatio="xMidYMid meet">
+                        <!-- Same chart but with slightly more width -->
+                        <rect width="382" height="184" fill="#f5f5f5"/>
+                        <text x="191" y="20" text-anchor="middle" font-size="8" fill="#666">Sentiment History</text>
+                        <text x="10" y="50" font-size="7" fill="#666">$0K</text>
+                        <text x="10" y="90" font-size="7" fill="#666">$100K</text>
+                        <text x="10" y="130" font-size="7" fill="#666">$200K</text>
+                        <text x="10" y="170" font-size="7" fill="#666">$300K</text>
+                        <!-- Sample data points with more spacing -->
+                        <circle cx="52" cy="140" r="2" fill="#22c55e"/>
+                        <circle cx="84" cy="120" r="2" fill="#ef4444"/>
+                        <circle cx="116" cy="110" r="2" fill="#22c55e"/>
+                        <circle cx="148" cy="100" r="2" fill="#ef4444"/>
+                        <circle cx="180" cy="95" r="2" fill="#22c55e"/>
+                        <circle cx="212" cy="90" r="2" fill="#ef4444"/>
+                        <circle cx="244" cy="85" r="2" fill="#22c55e"/>
+                        <circle cx="276" cy="80" r="2" fill="#ef4444"/>
+                        <circle cx="308" cy="75" r="2" fill="#22c55e"/>
+                        <circle cx="340" cy="70" r="2" fill="#ef4444"/>
+                        <!-- X-axis labels -->
+                        <text x="52" y="180" text-anchor="middle" font-size="7" fill="#666">Jan</text>
+                        <text x="116" y="180" text-anchor="middle" font-size="7" fill="#666">Feb</text>
+                        <text x="180" y="180" text-anchor="middle" font-size="7" fill="#666">Mar</text>
+                        <text x="244" y="180" text-anchor="middle" font-size="7" fill="#666">Apr</text>
+                        <text x="308" y="180" text-anchor="middle" font-size="7" fill="#666">May</text>
+                        <text x="340" y="180" text-anchor="middle" font-size="7" fill="#666">Jun</text>
+                    </svg>
+                </div>
+                <div class="info-text">
+                    Hover over the chart to see detailed TVL and ratio information
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mobile-viewport">
+        <div class="viewport-header">Small Mobile (320px)</div>
+        <div class="viewport-content" id="viewport-320">
+            <div class="chart-container">
+                <h3 style="margin: 0 0 16px 0; font-size: 14px;">Historical Chart</h3>
+                <div class="chart-section no-overflow">
+                    <svg class="chart-svg" viewBox="0 0 312 184" preserveAspectRatio="xMidYMid meet">
+                        <!-- Smaller chart for very small screens -->
+                        <rect width="312" height="184" fill="#f5f5f5"/>
+                        <text x="156" y="20" text-anchor="middle" font-size="7" fill="#666">Sentiment History</text>
+                        <text x="10" y="50" font-size="7" fill="#666">$0K</text>
+                        <text x="10" y="90" font-size="7" fill="#666">$100K</text>
+                        <text x="10" y="130" font-size="7" fill="#666">$200K</text>
+                        <text x="10" y="170" font-size="7" fill="#666">$300K</text>
+                        <!-- Sample data points with reduced spacing -->
+                        <circle cx="42" cy="140" r="1.5" fill="#22c55e"/>
+                        <circle cx="68" cy="120" r="1.5" fill="#ef4444"/>
+                        <circle cx="94" cy="110" r="1.5" fill="#22c55e"/>
+                        <circle cx="120" cy="100" r="1.5" fill="#ef4444"/>
+                        <circle cx="146" cy="95" r="1.5" fill="#22c55e"/>
+                        <circle cx="172" cy="90" r="1.5" fill="#ef4444"/>
+                        <circle cx="198" cy="85" r="1.5" fill="#22c55e"/>
+                        <circle cx="224" cy="80" r="1.5" fill="#ef4444"/>
+                        <circle cx="250" cy="75" r="1.5" fill="#22c55e"/>
+                        <circle cx="276" cy="70" r="1.5" fill="#ef4444"/>
+                        <!-- X-axis labels -->
+                        <text x="42" y="180" text-anchor="middle" font-size="6" fill="#666">Jan</text>
+                        <text x="94" y="180" text-anchor="middle" font-size="6" fill="#666">Feb</text>
+                        <text x="146" y="180" text-anchor="middle" font-size="6" fill="#666">Mar</text>
+                        <text x="198" y="180" text-anchor="middle" font-size="6" fill="#666">Apr</text>
+                        <text x="250" y="180" text-anchor="middle" font-size="6" fill="#666">May</text>
+                        <text x="276" y="180" text-anchor="middle" font-size="6" fill="#666">Jun</text>
+                    </svg>
+                </div>
+                <div class="info-text">
+                    Hover over the chart to see detailed TVL and ratio information
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Test function to check for horizontal overflow
+        function checkOverflow(element) {
+            const hasHorizontalScrollbar = element.scrollWidth > element.clientWidth;
+            const hasVerticalScrollbar = element.scrollHeight > element.clientHeight;
+            
+            if (hasHorizontalScrollbar) {
+                element.className = element.className.replace('no-overflow', 'has-overflow');
+                console.log('Overflow detected in:', element.id);
+                return true;
+            }
+            return false;
+        }
+        
+        // Check all viewport containers
+        const containers = document.querySelectorAll('.viewport-content');
+        containers.forEach(container => {
+            checkOverflow(container);
+        });
+        
+        console.log('Mobile overflow test completed');
+    </script>
+</body>
+</html>

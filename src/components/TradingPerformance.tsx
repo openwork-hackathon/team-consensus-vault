@@ -215,7 +215,7 @@ export default function TradingPerformance({ className = '' }: TradingPerformanc
             {/* Desktop Table Layout */}
             <div className="hidden sm:block -mx-2 px-2">
               <div className="overflow-x-auto scrollbar-thin">
-                <table className="w-full text-sm">
+                <table className="w-full text-sm min-w-[500px] lg:min-w-[640px]">
                 <colgroup>
                   <col className="w-[80px]" />
                   <col className="w-[70px]" />
