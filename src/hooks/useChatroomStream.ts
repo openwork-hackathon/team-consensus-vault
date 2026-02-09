@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { ChatMessage, ChatPhase, MessageSentiment, ChatRoomState } from '@/lib/chatroom/types';
+import { ChatMessage as ChatMessageType, ChatPhase, MessageSentiment, ChatRoomState } from '@/lib/chatroom/types';
 import {
   saveChatHistory,
   loadChatHistory,
@@ -23,7 +23,7 @@ interface TypingPersona {
 }
 
 interface ChatroomStreamState {
-  messages: ChatMessage[];
+  messages: ChatMessageType[];
   phase: ChatPhase;
   typingPersona: TypingPersona | null;
   consensusDirection: MessageSentiment | null;
@@ -55,7 +55,7 @@ interface ChatroomStreamActions {
  * Handles time gap detection, missed message summaries, and graceful reconnection.
  */
 export function useChatroomStream(): ChatroomStreamState & ChatroomStreamActions {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessageType[]>([]);
   const [phase, setPhase] = useState<ChatPhase>('DEBATE');
   const [typingPersona, setTypingPersona] = useState<TypingPersona | null>(null);
   const [consensusDirection, setConsensusDirection] = useState<MessageSentiment | null>(null);
@@ -81,7 +81,7 @@ export function useChatroomStream(): ChatroomStreamState & ChatroomStreamActions
   const lastSavedStateRef = useRef<ChatRoomState | null>(null);
   const storageCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const addMessage = useCallback((msg: ChatMessage) => {
+  const addMessage = useCallback((msg: ChatMessageType) => {
     // Deduplicate by message ID
     if (messageIdsRef.current.has(msg.id)) return;
     messageIdsRef.current.add(msg.id);
@@ -198,7 +198,7 @@ export function useChatroomStream(): ChatroomStreamState & ChatroomStreamActions
   // Fetch missed conversation summary
   const fetchMissedSummaryIfNeeded = async (
     lastVisitTimestamp: number,
-    currentMessages: ChatMessage[],
+    currentMessages: ChatMessageType[],
     currentState: ChatRoomState | null
   ) => {
     try {
@@ -307,7 +307,7 @@ export function useChatroomStream(): ChatroomStreamState & ChatroomStreamActions
       es.addEventListener('history', (event) => {
         try {
           const data = JSON.parse(event.data);
-          const historyMessages: ChatMessage[] = data.messages || [];
+          const historyMessages: ChatMessageType[] = data.messages || [];
           
           // Merge with localStorage messages (prefer server messages for duplicates)
           const storedData = loadChatHistory();
@@ -356,7 +356,7 @@ export function useChatroomStream(): ChatroomStreamState & ChatroomStreamActions
 
       es.addEventListener('message', (event) => {
         try {
-          const msg: ChatMessage = JSON.parse(event.data);
+          const msg: ChatMessageType = JSON.parse(event.data);
           addMessage(msg);
         } catch (e) {
           console.error('[chatroom] Failed to parse message:', e);
@@ -442,6 +442,35 @@ export function useChatroomStream(): ChatroomStreamState & ChatroomStreamActions
 
       // CVAULT-184: Error events are no longer sent to the client - errors are handled silently server-side
       // No error event listeners should be registered
+
+      // CVAULT-185: Listen for stance change events
+      es.addEventListener('stance_change', (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          console.log('[chatroom] Stance change detected:', {
+            persona: data.handle,
+            from: data.from,
+            to: data.to,
+            convictionScore: data.convictionScore,
+            timestamp: new Date().toISOString(),
+          });
+          
+          // Add a system message to show the stance change
+          const stanceChangeMessage: ChatMessageType = {
+            id: `stance_${Date.now()}_${data.personaId}`,
+            personaId: 'system',
+            handle: 'System',
+            avatar: '🔄',
+            content: `${data.handle} has shifted stance from ${data.from} to ${data.to} (conviction: ${data.convictionScore}/100)`,
+            timestamp: Date.now(),
+            phase,
+          };
+          
+          addMessage(stanceChangeMessage);
+        } catch (e) {
+          console.error('[chatroom] Failed to parse stance_change:', e);
+        }
+      });
 
       es.onerror = () => {
         setIsConnected(false);

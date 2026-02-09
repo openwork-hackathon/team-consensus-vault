@@ -110,6 +110,7 @@ export function calculatePersuasionImpact(
   let impact = 0;
   let type: PersuasionFactor['type'] = 'data_quality';
   let description = '';
+  let hasDataQuality = false;
 
   // Factor 1: Data quality - messages with specific numbers/data are more persuasive
   const hasSpecificData = /\d+%|\$[\d,]+|\d+\s*(k|m|b|million|billion)/i.test(message.content);
@@ -118,10 +119,12 @@ export function calculatePersuasionImpact(
   if (hasSpecificData && hasTimeframe) {
     impact += 4;
     type = 'data_quality';
+    hasDataQuality = true;
     description = 'Strong data-backed argument with specific metrics and timeframe';
   } else if (hasSpecificData) {
     impact += 2;
     type = 'data_quality';
+    hasDataQuality = true;
     description = 'Data-backed argument with specific numbers';
   }
 
@@ -139,7 +142,10 @@ export function calculatePersuasionImpact(
   // Factor 3: Contradiction detection - if message contradicts recipient's view strongly
   if (message.sentiment !== recipientState.currentStance) {
     impact += 2;
-    type = 'contradiction';
+    // Only set type to contradiction if not already data_quality (data quality is primary)
+    if (!hasDataQuality) {
+      type = 'contradiction';
+    }
     description += '; Direct challenge to current stance';
   }
 
@@ -149,7 +155,10 @@ export function calculatePersuasionImpact(
   ).length;
   if (recentAgreeing >= 3) {
     impact += 3;
-    type = 'agreement';
+    // Only set type to agreement if not already data_quality
+    if (!hasDataQuality) {
+      type = 'agreement';
+    }
     description += `; ${recentAgreeing} recent messages support this view`;
   } else if (recentAgreeing >= 1) {
     impact += 1;
@@ -163,7 +172,10 @@ export function calculatePersuasionImpact(
   );
   if (isNovel) {
     impact += 2;
-    type = 'novelty';
+    // Only set type to novelty if not already data_quality
+    if (!hasDataQuality) {
+      type = 'novelty';
+    }
     description += '; Novel perspective or data point';
   }
 
@@ -196,11 +208,10 @@ export function applyPersuasion(
   // Determine if stance should shift
   const shouldShiftStance = factor.impact >= threshold;
   
+  // Conviction always decreases when receiving opposing persuasion
+  // The amount depends on whether it triggers a stance shift
   if (shouldShiftStance) {
-    // Find the message to determine new stance
-    const lastFactor = newState.persuasionFactors[newState.persuasionFactors.length - 1];
-    
-    // Conviction decreases when persuaded against current stance
+    // Major conviction drop when persuaded strongly enough to shift stance
     const convictionChange = -factor.impact * 2;
     newState.convictionScore = Math.max(MIN_CONVICTION, 
       Math.min(MAX_CONVICTION, state.convictionScore + convictionChange)
@@ -213,8 +224,12 @@ export function applyPersuasion(
       newState.convictionScore = 40; // Reset to moderate on shift
     }
   } else {
-    // Small conviction boost for resisting persuasion (confirmation bias)
-    newState.convictionScore = Math.min(MAX_CONVICTION, state.convictionScore + 1);
+    // Moderate conviction decrease from opposing arguments that don't trigger shift
+    // This is more realistic than boosting conviction when hearing opposing views
+    const convictionChange = -Math.max(1, Math.floor(factor.impact / 2));
+    newState.convictionScore = Math.max(MIN_CONVICTION, 
+      Math.min(MAX_CONVICTION, state.convictionScore + convictionChange)
+    );
   }
   
   newState.conviction = scoreToLevel(newState.convictionScore);
