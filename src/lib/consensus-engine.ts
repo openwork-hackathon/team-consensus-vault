@@ -76,6 +76,7 @@ export enum ConsensusErrorType {
   API_ERROR = 'API_ERROR',
   PARSE_ERROR = 'PARSE_ERROR',
   NETWORK_ERROR = 'NETWORK_ERROR',
+  PROXY_CONNECTION_ERROR = 'PROXY_CONNECTION_ERROR',
   RATE_LIMIT = 'RATE_LIMIT',
   MISSING_API_KEY = 'MISSING_API_KEY',
   INVALID_RESPONSE = 'INVALID_RESPONSE',
@@ -255,10 +256,23 @@ function createUserFacingError(error: ConsensusError): UserFacingError {
         type: 'network',
         message: 'Network connection issue - unable to reach AI service',
         severity: 'warning',
-        recoveryGuidance: 'Temporary network issue detected. The system will automatically retry in 2-3 minutes. Check your internet connection if this persists. You can also click "Analyze Again" to retry immediately.',
+        recoveryGuidance: 'Temporary network issue detected. The AI models are temporarily unavailable due to proxy connection problems. This usually resolves within 2-5 minutes. Click "Analyze Again" to retry with a fresh connection.',
         retryable: true,
         modelId,
-        estimatedWaitTime: 120000,
+        estimatedWaitTime: 180000, // Increased from 120s to 180s for proxy issues
+        isProxyError: true,
+      };
+
+    case ConsensusErrorType.PROXY_CONNECTION_ERROR:
+      return {
+        type: 'proxy_connection',
+        message: 'AI proxy service connection failed',
+        severity: 'warning',
+        recoveryGuidance: 'The AI proxy service is temporarily unavailable. This is a network infrastructure issue that typically resolves within 2-5 minutes. Click "Analyze Again" to retry with a fresh connection.',
+        retryable: true,
+        modelId,
+        estimatedWaitTime: 300000, // 5 minutes for proxy issues
+        isProxyError: true,
       };
 
     case ConsensusErrorType.AUTHENTICATION_ERROR:

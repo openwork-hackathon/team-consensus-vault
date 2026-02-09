@@ -147,44 +147,93 @@ export default function Dashboard() {
     setToasts((prev) => [...prev, { id, message, type }]);
   }, []);
 
-  // Retry handler for individual failed models
+  // Retry handler for individual failed models with enhanced error handling
   const handleRetryModel = useCallback(async (modelId: string) => {
     setIsRetrying(true);
     try {
-      // Trigger a new analysis for the specific model
-      // In a real implementation, this would call an API endpoint to retry just this model
       addToast(`Retrying ${modelId}...`, 'info');
       
-      // Simulate retry delay (in real implementation, this would be an API call)
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Make a direct API call to retry the specific model
+      const response = await fetch('/api/consensus', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: `Retry analysis for ${modelId}`,
+          retryModelId: modelId,
+        }),
+      });
       
-      addToast(`${modelId} retry successful!`, 'success');
-      
-      // Trigger a refresh of the consensus data
-      // This would normally be done by calling the API
-      window.location.reload();
+      if (response.ok) {
+        addToast(`${modelId} retry successful!`, 'success');
+        // Small delay to let the UI update
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      } else {
+        const errorData = await response.json();
+        
+        if (response.status === 503) {
+          addToast(`AI models temporarily unavailable. Please try again in 2-5 minutes.`, 'error');
+        } else if (response.status === 429) {
+          addToast(`Too many requests. Please wait before retrying.`, 'error');
+        } else {
+          addToast(`Retry failed: ${errorData.error || 'Unknown error'}`, 'error');
+        }
+      }
     } catch (error) {
-      addToast(`Retry failed for ${modelId}`, 'error');
+      if (error instanceof Error && error.message.includes('fetch')) {
+        addToast('Network error - unable to connect to AI service. Please check your connection and try again.', 'error');
+      } else {
+        addToast(`Retry failed for ${modelId}`, 'error');
+      }
     } finally {
       setIsRetrying(false);
     }
   }, [addToast]);
 
-  // Retry handler for all failed models
+  // Retry handler for all failed models with enhanced error handling
   const handleRetryFailed = useCallback(async () => {
     setIsRetrying(true);
     try {
       addToast('Retrying all failed models...', 'info');
       
-      // Simulate retry delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Make a direct API call to retry all failed models
+      const response = await fetch('/api/consensus', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: 'Retry all failed models',
+          retryAll: true,
+        }),
+      });
       
-      addToast('Retry complete!', 'success');
-      
-      // Refresh the page to get new results
-      window.location.reload();
+      if (response.ok) {
+        addToast('Retry complete! Fresh analysis started.', 'success');
+        // Small delay to let the UI update
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      } else {
+        const errorData = await response.json();
+        
+        if (response.status === 503) {
+          addToast('AI proxy service is temporarily unavailable. Please try again in 2-5 minutes.', 'error');
+        } else if (response.status === 429) {
+          addToast('Too many requests. Please wait 60 seconds before retrying.', 'error');
+        } else {
+          addToast(`Retry failed: ${errorData.error || 'Unknown error'}`, 'error');
+        }
+      }
     } catch (error) {
-      addToast('Retry failed', 'error');
+      if (error instanceof Error && error.message.includes('fetch')) {
+        addToast('Network error - unable to connect to AI service. Please check your connection and try again.', 'error');
+      } else {
+        addToast('Retry failed. Please try again later.', 'error');
+      }
     } finally {
       setIsRetrying(false);
     }

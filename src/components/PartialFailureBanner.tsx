@@ -58,15 +58,31 @@ export default function PartialFailureBanner({
               </ul>
             </div>
 
-            {/* Recovery guidance */}
+            {/* Enhanced recovery guidance based on error type */}
             <div className="mt-3 flex items-start gap-2 text-xs">
               <span className="flex-shrink-0">💡</span>
-              <p>
-                {successCount >= 3 
-                  ? `You can still make informed decisions based on the ${successCount} successful analyses.`
-                  : 'Consider retrying to get more comprehensive insights.'
-                }
-              </p>
+              <div className="space-y-1">
+                {errorSummary.includes('proxy') || errorSummary.includes('network') || errorSummary.includes('connection') ? (
+                  <p>
+                    <strong>Proxy Connection Issue:</strong> The AI models are temporarily unavailable due to network infrastructure problems. This typically resolves within 2-5 minutes. Click "Retry Failed Models" to attempt a fresh connection.
+                  </p>
+                ) : successCount >= 3 ? (
+                  <p>
+                    <strong>Partial Analysis Available:</strong> You can still make informed decisions based on the {successCount} successful analyses.
+                  </p>
+                ) : (
+                  <p>
+                    <strong>Limited Analysis:</strong> Consider retrying to get more comprehensive insights from all models.
+                  </p>
+                )}
+                
+                {/* Show estimated wait time for proxy errors */}
+                {(errorSummary.includes('proxy') || errorSummary.includes('network') || errorSummary.includes('connection')) && (
+                  <p className="opacity-90">
+                    <strong>Estimated recovery time:</strong> 2-5 minutes
+                  </p>
+                )}
+              </div>
             </div>
 
             {/* Retry button */}

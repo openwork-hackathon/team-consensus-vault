@@ -11,6 +11,7 @@ import { createApiLogger } from '@/lib/api-logger';
 import type { ProgressUpdate } from '@/lib/types';
 import { proxyFetch, isProxyConfigured, ProxyError, isRetryableProxyError } from '@/lib/proxy-fetch';
 import { withAICaching, AI_CACHE_TTL } from '@/lib/ai-cache';
+import { ConsensusError } from '@/lib/consensus-engine';
 
 // Use mock data when API keys aren't available (development mode)
 const USE_MOCK = process.env.NODE_ENV === 'development' && !process.env.DEEPSEEK_API_KEY;
@@ -135,19 +136,76 @@ export async function GET(request: NextRequest) {
       stage: 'initialization',
     });
     
-    // Check if this is a retryable proxy error
-    const isRetryable = error instanceof ProxyError ? error.retryable : false;
-    const statusCode = error instanceof ProxyError ? error.statusCode || 503 : 500;
+    // Enhanced proxy connection error handling
+    if (error instanceof ProxyError) {
+      // Map specific proxy errors to appropriate HTTP status codes
+      let statusCode = 503; // Default to Service Unavailable for proxy errors
+      let userMessage = error.message;
+      
+      switch (error.type) {
+        case 'ECONNREFUSED':
+          statusCode = 503;
+          userMessage = 'AI proxy service is temporarily unavailable. Please try again in a few minutes.';
+          break;
+        case 'ETIMEDOUT':
+          statusCode = 503;
+          userMessage = 'AI proxy connection timed out. The service may be experiencing high load.';
+          break;
+        case 'ENOTFOUND':
+          statusCode = 503;
+          userMessage = 'AI proxy server not found. Please check configuration and try again later.';
+          break;
+        case 'PROXY_DOWN':
+          statusCode = 503;
+          userMessage = 'AI models are temporarily unavailable. Please try again in 2-5 minutes.';
+          break;
+        case 'RATE_LIMIT':
+          statusCode = 429;
+          userMessage = 'Too many requests. Please wait before trying again.';
+          break;
+        case 'NETWORK_ERROR':
+          statusCode = 503;
+          userMessage = 'Network error connecting to AI services. Please try again later.';
+          break;
+      }
+      
+      return Response.json(
+        {
+          error: userMessage,
+          retryable: error.retryable,
+          requestId: logger.getRequestId(),
+          type: error.type,
+          status: statusCode >= 500 ? 'service_unavailable' : 'client_error',
+          isProxyError: true,
+        },
+        { status: statusCode }
+      );
+    }
     
-    // Return structured error response for proxy/connection issues
+    // Handle missing API key errors (configuration issues)
+    if (error instanceof ConsensusError && error.type === 'MISSING_API_KEY') {
+      return Response.json(
+        {
+          error: 'API configuration error. Please contact support.',
+          retryable: false,
+          requestId: logger.getRequestId(),
+          type: 'CONFIGURATION_ERROR',
+          isProxyError: false,
+        },
+        { status: 500 }
+      );
+    }
+    
+    // Return structured error response for other errors
     return Response.json(
       {
         error: error instanceof Error ? error.message : 'Unknown error',
-        retryable: isRetryable,
+        retryable: isRetryableProxyError(error),
         requestId: logger.getRequestId(),
         type: error instanceof ProxyError ? error.type : 'UNKNOWN_ERROR',
+        isProxyError: error instanceof ProxyError,
       },
-      { status: statusCode }
+      { status: error instanceof ProxyError ? error.statusCode || 503 : 500 }
     );
   }
 }
@@ -521,8 +579,66 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Consensus API error:', error);
     
+    // Enhanced proxy connection error handling
+    if (error instanceof ProxyError) {
+      // Map specific proxy errors to appropriate HTTP status codes
+      let statusCode = 503; // Default to Service Unavailable for proxy errors
+      let userMessage = error.message;
+      
+      switch (error.type) {
+        case 'ECONNREFUSED':
+          statusCode = 503;
+          userMessage = 'AI proxy service is temporarily unavailable. Please try again in a few minutes.';
+          break;
+        case 'ETIMEDOUT':
+          statusCode = 503;
+          userMessage = 'AI proxy connection timed out. The service may be experiencing high load.';
+          break;
+        case 'ENOTFOUND':
+          statusCode = 503;
+          userMessage = 'AI proxy server not found. Please check configuration and try again later.';
+          break;
+        case 'PROXY_DOWN':
+          statusCode = 503;
+          userMessage = 'AI models are temporarily unavailable. Please try again in 2-5 minutes.';
+          break;
+        case 'RATE_LIMIT':
+          statusCode = 429;
+          userMessage = 'Too many requests. Please wait before trying again.';
+          break;
+        case 'NETWORK_ERROR':
+          statusCode = 503;
+          userMessage = 'Network error connecting to AI services. Please try again later.';
+          break;
+      }
+      
+      return Response.json(
+        { 
+          error: userMessage,
+          retryable: error.retryable,
+          errorType: error.type,
+          isProxyError: true,
+          status: statusCode >= 500 ? 'service_unavailable' : 'client_error',
+        },
+        { status: statusCode }
+      );
+    }
+    
+    // Handle missing API key errors (configuration issues)
+    if (error instanceof ConsensusError && error.type === 'MISSING_API_KEY') {
+      return Response.json(
+        {
+          error: 'API configuration error. Please contact support.',
+          retryable: false,
+          errorType: 'CONFIGURATION_ERROR',
+          isProxyError: false,
+        },
+        { status: 500 }
+      );
+    }
+    
     // Check if this is a retryable proxy error
-    const isRetryable = error instanceof ProxyError ? error.retryable : false;
+    const isRetryable = isRetryableProxyError(error);
     const statusCode = error instanceof ProxyError ? error.statusCode || 503 : 500;
     const errorType = error instanceof ProxyError ? error.type : 'UNKNOWN_ERROR';
     
@@ -531,6 +647,7 @@ export async function POST(request: NextRequest) {
         error: error instanceof Error ? error.message : 'Unknown error',
         retryable: isRetryable,
         errorType,
+        isProxyError: error instanceof ProxyError,
       },
       { status: statusCode }
     );

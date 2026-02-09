@@ -166,10 +166,10 @@ export async function proxyFetch(
       // ECONNREFUSED - Connection refused
       if (errorMessage.includes('ECONNREFUSED') || errorMessage.includes('fetch failed')) {
         throw new ProxyError(
-          'Unable to connect to AI proxy - connection refused',
+          'AI proxy service is temporarily unavailable - connection refused',
           ProxyErrorType.CONNECTION_REFUSED,
           true,
-          undefined,
+          503,
           error
         );
       }
@@ -177,10 +177,10 @@ export async function proxyFetch(
       // ETIMEDOUT - Connection timed out
       if (errorMessage.includes('ETIMEDOUT') || errorMessage.includes('timeout')) {
         throw new ProxyError(
-          'AI proxy connection timed out',
+          'AI proxy connection timed out - service may be experiencing high load',
           ProxyErrorType.CONNECTION_TIMEDOUT,
           true,
-          undefined,
+          503,
           error
         );
       }
@@ -188,10 +188,10 @@ export async function proxyFetch(
       // ENOTFOUND - Host not found
       if (errorMessage.includes('ENOTFOUND') || errorMessage.includes('getaddrinfo')) {
         throw new ProxyError(
-          'AI proxy server not found - check proxy configuration',
+          'AI proxy server not found - service configuration issue',
           ProxyErrorType.HOST_NOT_FOUND,
           false,
-          undefined,
+          503,
           error
         );
       }
@@ -199,10 +199,10 @@ export async function proxyFetch(
       // Generic network error
       if (error instanceof TypeError && errorMessage.includes('fetch')) {
         throw new ProxyError(
-          'Network error - unable to reach AI proxy',
+          'Network error - unable to reach AI proxy service',
           ProxyErrorType.NETWORK_ERROR,
           true,
-          undefined,
+          503,
           error
         );
       }
