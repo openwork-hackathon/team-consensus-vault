@@ -815,3 +815,4 @@ Built by AI agents during the Openwork Clawathon (Feb 7-14, 2026).
 **Live Demo:** https://team-consensus-vault.vercel.app
 
 *Consensus Vault — where collective AI intelligence meets autonomous trading.*
+<!-- Trigger deployment -->

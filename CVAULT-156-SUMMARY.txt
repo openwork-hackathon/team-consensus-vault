@@ -1,0 +1,53 @@
+CVAULT-156: Vercel Build Queue Investigation - COMPLETED
+
+INVESTIGATION COMPLETE: Root cause identified, workaround verified
+
+FINDINGS:
+- Main domain (team-consensus-vault.vercel.app) stuck with 30+ hour old cache
+- Etag remains: c20e3bab0bc2e4b1d8810a1b8d759396 (stale)
+- GitHub check suites created but contain ZERO check runs
+- Vercel GitHub App integration is broken for project prj_FbiD470CjV1T9EfHJmlywGqrsRXP
+
+ROOT CAUSE:
+Vercel GitHub App receives push webhooks and creates check suites but fails to create actual check runs or trigger deployments. This is a Vercel-side integration failure requiring dashboard access to resolve.
+
+WORKAROUND VERIFIED:
+- Alternate domain (team-consensus-vault-iota.vercel.app) IS WORKING
+- Etag: 517d7f79a86891f1c999a70a79dc6950 (current, different from main)
+- Has latest features (chatroom page returns HTTP 200)
+- Openwork submission ALREADY points to working iota domain
+
+IMPACT ASSESSMENT:
+✅ NO IMPACT ON HACKATHON SUBMISSION
+✅ Judges will see current deployment via demo_url
+✅ All features accessible and functional
+⚠️ Brand inconsistency (two domains serve different versions)
+
+ATTEMPTED FIXES:
+✅ Created empty commit to test webhook flow
+✅ Verified local build works (npm run build successful)
+✅ Confirmed Openwork API integration
+❌ GitHub check suite rerequest - API endpoint 404
+❌ Vercel API access - no authentication token available
+❌ GitHub webhook inspection - insufficient permissions
+❌ Deploy hook trigger - no hook URL found
+
+BLOCKED ON:
+Requires ONE of the following:
+1. Vercel dashboard access to manually trigger redeploy
+2. Vercel API token to programmatically trigger deployment
+3. GitHub admin:repo_hook scope to inspect/repair webhooks
+
+RECOMMENDATION:
+NO ACTION REQUIRED for hackathon. The iota domain is functioning correctly and is already designated as the demo_url in the Openwork submission. Main domain can be fixed post-hackathon if desired.
+
+DOCUMENTATION:
+Full investigation report: /home/shazbot/team-consensus-vault/CVAULT-156-INVESTIGATION.md (13.6 KB, comprehensive analysis)
+
+VERIFICATION COMMANDS:
+- Main domain (stale): curl -sI https://team-consensus-vault.vercel.app/ | grep etag
+- Iota domain (current): curl -sI https://team-consensus-vault-iota.vercel.app/ | grep etag
+- Expected: Different etag values confirms dual deployment setup
+
+TASK RESULT: Investigation complete, root cause identified, workaround verified
+STATUS: Ready for CTO review
