@@ -291,39 +291,41 @@ export default function SignalHistory({
                             <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-3">
                               Trade Outcome
                             </h4>
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                              <div className="bg-background/50 rounded-lg p-3">
-                                <div className="text-xs text-muted-foreground mb-1">Entry Price</div>
-                                <div className="text-sm font-semibold">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                              <div className="bg-background/50 rounded-lg p-3 min-w-0">
+                                <div className="text-xs text-muted-foreground mb-1 truncate">Entry Price</div>
+                                <div className="text-sm font-semibold truncate">
                                   {signal.entryPrice ? `$${signal.entryPrice.toLocaleString()}` : '-'}
                                 </div>
                               </div>
-                              <div className="bg-background/50 rounded-lg p-3">
-                                <div className="text-xs text-muted-foreground mb-1">Exit Price</div>
-                                <div className="text-sm font-semibold">
+                              <div className="bg-background/50 rounded-lg p-3 min-w-0">
+                                <div className="text-xs text-muted-foreground mb-1 truncate">Exit Price</div>
+                                <div className="text-sm font-semibold truncate">
                                   {signal.exitPrice ? `$${signal.exitPrice.toLocaleString()}` : '-'}
                                 </div>
                               </div>
-                              <div className="bg-background/50 rounded-lg p-3">
-                                <div className="text-xs text-muted-foreground mb-1">P&L</div>
-                                <div className={`text-sm font-bold ${
+                              <div className="bg-background/50 rounded-lg p-3 min-w-0">
+                                <div className="text-xs text-muted-foreground mb-1 truncate">P&L</div>
+                                <div className={`text-sm font-bold min-w-0 ${
                                   signal.pnl && signal.pnl >= 0 ? 'text-bullish' : 'text-bearish'
                                 }`}>
                                   {signal.pnl !== undefined ? (
-                                    <>
-                                      {signal.pnl >= 0 ? '+' : ''}${signal.pnl.toFixed(2)}
+                                    <div className="flex items-center gap-1 truncate">
+                                      <span className="truncate">
+                                        {signal.pnl >= 0 ? '+' : ''}${signal.pnl.toFixed(2)}
+                                      </span>
                                       {signal.pnlPercentage !== undefined && (
-                                        <span className="text-xs ml-1">
+                                        <span className="text-xs flex-shrink-0">
                                           ({signal.pnlPercentage >= 0 ? '+' : ''}{signal.pnlPercentage.toFixed(1)}%)
                                         </span>
                                       )}
-                                    </>
+                                    </div>
                                   ) : '-'}
                                 </div>
                               </div>
-                              <div className="bg-background/50 rounded-lg p-3">
-                                <div className="text-xs text-muted-foreground mb-1">Status</div>
-                                <div className={`text-sm font-semibold ${
+                              <div className="bg-background/50 rounded-lg p-3 min-w-0">
+                                <div className="text-xs text-muted-foreground mb-1 truncate">Status</div>
+                                <div className={`text-sm font-semibold truncate ${
                                   signal.tradeStatus === 'closed'
                                     ? signal.pnl && signal.pnl >= 0
                                       ? 'text-bullish'

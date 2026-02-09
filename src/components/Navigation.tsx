@@ -88,31 +88,19 @@ export default function Navigation({
           <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
             {showMarketInfo && (
               <>
-                {/* Condensed market info for small screens (sm breakpoint) - shows just price */}
-                <div className="text-right sm:hidden" role="complementary" aria-label="Market information">
-                  <div className="font-semibold text-bullish text-xs" aria-label="BTC/USD at 45,234 dollars">
-                    $45,234
+                {/* Compact market info for medium screens (640px-1024px) - single condensed element */}
+                <div className="text-right hidden sm:block lg:hidden" role="complementary" aria-label="Market information">
+                  <div className="font-semibold text-sm" aria-label="BTC price 45,234 dollars">
+                    BTC $45,234
                   </div>
                 </div>
-                {/* Medium screens - compact two-column layout */}
-                <div className="hidden sm:flex md:hidden items-center gap-3" role="complementary" aria-label="Market information">
-                  <div className="text-right">
-                    <div className="text-[10px] text-muted-foreground leading-tight">Asset</div>
-                    <div className="font-semibold text-xs" aria-label="BTC/USD pair">BTC/USD</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-[10px] text-muted-foreground leading-tight">Price</div>
-                    <div className="font-semibold text-bullish text-xs" aria-label="Current BTC price 45,234 dollars">
-                      $45,234
-                    </div>
-                  </div>
-                </div>
-                {/* Desktop - full layout (md and up) */}
-                <div className="text-right hidden md:block" role="complementary" aria-label="Market information">
+                
+                {/* Full market info for large screens (>= 1024px) */}
+                <div className="text-right hidden lg:block" role="complementary" aria-label="Market information">
                   <div className="text-xs text-muted-foreground">Asset</div>
                   <div className="font-semibold text-sm" aria-label="BTC/USD pair">BTC/USD</div>
                 </div>
-                <div className="text-right hidden md:block" role="complementary" aria-label="Current price">
+                <div className="text-right hidden lg:block" role="complementary" aria-label="Current price">
                   <div className="text-xs text-muted-foreground">Price</div>
                   <div className="font-semibold text-bullish text-sm" aria-label="Current BTC price 45,234 dollars">
                     $45,234

@@ -67,8 +67,44 @@ export interface LivePnLProps {
 
 /**
  * Format currency with dollar sign and 2 decimal places
+ * Uses compact notation for large numbers (100K+) to prevent mobile overflow
  */
 function formatCurrency(value: number): string {
+  const absValue = Math.abs(value);
+  
+  // Use compact notation for large numbers (100K+) to prevent overflow on mobile
+  if (absValue >= 1000000000) {
+    return `$${value.toLocaleString('en-US', { 
+      notation: 'compact', 
+      compactDisplay: 'short',
+      maximumFractionDigits: 2 
+    })}`;
+  }
+  
+  if (absValue >= 1000000) {
+    return `$${value.toLocaleString('en-US', { 
+      notation: 'compact', 
+      compactDisplay: 'short',
+      maximumFractionDigits: 2 
+    })}`;
+  }
+  
+  if (absValue >= 100000) {
+    return `$${value.toLocaleString('en-US', { 
+      notation: 'compact', 
+      compactDisplay: 'short',
+      maximumFractionDigits: 1 
+    })}`;
+  }
+  
+  // Standard formatting for smaller numbers
+  return `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+/**
+ * Format full currency value for tooltips (no abbreviation)
+ */
+function formatCurrencyFull(value: number): string {
   return `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
@@ -233,8 +269,8 @@ function PnLDisplay({ dollarPnL, percentChange }: { dollarPnL: number; percentCh
           </span>
         </motion.div>
         
-        {/* Dollar P&L - Large hero number */}
-        <div className={`text-5xl sm:text-6xl font-bold tracking-tight ${isProfitable ? 'text-bullish' : 'text-bearish'}`}>
+        {/* Dollar P&L - Large hero number with responsive sizing */}
+        <div className={`text-[clamp(1.75rem,6vw,3.75rem)] font-bold tracking-tight overflow-hidden text-ellipsis ${isProfitable ? 'text-bullish' : 'text-bearish'}`}>
           <AnimatedNumber value={dollarPnL} />
         </div>
         
