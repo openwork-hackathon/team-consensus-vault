@@ -76,12 +76,16 @@ function VoteIndicator({
         className="w-5 h-5 flex items-center justify-center"
         animate={{ rotate: 360 }}
         transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+        role="status"
+        aria-live="polite"
+        aria-label="Loading vote"
       >
         <svg 
           className="w-4 h-4 text-muted-foreground" 
           xmlns="http://www.w3.org/2000/svg" 
           fill="none" 
           viewBox="0 0 24 24"
+          aria-hidden="true"
         >
           <circle 
             className="opacity-25" 
@@ -109,7 +113,7 @@ function VoteIndicator({
 
   if (!vote) {
     return (
-      <span className="text-neutral text-sm font-medium" aria-label="No vote">
+      <span className="text-neutral text-sm font-medium" aria-label="No vote yet">
         —
       </span>
     );
@@ -135,6 +139,12 @@ function ModelVoteCard({
   model: ModelVote; 
   isHighlighted: boolean;
 }) {
+  const voteStatusText = model.isLoading
+    ? 'is voting'
+    : model.vote
+    ? `voted ${model.vote} with ${model.confidence}% confidence`
+    : 'has not voted';
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -147,6 +157,8 @@ function ModelVoteCard({
           : 'bg-secondary/50 hover:bg-secondary'
         }
       `}
+      role="article"
+      aria-label={`${model.modelName} ${voteStatusText}`}
     >
       {/* Model Icon */}
       <div
@@ -155,6 +167,7 @@ function ModelVoteCard({
           backgroundColor: `${model.color}20`,
           border: `1.5px solid ${model.color}60`
         }}
+        aria-hidden="true"
       >
         {model.icon}
       </div>
@@ -172,9 +185,9 @@ function ModelVoteCard({
       {/* Confidence % */}
       <span className="text-[10px] font-semibold tabular-nums">
         {model.isLoading ? (
-          <span className="text-muted-foreground">...</span>
+          <span className="text-muted-foreground" aria-label="Loading">...</span>
         ) : model.vote ? (
-          <span className={isHighlighted ? 'text-primary' : 'text-foreground'}>
+          <span className={isHighlighted ? 'text-primary' : 'text-foreground'} aria-label={`${model.confidence} percent confidence`}>
             {model.confidence}%
           </span>
         ) : (

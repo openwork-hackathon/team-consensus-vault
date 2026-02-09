@@ -29,7 +29,13 @@ export default function ToastContainer({
   };
 
   return (
-    <div className={`fixed z-50 flex flex-col gap-2 ${positionClasses[position]}`}>
+    <div 
+      className={`fixed z-50 flex flex-col gap-2 ${positionClasses[position]}`}
+      role="region"
+      aria-label="Notifications"
+      aria-live="polite"
+      aria-atomic="false"
+    >
       <AnimatePresence>
         {toasts.map((toast) => (
           <Toast

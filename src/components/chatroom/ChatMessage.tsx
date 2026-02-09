@@ -43,7 +43,7 @@ function SentimentBadge({ sentiment, confidence }: { sentiment: string; confiden
     >
       {label}
       {confidence !== undefined && (
-        <span className="opacity-70" aria-hidden="true">{confidence}%</span>
+        <span aria-label={`${confidence} percent`}>{confidence}%</span>
       )}
     </span>
   );

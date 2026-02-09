@@ -24,6 +24,12 @@ export default function AnalystCard({ analyst, index, onRetry }: AnalystCardProp
     neutral: '→',
   };
 
+  const getStatusText = () => {
+    if (analyst.isTyping) return 'is analyzing';
+    if (analyst.error) return 'has an error';
+    return `shows ${analyst.sentiment} sentiment with ${analyst.confidence}% confidence`;
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -32,7 +38,7 @@ export default function AnalystCard({ analyst, index, onRetry }: AnalystCardProp
       className={`relative rounded-lg border-2 p-3 sm:p-4 transition-all duration-300 ${sentimentColors[analyst.sentiment]}`}
       style={{ borderColor: analyst.borderColor }}
       role="article"
-      aria-label={`${analyst.name} analysis`}
+      aria-label={`${analyst.name} ${getStatusText()}`}
       aria-busy={analyst.isTyping}
     >
       {/* Header */}
@@ -41,13 +47,14 @@ export default function AnalystCard({ analyst, index, onRetry }: AnalystCardProp
           <div
             className="w-10 h-10 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-base sm:text-lg font-bold flex-shrink-0"
             style={{ backgroundColor: analyst.color, color: '#fff' }}
+            aria-hidden="true"
           >
             {analyst.avatar}
           </div>
           <div className="min-w-0 flex-1">
             <h3 className="font-semibold text-xs sm:text-sm truncate">{analyst.name}</h3>
             <div className="flex items-center gap-1 sm:gap-2 text-xs">
-              <span className="text-base sm:text-lg">{sentimentIcons[analyst.sentiment]}</span>
+              <span className="text-base sm:text-lg" aria-hidden="true">{sentimentIcons[analyst.sentiment]}</span>
               <span className="capitalize">{analyst.sentiment}</span>
             </div>
           </div>
@@ -55,7 +62,9 @@ export default function AnalystCard({ analyst, index, onRetry }: AnalystCardProp
 
         {/* Confidence */}
         <div className="text-right flex-shrink-0">
-          <div className="text-xl sm:text-2xl font-bold tabular-nums">{analyst.confidence}%</div>
+          <div className="text-xl sm:text-2xl font-bold tabular-nums" aria-label={`${analyst.confidence} percent confidence`}>
+            {analyst.confidence}%
+          </div>
           <div className="text-[10px] sm:text-xs text-muted-foreground">
             <span className="hidden sm:inline">confidence</span>
             <span className="sm:hidden">conf.</span>
@@ -64,7 +73,7 @@ export default function AnalystCard({ analyst, index, onRetry }: AnalystCardProp
       </div>
 
       {/* Reasoning */}
-      <div className="min-h-[60px] sm:min-h-[80px]">
+      <div className="min-h-[60px] sm:min-h-[80px]" role="status" aria-live="polite">
         {analyst.isTyping ? (
           analyst.progress ? (
             <LoadingProgress
@@ -81,15 +90,16 @@ export default function AnalystCard({ analyst, index, onRetry }: AnalystCardProp
               <motion.span
                 animate={{ opacity: [0.3, 1, 0.3] }}
                 transition={{ duration: 1.5, repeat: Infinity }}
+                aria-hidden="true"
               >
                 ●●●
               </motion.span>
             </div>
           )
         ) : analyst.error ? (
-          <div className="space-y-2">
+          <div className="space-y-2" role="alert" aria-live="assertive">
             <div className="flex items-start gap-2">
-              <span className={`text-lg ${analyst.userFacingError?.severity === 'critical' ? 'text-red-500' : 'text-yellow-500'}`}>
+              <span className={`text-lg ${analyst.userFacingError?.severity === 'critical' ? 'text-red-500' : 'text-yellow-500'}`} aria-hidden="true">
                 {analyst.userFacingError?.severity === 'critical' ? '🚨' : '⚠'}
               </span>
               <p className="text-xs sm:text-sm text-red-600 dark:text-red-400 font-medium flex-1">
@@ -98,12 +108,12 @@ export default function AnalystCard({ analyst, index, onRetry }: AnalystCardProp
             </div>
             {analyst.userFacingError?.recoveryGuidance && (
               <p className="text-xs text-muted-foreground pl-6">
-                💡 {analyst.userFacingError.recoveryGuidance}
+                <span aria-hidden="true">💡</span> <span>{analyst.userFacingError.recoveryGuidance}</span>
               </p>
             )}
             {analyst.userFacingError?.retryable && analyst.userFacingError?.estimatedWaitTime && (
               <p className="text-xs text-blue-600 dark:text-blue-400 pl-6">
-                ⏱️ Wait: {Math.round(analyst.userFacingError.estimatedWaitTime / 1000)}s
+                <span aria-hidden="true">⏱️</span> Wait: {Math.round(analyst.userFacingError.estimatedWaitTime / 1000)}s
               </p>
             )}
             {/* Retry button */}
@@ -136,6 +146,9 @@ export default function AnalystCard({ analyst, index, onRetry }: AnalystCardProp
           initial={{ width: '0%' }}
           animate={{ width: '100%' }}
           transition={{ duration: 2, repeat: Infinity }}
+          role="progressbar"
+          aria-label={`${analyst.name} is analyzing`}
+          aria-valuetext="In progress"
         />
       )}
     </motion.div>

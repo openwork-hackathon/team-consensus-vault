@@ -29,6 +29,12 @@ export default function TradeSignal({ recommendation, consensusLevel, threshold 
     HOLD: 'AI consensus recommends holding current position',
   };
 
+  const signalAriaLabels = {
+    BUY: 'Buy signal activated',
+    SELL: 'Sell signal activated',
+    HOLD: 'Hold signal activated',
+  };
+
   return (
     <AnimatePresence>
       {isActive && recommendation && (
@@ -38,12 +44,16 @@ export default function TradeSignal({ recommendation, consensusLevel, threshold 
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
           transition={{ duration: 0.4, ease: 'easeOut' }}
           className={`relative rounded-xl border-2 p-4 sm:p-6 bg-gradient-to-br ${signalColors[recommendation]} overflow-hidden`}
+          role="alert"
+          aria-live="assertive"
+          aria-atomic="true"
         >
           {/* Pulsing background effect */}
           <motion.div
             className="absolute inset-0 bg-white/10"
             animate={{ opacity: [0.1, 0.3, 0.1] }}
             transition={{ duration: 2, repeat: Infinity }}
+            aria-hidden="true"
           />
 
           <div className="relative z-10">
@@ -53,6 +63,7 @@ export default function TradeSignal({ recommendation, consensusLevel, threshold 
                   className="text-3xl sm:text-4xl md:text-5xl"
                   animate={{ scale: [1, 1.2, 1] }}
                   transition={{ duration: 1.5, repeat: Infinity }}
+                  aria-hidden="true"
                 >
                   {signalIcons[recommendation]}
                 </motion.span>
@@ -65,7 +76,9 @@ export default function TradeSignal({ recommendation, consensusLevel, threshold 
               </div>
 
               <div className="text-left sm:text-right">
-                <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tabular-nums">{consensusLevel}%</div>
+                <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tabular-nums" aria-label={`${consensusLevel} percent agreement`}>
+                  {consensusLevel}%
+                </div>
                 <div className="text-xs text-white/80">Agreement</div>
               </div>
             </div>
@@ -79,13 +92,14 @@ export default function TradeSignal({ recommendation, consensusLevel, threshold 
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               className="w-full bg-white/20 hover:bg-white/30 active:bg-white/40 backdrop-blur-sm text-white font-semibold py-3 px-6 rounded-lg transition-colors touch-manipulation min-h-[48px]"
+              aria-label={`Execute ${recommendation} trade`}
             >
               Execute Trade
             </motion.button>
           </div>
 
           {/* Corner accent */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl" />
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl" aria-hidden="true" />
         </motion.div>
       )}
     </AnimatePresence>
