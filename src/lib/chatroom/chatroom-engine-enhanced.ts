@@ -41,7 +41,7 @@ interface EnhancedGenerationResult {
   previousStance?: MessageSentiment;
 }
 
-interface EnhancedChatRoomState extends ChatRoomState {
+export interface EnhancedChatRoomState extends ChatRoomState {
   persuasionStore: PersuasionStore;
   lastMarketData?: MarketData;
   marketDataTimestamp?: number;
