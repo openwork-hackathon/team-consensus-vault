@@ -449,15 +449,15 @@ export default function ConsensusVsContrarian({
         
         {/* Chart Container with proper overflow handling for mobile */}
         <div className="w-full overflow-hidden">
-          <div className={`w-full bg-muted/20 rounded-lg p-2 overflow-hidden ${isMobile ? 'h-64' : 'h-72'}`}>
+          <div className="w-full bg-muted/20 rounded-lg p-2 overflow-hidden h-48 sm:h-64 lg:h-72">
             <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-              <AreaChart 
-                data={historicalData} 
-                margin={{ 
-                  top: 10, 
-                  right: isMobile ? 5 : 10, 
-                  left: 0, 
-                  bottom: 0 
+              <AreaChart
+                data={historicalData}
+                margin={{
+                  top: 5,
+                  right: 5,
+                  left: -20,
+                  bottom: 0
                 }}
                 barCategoryGap="10%"
               >
