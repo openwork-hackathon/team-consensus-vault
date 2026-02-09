@@ -25,9 +25,7 @@ export default function Navigation({
   const navLinks = [
     { href: '/', label: 'Dashboard', shortLabel: '📊' },
     { href: '/predict', label: 'Predict', shortLabel: '🎯' },
-    { href: '/chatroom', label: 'Chatroom', shortLabel: '🤖' },
-    { href: '/human-chat', label: 'Human Chat', shortLabel: '💬' },
-    { href: '/arena', label: 'Arena', shortLabel: '🎭' },
+    { href: '/arena', label: 'Debate Arena', shortLabel: '🎭' },
     { href: '/rounds', label: 'Rounds', shortLabel: '🔄' },
   ];
 

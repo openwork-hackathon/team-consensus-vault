@@ -353,7 +353,7 @@ export default function ArenaPage() {
               <ul className="text-xs text-muted-foreground space-y-1">
                 <li>• {chatroomData.messages.length} agent messages</li>
                 <li>• {humanMessages.length} human messages</li>
-                <li>• {personaCount} AI participants</li>
+                <li>• Multiple AI participants</li>
               </ul>
             </div>
           </div>

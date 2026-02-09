@@ -354,7 +354,7 @@ export default function DualChatroom() {
         <div className="px-4 py-2 border-t border-border bg-card/50">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <div>
-              {PERSONAS.length} AI personas across {Object.keys(modelDistribution).length} models
+              AI personas across {Object.keys(modelDistribution).length} models
             </div>
             <div className="flex gap-2">
               {Object.entries(modelDistribution).map(([modelId, count]) => (
