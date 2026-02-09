@@ -100,6 +100,7 @@ let roundStartTime = Date.now();
 export async function GET(request: NextRequest) {
   const encoder = new TextEncoder();
   const lockId = `pm_sse_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  const connectionStartTime = Date.now();
 
   const stream = new ReadableStream({
     async start(controller) {
@@ -121,11 +122,15 @@ export async function GET(request: NextRequest) {
         }
       };
 
-      // Send connection confirmation
-      send('connected', { 
+      // Track connection establishment time
+      const connectionEstablishmentTime = Date.now() - connectionStartTime;
+
+      // Send connection confirmation with timing metrics
+      send('connected', {
         timestamp: Date.now(),
         demoMode: true,
-        config: DEMO_CONFIG 
+        config: DEMO_CONFIG,
+        connectionTimeMs: connectionEstablishmentTime
       });
 
       // Send initial round state

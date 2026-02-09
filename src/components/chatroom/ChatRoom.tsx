@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { ChatMessage as ChatMessageType, ChatPhase } from '@/lib/chatroom/types';
 import ChatMessage from './ChatMessage';
@@ -25,6 +25,8 @@ export default function ChatRoom({
   const scrollRef = useRef<HTMLDivElement>(null);
   const isAutoScrollRef = useRef(true);
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const [focusedMessageIndex, setFocusedMessageIndex] = useState<number>(-1);
+  const messageRefs = useRef<(HTMLElement | null)[]>([]);
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {

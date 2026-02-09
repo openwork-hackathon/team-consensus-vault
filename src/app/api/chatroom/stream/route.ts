@@ -30,6 +30,7 @@ export const maxDuration = 300;
 export async function GET(request: NextRequest) {
   const encoder = new TextEncoder();
   const lockId = `sse_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  const connectionStartTime = Date.now();
 
   const stream = new ReadableStream({
     async start(controller) {
@@ -54,8 +55,14 @@ export async function GET(request: NextRequest) {
       // Initialize state if first connection ever
       await initializeIfEmpty();
 
-      // Send connection confirmation
-      send('connected', { timestamp: Date.now() });
+      // Track connection establishment time
+      const connectionEstablishmentTime = Date.now() - connectionStartTime;
+
+      // Send connection confirmation with timing metrics
+      send('connected', {
+        timestamp: Date.now(),
+        connectionTimeMs: connectionEstablishmentTime
+      });
 
       // Load and send history
       const history = await getMessages();

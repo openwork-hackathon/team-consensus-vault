@@ -50,16 +50,20 @@ export default function RoundPhaseIndicator({ phase, className = '' }: RoundPhas
   const config = phaseConfig[phase];
 
   return (
-    <div className={`${className}`}>
+    <div className={`${className}`} role="region" aria-label="Round phase indicator" aria-live="polite">
       <div
         className={`flex items-center gap-3 px-6 py-4 rounded-lg border-2 ${config.color} transition-all`}
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        aria-label={`Current phase: ${config.label}. ${config.description}`}
       >
         <div className="text-3xl" aria-hidden="true">
           {config.icon}
         </div>
         <div className="flex-1">
-          <div className="font-bold text-lg">{config.label}</div>
-          <div className="text-sm opacity-80">{config.description}</div>
+          <div className="font-bold text-lg" id="round-phase-label">{config.label}</div>
+          <div className="text-sm opacity-80" id="round-phase-description">{config.description}</div>
         </div>
       </div>
     </div>

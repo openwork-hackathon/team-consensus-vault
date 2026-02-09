@@ -188,40 +188,51 @@ export default function SignalHistory({
               >
                 {/* Signal Header (Always Visible) */}
                 <button
+                  ref={el => { buttonRefs.current[index] = el; }}
                   onClick={() => toggleExpand(signal.id)}
-                  className="w-full p-4 text-left hover:bg-background/20 transition-colors touch-manipulation"
+                  onKeyDown={(e) => handleKeyDown(e, index, signal.id)}
+                  className="w-full p-4 text-left hover:bg-background/20 transition-colors touch-manipulation focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
+                  aria-expanded={isExpanded}
+                  aria-controls={`signal-details-${signal.id}`}
+                  tabIndex={0}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       {/* Signal Type and Confidence */}
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xl">{colors.icon}</span>
+                        <span className="text-xl" aria-hidden="true">{colors.icon}</span>
                         <span className={`font-bold text-lg ${colors.text}`}>
                           {signal.signalType}
                         </span>
-                        <span className={`text-sm font-semibold ${colors.text}`}>
+                        <span className={`text-sm font-semibold ${colors.text}`} aria-label={`${signal.confidence} percent confidence`}>
                           {signal.confidence}%
                         </span>
                         {/* Trade Outcome & P&L */}
                         {signal.tradeExecuted && (
                           <div className="ml-auto flex items-center gap-2">
                             {signal.pnl !== undefined && (
-                              <span className={`text-sm font-bold ${
-                                signal.pnl >= 0 ? 'text-bullish' : 'text-bearish'
-                              }`}>
+                              <span 
+                                className={`text-sm font-bold ${
+                                  signal.pnl >= 0 ? 'text-bullish' : 'text-bearish'
+                                }`}
+                                aria-label={`Profit and loss: ${signal.pnl >= 0 ? 'plus' : 'minus'} ${Math.abs(signal.pnl).toFixed(2)} dollars`}
+                              >
                                 {signal.pnl >= 0 ? '+' : ''}${Math.abs(signal.pnl).toFixed(2)}
                               </span>
                             )}
                             {signal.tradeStatus && (
-                              <span className={`text-xs px-2 py-0.5 rounded ${
-                                signal.tradeStatus === 'closed'
-                                  ? signal.pnl && signal.pnl >= 0
-                                    ? 'bg-bullish/20 text-bullish'
-                                    : 'bg-bearish/20 text-bearish'
-                                  : signal.tradeStatus === 'open'
-                                  ? 'bg-primary/20 text-primary'
-                                  : 'bg-muted text-muted-foreground'
-                              }`}>
+                              <span 
+                                className={`text-xs px-2 py-0.5 rounded ${
+                                  signal.tradeStatus === 'closed'
+                                    ? signal.pnl && signal.pnl >= 0
+                                      ? 'bg-bullish/20 text-bullish'
+                                      : 'bg-bearish/20 text-bearish'
+                                    : signal.tradeStatus === 'open'
+                                    ? 'bg-primary/20 text-primary'
+                                    : 'bg-muted text-muted-foreground'
+                                }`}
+                                aria-label={`Trade status: ${signal.tradeStatus}`}
+                              >
                                 {signal.tradeStatus}
                               </span>
                             )}
@@ -245,6 +256,7 @@ export default function SignalHistory({
                       animate={{ rotate: isExpanded ? 180 : 0 }}
                       transition={{ duration: 0.2 }}
                       className="text-muted-foreground text-lg flex-shrink-0"
+                      aria-hidden="true"
                     >
                       ▼
                     </motion.div>
@@ -255,6 +267,7 @@ export default function SignalHistory({
                 <AnimatePresence>
                   {isExpanded && (
                     <motion.div
+                      id={`signal-details-${signal.id}`}
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
@@ -337,7 +350,11 @@ export default function SignalHistory({
 
       {/* Footer Info */}
       {displaySignals.length > 0 && (
-        <div className="mt-4 pt-4 border-t border-border/50">
+        <div 
+          className="mt-4 pt-4 border-t border-border/50"
+          role="status"
+          aria-live="polite"
+        >
           <p className="text-xs text-muted-foreground text-center">
             Showing {displaySignals.length} of {signals.length} total signals
           </p>
