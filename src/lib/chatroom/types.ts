@@ -50,6 +50,10 @@ export interface ChatRoomState {
   consensusDirection: MessageSentiment | null;
   consensusStrength: number;
   recentSpeakers: string[];
+  // CVAULT-184: Track temporarily unavailable personas (failed API calls)
+  unavailablePersonas?: string[];
+  // CVAULT-184: Retry counter to prevent infinite loops
+  retryCount?: number;
 }
 
 export interface Persona {

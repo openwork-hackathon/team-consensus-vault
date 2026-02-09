@@ -55,9 +55,8 @@ export async function generateNextMessage(
     promptData = JSON.parse(buildDebatePrompt(persona, history));
   }
 
-  // 4. Call persona's model with error handling
+  // 4. Call persona's model with error handling - silently skip on failure
   let rawResponse: string;
-  let messageError: { type: string; message: string; recoveryGuidance: string } | undefined;
   
   try {
     rawResponse = await callModelRaw(
@@ -67,34 +66,91 @@ export async function generateNextMessage(
       250
     );
   } catch (error) {
-    // Log detailed error information for debugging
+    // Log detailed error information for debugging (INTERNAL ONLY - not exposed to frontend)
     if (error instanceof ChatroomError) {
-      const userFacingError = createUserFacingError(error);
-      console.error(`[chatroom-engine] Model call failed for ${persona.handle}:`, {
+      console.error(`[chatroom-engine] Model call failed for ${persona.handle} - SKIPPING TO NEXT SPEAKER:`, {
         modelId: error.personaId,
         errorType: error.type,
-        retryable: userFacingError.retryable,
         message: error.message,
+        timestamp: new Date().toISOString(),
       });
-
-      // Store structured error for UI display
-      messageError = {
-        type: error.type,
-        message: userFacingError.message,
-        recoveryGuidance: userFacingError.recoveryGuidance,
-      };
-
-      // Generate fallback message indicating technical difficulty
-      rawResponse = `[Technical difficulties - ${userFacingError.message}]`;
     } else {
-      console.error(`[chatroom-engine] Unexpected error calling ${persona.handle}:`, error);
-      messageError = {
-        type: 'unknown',
-        message: 'AI service temporarily unavailable',
-        recoveryGuidance: 'This AI is experiencing issues. The conversation will continue with other participants.',
-      };
-      rawResponse = '[Technical difficulties - unable to generate response]';
+      console.error(`[chatroom-engine] Unexpected error calling ${persona.handle} - SKIPPING TO NEXT SPEAKER:`, {
+        error: error instanceof Error ? error.message : String(error),
+        timestamp: new Date().toISOString(),
+      });
     }
+
+    // CRITICAL: Silently skip this failed persona and retry with a different one
+    // We do this by recursively calling generateNextMessage with updated state
+    // that marks the current persona as temporarily unavailable
+    const unavailablePersonas = new Set(currentState.unavailablePersonas || []);
+    unavailablePersonas.add(speakerId);
+    
+    // If ALL personas have failed, reset and extend cooldown
+    const allPersonaIds = PERSONAS.map(p => p.id);
+    if (unavailablePersonas.size >= allPersonaIds.length) {
+      console.error('[chatroom-engine] ALL PERSONAS FAILED - entering extended cooldown');
+      
+      // Reset unavailable personas after extended cooldown
+      const extendedCooldownMinutes = 5; // 5 minute extended cooldown
+      currentState.phase = 'COOLDOWN';
+      currentState.cooldownEndsAt = Date.now() + extendedCooldownMinutes * 60 * 1000;
+      currentState.unavailablePersonas = [];
+      
+      phaseChange = { 
+        from: currentState.phase, 
+        to: 'COOLDOWN' 
+      };
+      
+      // Return empty message with state update to trigger cooldown
+      return {
+        message: {
+          id: `sys_${Date.now()}`,
+          personaId: 'system',
+          handle: 'System',
+          avatar: '⚙️',
+          content: '',
+          timestamp: Date.now(),
+          phase: currentState.phase,
+        },
+        state: currentState,
+        phaseChange,
+      };
+    }
+    
+    // Mark current speaker as unavailable and retry with next speaker
+    currentState.unavailablePersonas = Array.from(unavailablePersonas);
+    
+    // Recursively try next speaker (with depth protection)
+    const retryCount = currentState.retryCount || 0;
+    if (retryCount >= PERSONAS.length) {
+      // Too many retries, give up and return to cooldown
+      console.error('[chatroom-engine] Max retries exceeded - entering cooldown');
+      currentState.phase = 'COOLDOWN';
+      currentState.cooldownEndsAt = Date.now() + 2 * 60 * 1000; // 2 min cooldown
+      currentState.unavailablePersonas = [];
+      currentState.retryCount = 0;
+      
+      return {
+        message: {
+          id: `sys_${Date.now()}`,
+          personaId: 'system',
+          handle: 'System',
+          avatar: '⚙️',
+          content: '',
+          timestamp: Date.now(),
+          phase: currentState.phase,
+        },
+        state: currentState,
+        phaseChange: { from: phaseChange?.from || 'DEBATE', to: 'COOLDOWN' },
+      };
+    }
+    
+    currentState.retryCount = retryCount + 1;
+    
+    // Retry generation with next available speaker
+    return generateNextMessage(history, currentState);
   }
 
   // 5. Strip model reasoning tags (e.g. DeepSeek <think>...</think>) and parse sentiment
@@ -204,15 +260,27 @@ export async function generateNextMessage(
 
 /**
  * Use DeepSeek as moderator to pick the next speaker.
+ * CVAULT-184: Enhanced to avoid unavailable personas.
  */
 async function pickNextSpeaker(
   history: ChatMessage[],
   state: ChatRoomState
 ): Promise<string> {
-  const personaIds = PERSONAS.map(p => p.id);
+  const unavailableSet = new Set(state.unavailablePersonas || []);
+  const personaIds = PERSONAS.map(p => p.id).filter(id => !unavailableSet.has(id));
+  
+  // If all personas are unavailable, clear the list and try again
+  if (personaIds.length === 0) {
+    console.warn('[chatroom-engine] All personas unavailable, resetting unavailable list');
+    state.unavailablePersonas = [];
+    return pickNextSpeaker(history, state);
+  }
+  
   const personaHandles: Record<string, string> = {};
   for (const p of PERSONAS) {
-    personaHandles[p.id] = p.handle;
+    if (!unavailableSet.has(p.id)) {
+      personaHandles[p.id] = p.handle;
+    }
   }
 
   const promptData = JSON.parse(
@@ -247,10 +315,13 @@ async function pickNextSpeaker(
     }
   }
 
-  // Fallback: pick randomly, avoiding recent speakers
+  // Fallback: pick randomly, avoiding recent speakers AND unavailable personas
   const candidates = personaIds.filter(
     id => id !== state.lastSpeakerId && !state.recentSpeakers.slice(0, 2).includes(id)
   );
   const pool = candidates.length > 0 ? candidates : personaIds;
-  return pool[Math.floor(Math.random() * pool.length)];
+  const selected = pool[Math.floor(Math.random() * pool.length)];
+  
+  console.log(`[chatroom-engine] Fallback speaker selection: ${selected} (pool size: ${pool.length})`);
+  return selected;
 }

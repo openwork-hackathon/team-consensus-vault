@@ -73,7 +73,6 @@ export default function SwapWidget({ isOpen, onClose }: SwapWidgetProps) {
 
   // LI.FI widget configuration
   const widgetConfig = {
-    integrator: 'consensus-vault',
     toChain: BASE_CHAIN_ID,
     toToken: OPENWORK_TOKEN_ADDRESS,
     disabledUI: ['toToken'],
@@ -232,7 +231,7 @@ export default function SwapWidget({ isOpen, onClose }: SwapWidgetProps) {
 
         {/* LI.FI Widget */}
         <div className="p-4">
-          <LiFiWidget {...widgetConfig} />
+          <LiFiWidget integrator="consensus-vault" config={widgetConfig} />
         </div>
       </div>
     </div>

@@ -137,23 +137,42 @@ export async function GET(request: NextRequest) {
                   }
 
                   // Generate message with error handling
+                  // CVAULT-184: generateNextMessage now handles errors internally by skipping failed personas
+                  // No error events are sent to frontend - all failures are silent
                   const currentHistory = await getMessages();
                   let result;
 
                   try {
                     result = await generateNextMessage(currentHistory, freshState);
+                    
+                    // Check if this is a system message (empty content) indicating cooldown
+                    if (result.message.personaId === 'system' && !result.message.content) {
+                      // Just update state, don't append empty message
+                      await setState(result.state);
+                      
+                      // Broadcast phase change if any
+                      if (result.phaseChange) {
+                        send('phase_change', {
+                          from: result.phaseChange.from,
+                          to: result.phaseChange.to,
+                          cooldownEndsAt: result.state.cooldownEndsAt,
+                        });
+                      }
+                      
+                      lastKnownIndex = await getMessageIndex();
+                      return; // Skip normal message flow
+                    }
+                    
                   } catch (genError) {
-                    // Log generation error but continue
-                    console.error('[chatroom-stream] Message generation failed:', genError);
-
-                    // Send error event to clients
-                    send('generation_error', {
-                      timestamp: Date.now(),
-                      error: genError instanceof Error ? genError.message : 'Unknown generation error',
+                    // CVAULT-184: This should rarely happen since generateNextMessage handles errors internally
+                    // But as a last resort, log and continue silently
+                    console.error('[chatroom-stream] Unexpected generation error (should be rare):', {
+                      error: genError instanceof Error ? genError.message : String(genError),
+                      timestamp: new Date().toISOString(),
                     });
-
-                    // Continue to next iteration without storing message
-                    throw genError; // Re-throw to trigger finally block
+                    
+                    // Release lock and continue to next iteration WITHOUT sending error to frontend
+                    continue;
                   }
 
                   // Store message and state
@@ -196,13 +215,10 @@ export async function GET(request: NextRequest) {
                   lastKnownIndex = await getMessageIndex();
                 }
               } catch (error) {
-                console.error('[chatroom-stream] Generation error:', error);
-
-                // Send detailed error to clients for debugging
-                send('system_error', {
-                  timestamp: Date.now(),
-                  message: 'Message generation failed - will retry on next cycle',
-                  severity: 'warning',
+                // CVAULT-184: Log errors internally but NEVER send to frontend
+                console.error('[chatroom-stream] Loop error (logged only, not sent to client):', {
+                  error: error instanceof Error ? error.message : String(error),
+                  timestamp: new Date().toISOString(),
                 });
               } finally {
                 await releaseLock(lockId);

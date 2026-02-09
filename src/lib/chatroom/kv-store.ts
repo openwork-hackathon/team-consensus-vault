@@ -1,20 +1,24 @@
-import { ChatMessage, ChatRoomState, ChatPhase } from './types';
+import { ChatMessage, ChatRoomState, ChatPhase, PersonaPersuasionState } from './types';
 
 const KEYS = {
   messages: 'chatroom:messages',
   state: 'chatroom:state',
   lock: 'chatroom:lock',
   msgIndex: 'chatroom:msg_index',
+  persuasion: 'chatroom:persuasion', // CVAULT-185: Persuasion state storage
+  marketData: 'chatroom:market_data', // CVAULT-185: Market data cache
 };
 
 const MAX_MESSAGES = 200;
 const LOCK_TTL_SECONDS = 120;
+const PERSUASION_TTL_SECONDS = 86400; // 24 hours
 
 // In-memory fallback
 let memMessages: ChatMessage[] = [];
 let memState: ChatRoomState | null = null;
 let memLock: { holder: string; expiresAt: number } | null = null;
 let memMsgIndex = 0;
+let memPersuasionStates: Record<string, PersonaPersuasionState> = {};
 
 function isKVAvailable(): boolean {
   return !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
