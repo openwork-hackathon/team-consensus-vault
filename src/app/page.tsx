@@ -21,6 +21,9 @@ import { useVault } from '@/contexts/VaultContext';
 import { TokenBalance } from '@/components/TokenBalance';
 import { useOpenworkBalance } from '@/hooks/useOpenworkBalance';
 import { useTradingHistory } from '@/hooks/useTradingHistory';
+import { useChatroomStream } from '@/hooks/useChatroomStream';
+import ChatRoom from '@/components/chatroom/ChatRoom';
+import Link from 'next/link';
 
 // Lazy load heavy components to reduce initial bundle size
 const ConsensusVsContrarian = lazy(() =>
@@ -32,6 +35,7 @@ const TradingPerformance = lazy(() =>
 
 export default function Dashboard() {
   const consensusData = useConsensusStream();
+  const chatroomData = useChatroomStream();
   const { address, isConnected } = useAccount();
   const { addDeposit, removeDeposit, totalValueLocked, getDepositsByAddress } = useVault();
   const { formatted: openworkBalance, isLoading: balanceLoading } = useOpenworkBalance(address);
@@ -306,6 +310,47 @@ export default function Dashboard() {
       />
 
       <div id="main-content" className="container mx-auto px-4 py-6 lg:py-8 max-w-7xl">
+        {/* Live AI Debate — Hero Section */}
+        <section className="mb-6 bg-card rounded-xl border border-border overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card/80">
+            <div className="flex items-center gap-3">
+              <div className={`w-2 h-2 rounded-full ${chatroomData.isConnected ? 'bg-green-500 animate-pulse' : 'bg-yellow-500'}`} />
+              <h2 className="font-bold text-lg">Live AI Debate</h2>
+              <span className={`text-xs px-2 py-0.5 rounded font-medium ${
+                chatroomData.phase === 'DEBATE' ? 'bg-bullish/20 text-bullish' :
+                chatroomData.phase === 'CONSENSUS' ? 'bg-blue-500/20 text-blue-500' :
+                'bg-purple-500/20 text-purple-500'
+              }`}>
+                {chatroomData.phase}
+              </span>
+              {chatroomData.consensusDirection && (
+                <span className={`text-xs font-medium ${
+                  chatroomData.consensusDirection === 'bullish' ? 'text-bullish' :
+                  chatroomData.consensusDirection === 'bearish' ? 'text-bearish' : 'text-muted-foreground'
+                }`}>
+                  {chatroomData.consensusDirection === 'bullish' ? '📈' : chatroomData.consensusDirection === 'bearish' ? '📉' : '⚖️'}{' '}
+                  {Math.round(chatroomData.consensusStrength * 100)}% {chatroomData.consensusDirection}
+                </span>
+              )}
+            </div>
+            <Link
+              href="/arena"
+              className="text-sm font-medium text-primary hover:text-primary/80 transition-colors px-3 py-1.5 rounded-lg hover:bg-primary/10"
+            >
+              Join the Arena →
+            </Link>
+          </div>
+          <div className="h-[400px]">
+            <ChatRoom
+              messages={chatroomData.messages}
+              phase={chatroomData.phase}
+              typingPersona={chatroomData.typingPersona}
+              cooldownEndsAt={chatroomData.cooldownEndsAt}
+              isConnected={chatroomData.isConnected}
+            />
+          </div>
+        </section>
+
         {/* Vault Stats + Deposit Button */}
         <section
           className="mb-6 bg-card rounded-xl p-6 border border-border"
