@@ -27,6 +27,7 @@ import {
   getCurrentPool,
   resetPool 
 } from '@/lib/prediction-market/state';
+import { checkAndCleanupIfNeeded } from '@/lib/stale-trade-handler';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5 minute timeout for demo rounds
@@ -126,12 +127,25 @@ export async function GET(request: NextRequest) {
       // Track connection establishment time
       const connectionEstablishmentTime = Date.now() - connectionStartTime;
 
+      // CVAULT-181: Check for and clean up stale trades when a new client connects
+      // This handles the case where nobody visited for hours and trades became stale
+      let staleCleanupTriggered = false;
+      try {
+        staleCleanupTriggered = await checkAndCleanupIfNeeded();
+        if (staleCleanupTriggered) {
+          console.log('[prediction-market-stream] Stale trade cleanup triggered on client connect');
+        }
+      } catch (cleanupErr) {
+        console.error('[prediction-market-stream] Stale cleanup check error:', cleanupErr);
+      }
+
       // Send connection confirmation with timing metrics
       send('connected', {
         timestamp: Date.now(),
         demoMode: true,
         config: DEMO_CONFIG,
-        connectionTimeMs: connectionEstablishmentTime
+        connectionTimeMs: connectionEstablishmentTime,
+        staleCleanupTriggered,
       });
 
       // Send initial round state

@@ -5,6 +5,7 @@ import { useAccount, useConnectorClient } from 'wagmi';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
 import { useBalance, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { parseEther, formatEther } from 'viem';
+import { OPENWORK_TOKEN } from '@/lib/wagmi';
 
 // OPENWORK Token ABI (ERC20)
 const OPENWORK_ABI = [
@@ -38,7 +39,6 @@ const OPENWORK_ABI = [
   },
 ] as const;
 
-const OPENWORK_TOKEN_ADDRESS = '0x299c30DD5974BF4D5bFE42C340CA40462816AB07' as const;
 const BASE_CHAIN_ID = 8453;
 
 interface SwapWidgetProps {
@@ -74,7 +74,7 @@ export default function SwapWidget({ isOpen, onClose }: SwapWidgetProps) {
   // LI.FI widget configuration
   const widgetConfig = {
     toChain: BASE_CHAIN_ID,
-    toToken: OPENWORK_TOKEN_ADDRESS,
+    toToken: OPENWORK_TOKEN.address,
     disabledUI: ['toToken'],
     chains: { allow: [BASE_CHAIN_ID] },
     theme: {

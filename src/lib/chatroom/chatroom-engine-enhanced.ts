@@ -27,7 +27,7 @@ const RECENT_SPEAKERS_LIMIT = 5;
 
 interface EnhancedGenerationResult {
   message: ChatMessage;
-  state: ChatRoomState;
+  state: EnhancedChatRoomState;
   persuasionState: PersuasionState;
   consensusUpdate?: { direction: MessageSentiment | null; strength: number };
   phaseChange?: { from: ChatPhase; to: ChatPhase };

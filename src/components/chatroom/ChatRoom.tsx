@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { ChatMessage as ChatMessageType, ChatPhase } from '@/lib/chatroom/types';
 import { TimeGapInfo, formatTimeGap } from '@/lib/chatroom/local-storage';
+import { PERSONAS } from '@/lib/chatroom/personas';
 import ChatMessage from './ChatMessage';
 import TypingIndicator from './TypingIndicator';
 import PhaseIndicator from './PhaseIndicator';
@@ -182,11 +183,11 @@ export default function ChatRoom({
         <span className="text-muted-foreground" aria-label={`${messages.length} messages in chat`}>
           {messages.length} messages
         </span>
-        <span className="text-muted-foreground hidden sm:inline" aria-label="17 AI personalities debating the market">
-          17 AI personalities debating the market
+        <span className="text-muted-foreground hidden sm:inline" aria-label={`${PERSONAS.length} AI personalities debating the market`}>
+          {PERSONAS.length} AI personalities debating the market
         </span>
-        <span className="text-muted-foreground sm:hidden" aria-label="17 AI debating">
-          17 AI debating
+        <span className="text-muted-foreground sm:hidden" aria-label={`${PERSONAS.length} AI debating`}>
+          {PERSONAS.length} AI debating
         </span>
       </div>
     </div>

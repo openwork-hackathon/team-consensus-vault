@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSystemHealthSummary, getPerformanceMetrics as getConsensusMetrics } from '@/lib/consensus-engine';
 import { getPerformanceMetrics as getAIPerformanceMetrics } from '@/lib/ai-cache';
+import { checkAndCleanupIfNeeded, getLastCleanupTimestamp } from '@/lib/stale-trade-handler';
 
 /**
  * Health check endpoint for monitoring system status
@@ -99,6 +100,10 @@ export async function GET(request: NextRequest) {
 
     const responseTime = Date.now() - startTime;
 
+    // CVAULT-181: Trigger stale trade cleanup check on health endpoint visits
+    // This runs asynchronously and won't block the health response
+    const staleCheckTriggered = await checkAndCleanupIfNeeded();
+
     const response = {
       status: healthData.overall.status,
       timestamp: healthData.overall.timestamp,
@@ -150,6 +155,12 @@ export async function GET(request: NextRequest) {
       },
       version: process.env.npm_package_version || 'unknown',
       uptime: process.uptime(),
+      staleTradeCleanup: {
+        lastCleanupAt: getLastCleanupTimestamp() > 0 
+          ? new Date(getLastCleanupTimestamp()).toISOString() 
+          : null,
+        cleanupTriggeredThisRequest: staleCheckTriggered,
+      },
       responseTimeMs: responseTime,
     };
 
