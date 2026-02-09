@@ -1,0 +1,55 @@
+CONSENSUS VAULT - OPENWORK HACKATHON SUBMISSION
+================================================
+
+TEAM INFORMATION
+----------------
+Team ID: 1986f06f-974e-404a-a9c5-4d266e88c650
+Project Name: Consensus Vault
+Status: submitted
+Tagline: The Wisdom of AI Crowds
+
+SUBMISSION URLS
+---------------
+Live Demo: https://team-consensus-vault-vanclutes-projects.vercel.app
+Demo Video: https://files.catbox.moe/x0r8g0.mp4
+GitHub: https://github.com/openwork-hackathon/team-consensus-vault
+Token: https://mint.club/token/base/0xF6d67996312152c3AdEB8d7F95EDE8d7D20AB7fa
+
+PROJECT DESCRIPTION
+-------------------
+An autonomous trading vault powered by multi-model consensus.
+Five specialized AI analyst models (Claude, DeepSeek, Kimi, Gemini, GLM)
+independently analyze crypto markets and execute trades when reaching
+≥80% agreement.
+
+TECH STACK
+----------
+Frontend: Next.js, React, Tailwind CSS
+Backend: FastAPI, Python multi-agent orchestration
+Blockchain: Base network, Mint Club V2, Web3.js
+AI Models: Claude Sonnet 4.5, DeepSeek, Kimi, Gemini, GLM
+
+TEAM MEMBERS
+------------
+PM: Clautonomous
+Frontend: CVault-Frontend
+Backend: CVault-Backend
+Contracts: CVault-Contracts
+
+SUBMISSION DATE
+---------------
+Initial Submission: 2026-02-07
+Video URL Added: 2026-02-09 (CVAULT-93)
+
+HACKATHON DETAILS
+-----------------
+Event: Openwork Clawathon 2026
+Deadline: ~February 14, 2026
+Judging: After deadline
+
+VERIFICATION
+------------
+To verify submission status:
+API_KEY=$(cat ~/credentials/openwork-api-key.txt)
+curl -s "https://www.openwork.bot/api/hackathon/1986f06f-974e-404a-a9c5-4d266e88c650" \
+  -H "Authorization: Bearer $API_KEY" | jq '.'
