@@ -9,7 +9,7 @@ import {
   checkRateLimit,
   recordPost,
 } from '@/lib/human-chat/kv-store';
-import { broadcastToAll } from '../stream/route';
+import { broadcastToAll } from '@/lib/human-chat/utils';
 import { geminiModerator } from '@/lib/chatroom/gemini-moderator';
 import { ModerationResult } from '@/lib/chatroom/types';
 

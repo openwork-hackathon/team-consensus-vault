@@ -8,30 +8,12 @@ import {
   cleanupInactiveUsers,
 } from '@/lib/human-chat/kv-store';
 import { HumanChatMessage, HumanChatUser } from '@/lib/human-chat/types';
+import { registerConnection, unregisterConnection, broadcastToAll } from '@/lib/human-chat/utils';
 
 const KEEPALIVE_INTERVAL = 15_000; // 15s
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
-
-// Track active connections for broadcasting
-const activeConnections = new Map<string, ReadableStreamDefaultController>();
-
-/**
- * Broadcast a message to all connected clients
- */
-export function broadcastToAll(eventType: string, data: unknown) {
-  const encoder = new TextEncoder();
-  const message = `event: ${eventType}\ndata: ${JSON.stringify(data)}\n\n`;
-  
-  activeConnections.forEach((controller) => {
-    try {
-      controller.enqueue(encoder.encode(message));
-    } catch {
-      // Controller closed, will be cleaned up on next iteration
-    }
-  });
-}
 
 export async function GET(request: NextRequest) {
   const encoder = new TextEncoder();
@@ -64,7 +46,7 @@ export async function GET(request: NextRequest) {
       };
 
       // Register connection
-      activeConnections.set(connectionId, controller);
+      registerConnection(connectionId, controller);
 
       // Send connection confirmation
       send('connected', {
@@ -110,7 +92,7 @@ export async function GET(request: NextRequest) {
       // Cleanup on abort
       request.signal.addEventListener('abort', async () => {
         clearInterval(keepaliveTimer);
-        activeConnections.delete(connectionId);
+        unregisterConnection(connectionId);
         
         // Remove user from active users
         if (userId) {
