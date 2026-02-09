@@ -45,7 +45,7 @@ export async function generateCacheKey(prefix: string, params: Record<string, un
   // Use Web Crypto API for edge runtime compatibility
   const encoder = new TextEncoder();
   const data = encoder.encode(sortedParams);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data as BufferSource);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   const hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
 

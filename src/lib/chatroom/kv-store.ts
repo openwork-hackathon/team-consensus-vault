@@ -1,7 +1,7 @@
 import { ChatMessage, ChatRoomState, ChatPhase, PersonaPersuasionState, DebateSummary } from './types';
 
 // Static import for @vercel/kv to avoid Turbopack issues
-import kvImport from '@vercel/kv';
+import { kv } from '@vercel/kv';
 
 const KEYS = {
   messages: 'chatroom:messages',
@@ -49,7 +49,7 @@ function defaultState(): ChatRoomState {
 export async function getMessages(): Promise<ChatMessage[]> {
   if (isKVAvailable()) {
     try {
-      const { kv } = kvImport;
+      // Using kv from @vercel/kv import
       const messages = await kv.get<ChatMessage[]>(KEYS.messages);
       return messages || [];
     } catch (error) {
@@ -62,7 +62,7 @@ export async function getMessages(): Promise<ChatMessage[]> {
 export async function appendMessage(message: ChatMessage): Promise<void> {
   if (isKVAvailable()) {
     try {
-      const { kv } = kvImport;
+      // Using kv from @vercel/kv import
       const messages = (await kv.get<ChatMessage[]>(KEYS.messages)) || [];
       messages.push(message);
       // Keep only the last MAX_MESSAGES
@@ -86,7 +86,7 @@ export async function appendMessage(message: ChatMessage): Promise<void> {
 export async function getState(): Promise<ChatRoomState> {
   if (isKVAvailable()) {
     try {
-      const { kv } = kvImport;
+      // Using kv from @vercel/kv import
       const state = await kv.get<ChatRoomState>(KEYS.state);
       return state || defaultState();
     } catch (error) {
@@ -99,7 +99,7 @@ export async function getState(): Promise<ChatRoomState> {
 export async function setState(state: ChatRoomState): Promise<void> {
   if (isKVAvailable()) {
     try {
-      const { kv } = kvImport;
+      // Using kv from @vercel/kv import
       await kv.set(KEYS.state, state);
       return;
     } catch (error) {
@@ -112,7 +112,7 @@ export async function setState(state: ChatRoomState): Promise<void> {
 export async function acquireLock(holderId: string): Promise<boolean> {
   if (isKVAvailable()) {
     try {
-      const { kv } = kvImport;
+      // Using kv from @vercel/kv import
       // SET NX EX — only sets if key doesn't exist, with TTL
       const result = await kv.set(KEYS.lock, holderId, { nx: true, ex: LOCK_TTL_SECONDS });
       return result === 'OK';
@@ -133,7 +133,7 @@ export async function acquireLock(holderId: string): Promise<boolean> {
 export async function releaseLock(holderId: string): Promise<void> {
   if (isKVAvailable()) {
     try {
-      const { kv } = kvImport;
+      // Using kv from @vercel/kv import
       // Only release if we hold it
       const current = await kv.get<string>(KEYS.lock);
       if (current === holderId) {
@@ -152,7 +152,7 @@ export async function releaseLock(holderId: string): Promise<void> {
 export async function getMessageIndex(): Promise<number> {
   if (isKVAvailable()) {
     try {
-      const { kv } = kvImport;
+      // Using kv from @vercel/kv import
       const index = await kv.get<number>(KEYS.msgIndex);
       return index || 0;
     } catch (error) {
@@ -175,7 +175,7 @@ export async function initializeIfEmpty(): Promise<void> {
 export async function getPersuasionStates(): Promise<Record<string, PersonaPersuasionState>> {
   if (isKVAvailable()) {
     try {
-      const { kv } = kvImport;
+      // Using kv from @vercel/kv import
       const states = await kv.get<Record<string, PersonaPersuasionState>>(KEYS.persuasion);
       return states || {};
     } catch (error) {
@@ -191,7 +191,7 @@ export async function getPersuasionStates(): Promise<Record<string, PersonaPersu
 export async function setPersuasionStates(states: Record<string, PersonaPersuasionState>): Promise<void> {
   if (isKVAvailable()) {
     try {
-      const { kv } = kvImport;
+      // Using kv from @vercel/kv import
       await kv.set(KEYS.persuasion, states, { ex: PERSUASION_TTL_SECONDS });
       return;
     } catch (error) {
@@ -207,7 +207,7 @@ export async function setPersuasionStates(states: Record<string, PersonaPersuasi
 export async function getMarketDataCache(): Promise<any> {
   if (isKVAvailable()) {
     try {
-      const { kv } = kvImport;
+      // Using kv from @vercel/kv import
       return await kv.get(KEYS.marketData);
     } catch (error) {
       console.error('[chatroom-kv] Error fetching market data:', error);
@@ -222,7 +222,7 @@ export async function getMarketDataCache(): Promise<any> {
 export async function setMarketDataCache(data: any): Promise<void> {
   if (isKVAvailable()) {
     try {
-      const { kv } = kvImport;
+      // Using kv from @vercel/kv import
       // Cache market data for 60 seconds
       await kv.set(KEYS.marketData, data, { ex: 60 });
       return;
@@ -242,7 +242,7 @@ let memDebateHistory: DebateSummary[] = [];
 export async function getDebateSummary(): Promise<DebateSummary | null> {
   if (isKVAvailable()) {
     try {
-      const { kv } = kvImport;
+      // Using kv from @vercel/kv import
       const summary = await kv.get<DebateSummary>(KEYS.debateSummary);
       return summary;
     } catch (error) {
@@ -258,7 +258,7 @@ export async function getDebateSummary(): Promise<DebateSummary | null> {
 export async function saveDebateSummary(summary: DebateSummary): Promise<void> {
   if (isKVAvailable()) {
     try {
-      const { kv } = kvImport;
+      // Using kv from @vercel/kv import
       // Save as current summary
       await kv.set(KEYS.debateSummary, summary, { ex: DEBATE_SUMMARY_TTL_SECONDS });
       
@@ -291,7 +291,7 @@ export async function saveDebateSummary(summary: DebateSummary): Promise<void> {
 export async function getDebateHistory(): Promise<DebateSummary[]> {
   if (isKVAvailable()) {
     try {
-      const { kv } = kvImport;
+      // Using kv from @vercel/kv import
       const history = await kv.get<DebateSummary[]>(KEYS.debateHistory);
       return history || [];
     } catch (error) {
@@ -307,7 +307,7 @@ export async function getDebateHistory(): Promise<DebateSummary[]> {
 export async function clearDebateSummary(): Promise<void> {
   if (isKVAvailable()) {
     try {
-      const { kv } = kvImport;
+      // Using kv from @vercel/kv import
       await kv.del(KEYS.debateSummary);
       console.log('[CVAULT-190] Debate summary cleared for new round');
       return;
