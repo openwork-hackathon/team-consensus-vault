@@ -3,7 +3,10 @@ const nextConfig = {
   env: {
     // AI model proxy URL — routes AI API calls through our server which holds the keys.
     // Falls back to direct calls when not set (local dev with keys in .env.local).
-    AI_PROXY_URL: process.env.AI_PROXY_URL || 'https://haywood-mitigable-kinsley.ngrok-free.dev',
+    // NOTE: Empty string explicitly DISABLES the proxy. Only use fallback if truly undefined.
+    AI_PROXY_URL: process.env.AI_PROXY_URL !== undefined
+      ? process.env.AI_PROXY_URL
+      : 'https://haywood-mitigable-kinsley.ngrok-free.dev',
   },
   reactStrictMode: true,
   transpilePackages: ['framer-motion'],

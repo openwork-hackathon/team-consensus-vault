@@ -39,6 +39,7 @@ next-env.d.ts
 
 # Internal task/session files — NEVER commit
 CVAULT-*.md
+CVAULT-*.txt
 TASK_*.md
 DEMO_*.md
 HACKATHON_*.md

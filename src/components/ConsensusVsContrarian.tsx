@@ -120,9 +120,17 @@ export default function ConsensusVsContrarian({
 }: ConsensusVsContrarianProps) {
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   // Calculate Market Belief Index
@@ -224,11 +232,11 @@ export default function ConsensusVsContrarian({
   }
 
   return (
-    <div className="bg-card rounded-xl p-6 border border-border space-y-6">
+    <div className="bg-card rounded-xl p-4 sm:p-6 border border-border space-y-6 w-full max-w-full overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold">Consensus vs Contrarian</h2>
+        <div className="min-w-0 flex-1">
+          <h2 className="text-lg sm:text-xl md:text-2xl font-bold truncate">Consensus vs Contrarian</h2>
           <p className="text-sm text-muted-foreground">
             Market sentiment analysis based on TVL distribution
           </p>
@@ -246,25 +254,25 @@ export default function ConsensusVsContrarian({
       </div>
 
       {/* TVL Comparison Panel - Side by Side Display */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full">
         {/* Consensus Card */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
-          className="bg-bullish/10 border border-bullish/20 rounded-lg p-4 relative overflow-hidden"
+          className="bg-bullish/10 border border-bullish/20 rounded-lg p-3 sm:p-4 relative overflow-hidden"
         >
-          <div className="absolute top-0 right-0 w-20 h-20 bg-bullish/5 rounded-full -mr-10 -mt-10" />
+          <div className="absolute top-0 right-0 w-16 h-16 sm:w-20 sm:h-20 bg-bullish/5 rounded-full -mr-8 -mt-8 sm:-mr-10 sm:-mt-10" />
           <div className="flex items-center justify-between mb-2 relative z-10">
-            <h3 className="font-semibold text-bullish flex items-center gap-2">
-              <span className="text-lg">🤝</span>
+            <h3 className="font-semibold text-bullish flex items-center gap-1 sm:gap-2 text-sm sm:text-base">
+              <span className="text-base sm:text-lg">🤝</span>
               $CVAULT
             </h3>
-            <span className="text-xs font-medium text-bullish bg-bullish/20 px-2 py-1 rounded-full">
+            <span className="text-xs font-medium text-bullish bg-bullish/20 px-2 py-1 rounded-full whitespace-nowrap">
               Consensus
             </span>
           </div>
-          <div className="text-3xl font-bold text-bullish mb-1 relative z-10">
+          <div className="text-2xl sm:text-3xl font-bold text-bullish mb-1 relative z-10">
             ${cvaultTVL.toLocaleString()}
           </div>
           <div className="text-sm text-muted-foreground relative z-10">
@@ -280,19 +288,19 @@ export default function ConsensusVsContrarian({
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="bg-bearish/10 border border-bearish/20 rounded-lg p-4 relative overflow-hidden"
+          className="bg-bearish/10 border border-bearish/20 rounded-lg p-3 sm:p-4 relative overflow-hidden"
         >
-          <div className="absolute top-0 right-0 w-20 h-20 bg-bearish/5 rounded-full -mr-10 -mt-10" />
+          <div className="absolute top-0 right-0 w-16 h-16 sm:w-20 sm:h-20 bg-bearish/5 rounded-full -mr-8 -mt-8 sm:-mr-10 sm:-mt-10" />
           <div className="flex items-center justify-between mb-2 relative z-10">
-            <h3 className="font-semibold text-bearish flex items-center gap-2">
-              <span className="text-lg">⚡</span>
+            <h3 className="font-semibold text-bearish flex items-center gap-1 sm:gap-2 text-sm sm:text-base">
+              <span className="text-base sm:text-lg">⚡</span>
               $DISSENT
             </h3>
-            <span className="text-xs font-medium text-bearish bg-bearish/20 px-2 py-1 rounded-full">
+            <span className="text-xs font-medium text-bearish bg-bearish/20 px-2 py-1 rounded-full whitespace-nowrap">
               Contrarian
             </span>
           </div>
-          <div className="text-3xl font-bold text-bearish mb-1 relative z-10">
+          <div className="text-2xl sm:text-3xl font-bold text-bearish mb-1 relative z-10">
             ${dissentTVL.toLocaleString()}
           </div>
           <div className="text-sm text-muted-foreground relative z-10">
@@ -325,19 +333,19 @@ export default function ConsensusVsContrarian({
         </div>
         
         {/* Main Index Display */}
-        <div className="text-center py-4 bg-gradient-to-b from-muted/50 to-transparent rounded-lg">
+        <div className="text-center py-3 sm:py-4 bg-gradient-to-b from-muted/50 to-transparent rounded-lg">
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            <div className="text-4xl sm:text-5xl font-bold text-primary mb-2">
-              {consensusPercentage}% <span className="text-lg sm:text-xl font-medium text-muted-foreground">Trust AI</span>
+            <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-primary mb-2">
+              {consensusPercentage}% <span className="text-base sm:text-lg md:text-xl font-medium text-muted-foreground">Trust AI</span>
             </div>
             <div className="text-sm font-medium text-muted-foreground mb-1">
               {getRatioText()}
             </div>
-            <div className="text-xs text-muted-foreground max-w-md mx-auto">
+            <div className="text-xs text-muted-foreground max-w-md mx-auto px-2">
               {getSentimentDescription()}
             </div>
           </motion.div>
@@ -405,26 +413,26 @@ export default function ConsensusVsContrarian({
         </div>
 
         {/* Legend */}
-        <div className="flex items-center justify-center gap-8 text-sm">
-          <div className="flex items-center gap-2 bg-bullish/10 px-3 py-2 rounded-lg">
+        <div className={`flex items-center justify-center text-sm ${isMobile ? 'gap-3' : 'gap-8'}`}>
+          <div className={`flex items-center gap-2 bg-bullish/10 px-2 sm:px-3 py-2 rounded-lg ${isMobile ? 'flex-1 max-w-[140px]' : ''}`}>
             <div className="w-4 h-4 bg-bullish rounded shadow-sm" />
-            <div>
-              <span className="text-bullish font-medium">AI Consensus</span>
-              <p className="text-xs text-muted-foreground">Trust AI recommendations</p>
+            <div className="min-w-0">
+              <span className="text-bullish font-medium text-xs sm:text-sm">AI Consensus</span>
+              <p className="text-xs text-muted-foreground hidden sm:block">Trust AI recommendations</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 bg-bearish/10 px-3 py-2 rounded-lg">
+          <div className={`flex items-center gap-2 bg-bearish/10 px-2 sm:px-3 py-2 rounded-lg ${isMobile ? 'flex-1 max-w-[140px]' : ''}`}>
             <div className="w-4 h-4 bg-bearish rounded shadow-sm" />
-            <div>
-              <span className="text-bearish font-medium">Contrarian</span>
-              <p className="text-xs text-muted-foreground">Bet against AI consensus</p>
+            <div className="min-w-0">
+              <span className="text-bearish font-medium text-xs sm:text-sm">Contrarian</span>
+              <p className="text-xs text-muted-foreground hidden sm:block">Bet against AI consensus</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Historical Chart */}
-      <div className="space-y-3">
+      <div className="space-y-3 w-full">
         <div className="flex items-center justify-between">
           <h3 className="font-semibold">Sentiment History</h3>
           <InfoTooltip 
@@ -438,54 +446,73 @@ export default function ConsensusVsContrarian({
             </span>
           </InfoTooltip>
         </div>
-        <div className="h-72 w-full bg-muted/20 rounded-lg p-2">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={historicalData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-              <defs>
-                <linearGradient id="cvaultGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#22c55e" stopOpacity={0.05}/>
-                </linearGradient>
-                <linearGradient id="dissentGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#ef4444" stopOpacity={0.05}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
-              <XAxis 
-                dataKey="timestamp" 
-                tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                axisLine={{ stroke: 'hsl(var(--border))' }}
-                tickLine={{ stroke: 'hsl(var(--border))' }}
-              />
-              <YAxis 
-                tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                tickFormatter={(value) => `$${(value / 1000).toFixed(0)}K`}
-                axisLine={{ stroke: 'hsl(var(--border))' }}
-                tickLine={{ stroke: 'hsl(var(--border))' }}
-              />
-              <RechartsTooltip content={<CustomTooltip />} />
-              <Area
-                type="monotone"
-                dataKey="cvault"
-                name="Consensus TVL"
-                stroke="#22c55e"
-                strokeWidth={2}
-                fill="url(#cvaultGradient)"
-              />
-              <Area
-                type="monotone"
-                dataKey="dissent"
-                name="Contrarian TVL"
-                stroke="#ef4444"
-                strokeWidth={2}
-                fill="url(#dissentGradient)"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+        
+        {/* Chart Container with proper overflow handling for mobile */}
+        <div className="w-full overflow-hidden">
+          <div className={`w-full bg-muted/20 rounded-lg p-2 overflow-hidden ${isMobile ? 'h-64' : 'h-72'}`}>
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+              <AreaChart 
+                data={historicalData} 
+                margin={{ 
+                  top: 10, 
+                  right: isMobile ? 5 : 10, 
+                  left: 0, 
+                  bottom: 0 
+                }}
+                barCategoryGap="10%"
+              >
+                <defs>
+                  <linearGradient id="cvaultGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#22c55e" stopOpacity={0.05}/>
+                  </linearGradient>
+                  <linearGradient id="dissentGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0.05}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
+                <XAxis 
+                  dataKey="timestamp" 
+                  tick={{ fontSize: isMobile ? 9 : 11, fill: 'hsl(var(--muted-foreground))' }}
+                  tickFormatter={(value) => {
+                    const date = new Date(value);
+                    return isMobile 
+                      ? date.toLocaleDateString('en-US', { month: 'short' })
+                      : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                  }}
+                  axisLine={{ stroke: 'hsl(var(--border))' }}
+                  tickLine={{ stroke: 'hsl(var(--border))' }}
+                  interval="preserveStartEnd"
+                />
+                <YAxis 
+                  tick={{ fontSize: isMobile ? 9 : 11, fill: 'hsl(var(--muted-foreground))' }}
+                  tickFormatter={(value) => `$${(value / 1000).toFixed(0)}K`}
+                  axisLine={{ stroke: 'hsl(var(--border))' }}
+                  tickLine={{ stroke: 'hsl(var(--border))' }}
+                />
+                <RechartsTooltip content={<CustomTooltip />} />
+                <Area
+                  type="monotone"
+                  dataKey="cvault"
+                  name="Consensus TVL"
+                  stroke="#22c55e"
+                  strokeWidth={isMobile ? 1.5 : 2}
+                  fill="url(#cvaultGradient)"
+                />
+                <Area
+                  type="monotone"
+                  dataKey="dissent"
+                  name="Contrarian TVL"
+                  stroke="#ef4444"
+                  strokeWidth={isMobile ? 1.5 : 2}
+                  fill="url(#dissentGradient)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         </div>
-        <p className="text-xs text-muted-foreground text-center">
+        <p className="text-xs text-muted-foreground text-center px-2">
           Hover over the chart to see detailed TVL and ratio information
         </p>
       </div>
@@ -503,7 +530,7 @@ export default function ConsensusVsContrarian({
           </svg>
           <h4 className="font-semibold">Key Insights</h4>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className={`grid gap-3 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-3'}`}>
           <div className="bg-background/50 rounded-lg p-3">
             <div className="text-xs text-muted-foreground mb-1">Market Preference</div>
             <div className="text-sm font-medium">
@@ -527,7 +554,7 @@ export default function ConsensusVsContrarian({
           </div>
         </div>
         <div className="mt-3 pt-3 border-t border-border/50">
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground leading-relaxed">
             <span className="font-medium text-foreground">💡 Did you know?</span> The Market Belief Index is a unique indicator 
             that measures real capital allocation between AI-following and AI-betting strategies, providing genuine insight into 
             market sentiment toward AI-driven decision making.

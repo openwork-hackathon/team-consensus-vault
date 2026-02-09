@@ -8,13 +8,26 @@
 
 // In production (Vercel), always use the proxy since API keys live on the proxy server.
 // In local dev, keys are in .env.local so call models directly.
-const DEFAULT_PROXY_URL = 'https://disposal-sophisticated-adsl-rate.trycloudflare.com';
+// NOTE: The ngrok URL is for when VERCEL is set but AI_PROXY_URL is not defined.
+// When AI_PROXY_URL="" (empty string), proxy is DISABLED and direct API calls are used.
+const DEFAULT_PROXY_URL = 'https://haywood-mitigable-kinsley.ngrok-free.dev';
 const IS_VERCEL = !!process.env.VERCEL;
 const PROXY_URL = process.env.AI_PROXY_URL !== undefined
   ? process.env.AI_PROXY_URL  // Explicitly set (can be empty string to disable)
   : IS_VERCEL
     ? DEFAULT_PROXY_URL  // On Vercel, always use proxy
     : (process.env.DEEPSEEK_API_KEY ? '' : DEFAULT_PROXY_URL);  // Local: auto-detect
+
+// Debug logging for proxy configuration (dev only)
+if (process.env.NODE_ENV === 'development') {
+  console.log('[proxy-fetch] Configuration:', {
+    AI_PROXY_URL_raw: process.env.AI_PROXY_URL,
+    AI_PROXY_URL_defined: process.env.AI_PROXY_URL !== undefined,
+    IS_VERCEL,
+    PROXY_URL_computed: PROXY_URL || '(empty - direct calls)',
+    HAS_DEEPSEEK_KEY: !!process.env.DEEPSEEK_API_KEY,
+  });
+}
 
 /**
  * Enhanced error types for proxy connection issues
