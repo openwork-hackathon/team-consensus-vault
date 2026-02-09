@@ -136,8 +136,9 @@ export async function generateNextMessageEnhanced(
   // 6. Check if stance should change based on persuasion
   if (persuasionState.convictionScore < 30 && recentMessages.length > 0) {
     // Find the most persuasive recent opposing message
+    const currentStance = persuasionState.currentStance;
     const opposingMessages = recentMessages.filter(
-      m => m.sentiment && m.sentiment !== persuasionState.currentStance
+      m => m.sentiment && m.sentiment !== currentStance
     );
     
     if (opposingMessages.length > 0) {
@@ -171,33 +172,39 @@ export async function generateNextMessageEnhanced(
   }
 
   // 8. Call model
-  let rawResponse: string;
-  let messageError: { type: string; message: string; recoveryGuidance: string } | undefined;
-  
-  try {
-    rawResponse = await callModelRaw(
-      persona.modelId,
-      promptData.systemPrompt,
-      promptData.userPrompt,
-      250
-    );
-  } catch (error) {
-    if (error instanceof ChatroomError) {
-      const userFacingError = createUserFacingError(error);
-      messageError = {
-        type: error.type,
-        message: userFacingError.message,
-        recoveryGuidance: userFacingError.recoveryGuidance,
-      };
-      rawResponse = `[Technical difficulties - ${userFacingError.message}]`;
-    } else {
-      messageError = {
-        type: 'unknown',
-        message: 'AI service temporarily unavailable',
-        recoveryGuidance: 'This AI is experiencing issues. The conversation will continue.',
-      };
-      rawResponse = '[Technical difficulties - unable to generate response]';
-    }
+  // CVAULT-184: Handle silent failures - return null if model call fails
+  const rawResponse = await callModelRaw(
+    persona.modelId,
+    promptData.systemPrompt,
+    promptData.userPrompt,
+    250
+  );
+
+  // If model call failed, silently skip this persona and return special result
+  if (!rawResponse) {
+    console.warn(`[chatroom-enhanced] Silent failure for persona ${persona.id}, skipping to next speaker`);
+    
+    // Update persuasion state to reflect temporary unavailability
+    const updatedState = currentState.persuasionStore.updateState(speakerId, {
+      ...persuasionState,
+      lastUpdated: Date.now(),
+    });
+    
+    // Return a special result that indicates this persona should be skipped
+    return {
+      message: {
+        id: `skip_${Date.now()}_${speakerId}`,
+        personaId: speakerId,
+        handle: persona.handle,
+        avatar: persona.avatar,
+        content: '',
+        timestamp: Date.now(),
+        phase: currentState.phase,
+        skipped: true, // Special flag to indicate this was skipped
+      } as ChatMessage,
+      state: currentState,
+      persuasionState: updatedState,
+    };
   }
 
   // 9. Parse response
@@ -253,6 +260,7 @@ export async function generateNextMessageEnhanced(
   }
 
   // 11. Create message
+  // CVAULT-184: No error field - errors are handled silently
   const message: ChatMessage = {
     id: `msg_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
     personaId: persona.id,
@@ -263,7 +271,6 @@ export async function generateNextMessageEnhanced(
     confidence,
     timestamp: Date.now(),
     phase: currentState.phase,
-    error: messageError,
     acknowledgesOpposingView,
     marketDataRefs: marketDataRefs.length > 0 ? marketDataRefs : undefined,
   };
@@ -395,8 +402,8 @@ async function pickNextSpeakerEnhanced(
   // Weight wavering personas higher (they need to clarify their stance)
   const weights = pool.map(id => {
     const ps = state.persuasionStore.getState(id);
-    if (ps?.convictionLevel === 'wavering') return 3;
-    if (ps?.convictionLevel === 'weak') return 2;
+    if (ps?.conviction === 'wavering') return 3;
+    if (ps?.conviction === 'weak') return 2;
     return 1;
   });
   

@@ -16,6 +16,8 @@ const DEFAULT_TIMEOUT = 30000;
  * Reuses the same provider-switching logic from consensus-engine.ts
  * but returns the raw string response instead of parsing it as a trading signal.
  * Enhanced with progress tracking and user-facing errors.
+ * 
+ * CVAULT-184: Returns null on failure instead of throwing to enable silent failure handling
  */
 export async function callModelRaw(
   modelId: string,
@@ -23,16 +25,18 @@ export async function callModelRaw(
   userPrompt: string,
   maxTokens: number = 200,
   onProgress?: (progress: ProgressUpdate) => void
-): Promise<string> {
+): Promise<string | null> {
   const config = ANALYST_MODELS.find(m => m.id === modelId);
   if (!config) {
-    throw new Error(`Unknown model: ${modelId}`);
+    console.error(`[chatroom-model] Unknown model: ${modelId}`);
+    return null;
   }
 
   const usingProxy = isProxyConfigured();
   const apiKey = usingProxy ? 'proxy-managed' : process.env[config.apiKeyEnv];
   if (!apiKey) {
-    throw new Error(`Missing API key: ${config.apiKeyEnv}`);
+    console.error(`[chatroom-model] Missing API key: ${config.apiKeyEnv} for model: ${modelId}`);
+    return null;
   }
 
   // Rate limiting
@@ -44,7 +48,16 @@ export async function callModelRaw(
   }
   lastRequestTime[config.id] = Date.now();
 
-  return callWithRetry(config, apiKey, systemPrompt, userPrompt, maxTokens, 0);
+  try {
+    return await callWithRetry(config, apiKey, systemPrompt, userPrompt, maxTokens, 0);
+  } catch (error) {
+    // CVAULT-184: Log error internally but don't throw - return null for silent failure
+    console.error(`[chatroom-model] Silent failure for model ${modelId}:`, {
+      error: error instanceof Error ? error.message : String(error),
+      timestamp: new Date().toISOString(),
+    });
+    return null;
+  }
 }
 
 async function callWithRetry(
@@ -54,7 +67,7 @@ async function callWithRetry(
   userPrompt: string,
   maxTokens: number,
   retryCount: number
-): Promise<string> {
+): Promise<string | null> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT);
 
@@ -102,17 +115,14 @@ async function callWithRetry(
       return callWithRetry(config, apiKey, systemPrompt, userPrompt, maxTokens, retryCount + 1);
     }
 
-    // Convert to ChatroomError for better error tracking
-    if (error instanceof ChatroomError) {
-      throw error;
-    }
-
-    throw new ChatroomError(
-      error instanceof Error ? error.message : 'Unknown error',
+    // CVAULT-184: Don't throw ChatroomError - log internally and return null for silent failure
+    console.error(`[chatroom-model] Final failure for ${config.id} after ${retryCount + 1} attempts:`, {
+      error: error instanceof Error ? error.message : String(error),
       errorType,
-      config.id,
-      error
-    );
+      timestamp: new Date().toISOString(),
+    });
+    
+    return null;
   }
 }
 

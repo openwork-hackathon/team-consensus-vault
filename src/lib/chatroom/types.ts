@@ -21,6 +21,8 @@ export interface ChatMessage {
   acknowledgesOpposingView?: boolean;
   // CVAULT-185: Market data referenced in message
   marketDataRefs?: string[];
+  // CVAULT-188: Moderation metadata
+  moderation?: ModerationMetadata;
 }
 
 // CVAULT-185: Persuasion state per persona
@@ -57,6 +59,30 @@ export interface ChatRoomState {
   // CVAULT-185: Market data integration
   currentAsset?: string;
   persuasionStates?: Record<string, any>;
+  // CVAULT-190: Previous debate summary for context in next round
+  previousDebateSummary?: DebateSummary;
+}
+
+// CVAULT-190: Summary of a completed debate round for context in next round
+export interface DebateSummary {
+  roundNumber: number;
+  timestamp: number;
+  consensusDirection: MessageSentiment;
+  consensusStrength: number;
+  keyBullishArguments: string[];
+  keyBearishArguments: string[];
+  stanceChanges: StanceChangeSummary[];
+  topDataPoints: string[];
+  messageCount: number;
+}
+
+// CVAULT-190: Summary of a stance change during debate
+export interface StanceChangeSummary {
+  personaId: string;
+  handle: string;
+  from: MessageSentiment;
+  to: MessageSentiment;
+  reason?: string;
 }
 
 export interface Persona {
@@ -93,4 +119,56 @@ export interface StanceChangeEvent {
   from: MessageSentiment;
   to: MessageSentiment;
   convictionScore: number;
+}
+
+// CVAULT-188: Moderation types
+export type ModerationStatus = 'pending' | 'approved' | 'flagged' | 'removed';
+export type ViolationType = 'spam' | 'hate_speech' | 'harassment' | 'manipulation' | 'inappropriate_content' | 'other';
+
+export interface ModerationResult {
+  status: ModerationStatus;
+  violations: ViolationType[];
+  confidence: number;
+  reasoning: string;
+  flaggedAt?: number;
+  moderatorId?: string;
+}
+
+export interface ModerationMetadata {
+  moderationResult?: ModerationResult;
+  isUserGenerated?: boolean; // true if message from human user, false if from AI persona
+  userId?: string; // for user-generated messages
+}
+
+export interface MutedUser {
+  userId: string;
+  handle: string;
+  mutedAt: number;
+  mutedUntil: number | null; // null = permanent mute
+  reason: string;
+  moderatorId: string;
+}
+
+export interface BannedUser {
+  userId: string;
+  handle: string;
+  bannedAt: number;
+  reason: string;
+  moderatorId: string;
+}
+
+export interface ModerationAction {
+  type: 'mute' | 'unmute' | 'ban' | 'unban';
+  targetUserId: string;
+  targetHandle: string;
+  duration?: number; // for mute actions (in milliseconds)
+  reason: string;
+  moderatorId: string;
+  timestamp: number;
+}
+
+export interface ModerationStore {
+  mutedUsers: Record<string, MutedUser>;
+  bannedUsers: Record<string, BannedUser>;
+  moderationLog: ModerationAction[];
 }

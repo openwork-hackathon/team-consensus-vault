@@ -1,4 +1,4 @@
-import { ChatMessage, ChatRoomState, ChatPhase, MessageSentiment } from './types';
+import { ChatMessage, ChatRoomState, ChatPhase, MessageSentiment, DebateSummary } from './types';
 import { PERSONAS, PERSONAS_BY_ID } from './personas';
 import { callModelRaw } from './model-caller';
 import { ChatroomError, ChatroomErrorType, createUserFacingError } from './error-types';
@@ -6,11 +6,15 @@ import { buildDebatePrompt, buildCooldownPrompt, buildModeratorPrompt } from './
 import { calculateRollingConsensus } from './consensus-calc';
 import { fetchMarketData, MarketData } from './market-data';
 import { PersuasionStore, initializePersuasionState, PersuasionState } from './persuasion';
+import { extractDebateSummary, updateStanceChangeHandles } from './argument-extractor';
 
 const CONSENSUS_THRESHOLD = 80;
 const COOLDOWN_MIN_MINUTES = 15;
 const COOLDOWN_MAX_MINUTES = 30;
 const RECENT_SPEAKERS_LIMIT = 5;
+
+// CVAULT-190: Track debate round number for summary context
+let debateRoundCounter = 0;
 
 interface GenerationResult {
   message: ChatMessage;
@@ -38,6 +42,8 @@ export async function generateNextMessage(
       currentState.cooldownEndsAt = null;
       currentState.consensusDirection = null;
       currentState.consensusStrength = 0;
+      // CVAULT-190: Increment round counter when starting new debate
+      debateRoundCounter++;
     }
   }
 
@@ -90,7 +96,8 @@ export async function generateNextMessage(
       history,
       marketData,
       persuasionState,
-      currentState.currentAsset || 'BTC'
+      currentState.currentAsset || 'BTC',
+      currentState.previousDebateSummary
     ));
   }
 
@@ -297,6 +304,31 @@ export async function generateNextMessage(
           currentState.cooldownEndsAt = Date.now() + cooldownMinutes * 60 * 1000;
         }
         phaseChange = { from: 'CONSENSUS', to: 'COOLDOWN' };
+
+        // CVAULT-190: Generate debate summary when entering COOLDOWN
+        if (currentState.persuasionStates) {
+          const summary = extractDebateSummary(
+            [...history, message],
+            currentState.persuasionStates,
+            debateRoundCounter,
+            currentState.consensusDirection || 'neutral',
+            currentState.consensusStrength
+          );
+
+          // Update handles in stance changes
+          const handleMap = Object.fromEntries(
+            PERSONAS.map(p => [p.id, p.handle])
+          );
+          currentState.previousDebateSummary = updateStanceChangeHandles(summary, handleMap);
+
+          console.log('[chatroom-engine] Generated debate summary for round', debateRoundCounter, {
+            consensus: summary.consensusDirection,
+            strength: summary.consensusStrength,
+            bullishArgs: summary.keyBullishArguments.length,
+            bearishArgs: summary.keyBearishArguments.length,
+            stanceChanges: summary.stanceChanges.length,
+          });
+        }
       }
     }
   }

@@ -10,7 +10,11 @@ import {
   initializeIfEmpty,
   getPersuasionStates,
   setPersuasionStates,
+  saveDebateSummary,
+  clearDebateSummary,
+  getDebateHistory,
 } from '@/lib/chatroom/kv-store';
+import { extractDebateSummary } from '@/lib/chatroom/argument-extractor';
 import {
   generateNextMessageEnhanced,
   initializeEnhancedState,
@@ -242,6 +246,39 @@ export async function GET(request: NextRequest) {
                       to: result.persuasionState.currentStance,
                       convictionScore: result.persuasionState.convictionScore,
                     });
+                  }
+
+                  // CVAULT-190: Capture debate summary when consensus is reached
+                  if (result.phaseChange?.to === 'CONSENSUS' && result.consensusUpdate) {
+                    try {
+                      const debateHistory = await getMessages();
+                      const persuasionStates = result.state.persuasionStore.getAllStates();
+                      const debateHistorySummaries = await getDebateHistory();
+                      const roundNumber = debateHistorySummaries.length + 1;
+                      
+                      const summary = extractDebateSummary(
+                        debateHistory,
+                        persuasionStates,
+                        roundNumber,
+                        result.consensusUpdate.direction || 'neutral',
+                        result.consensusUpdate.strength
+                      );
+                      
+                      await saveDebateSummary(summary);
+                      console.log(`[CVAULT-190] Debate summary captured for round ${roundNumber}: ${summary.consensusDirection} @ ${summary.consensusStrength}%`);
+                    } catch (summaryError) {
+                      // Non-blocking: log error but don't break consensus flow
+                      console.error('[CVAULT-190] Failed to capture debate summary:', summaryError);
+                    }
+                  }
+                  
+                  // CVAULT-190: Clear debate summary when starting new debate round
+                  if (result.phaseChange?.from === 'COOLDOWN' && result.phaseChange?.to === 'DEBATE') {
+                    try {
+                      await clearDebateSummary();
+                    } catch (clearError) {
+                      console.error('[CVAULT-190] Failed to clear debate summary:', clearError);
+                    }
                   }
 
                   // Broadcast phase change if any
