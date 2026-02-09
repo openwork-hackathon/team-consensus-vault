@@ -73,8 +73,10 @@ export class ErrorAggregator {
    * Create a user-friendly error key for deduplication
    */
   private getErrorKey(error: UserFacingError): string {
-    // Group errors by type and severity for deduplication
-    return `${error.type}_${error.severity}`;
+    // Group errors by type, severity, and model for more granular deduplication
+    // This prevents grouping different model errors while still deduping identical errors
+    const modelPart = error.modelId ? `_${error.modelId}` : '';
+    return `${error.type}_${error.severity}${modelPart}`;
   }
 
   /**

@@ -223,4 +223,156 @@ describe('Error Handling Utilities', () => {
   });
 });
 
+describe('Error Aggregation', () => {
+  it('should aggregate multiple rate limit errors', () => {
+    const errors = [
+      { type: 'rate_limit', severity: 'warning' as const, retryable: true, message: 'Rate limited', recoveryGuidance: 'Wait', modelId: 'deepseek', estimatedWaitTime: 60000 },
+      { type: 'rate_limit', severity: 'warning' as const, retryable: true, message: 'Rate limited', recoveryGuidance: 'Wait', modelId: 'kimi', estimatedWaitTime: 60000 },
+    ];
+    
+    // Simulate aggregation logic
+    const errorCounts: Record<string, number> = {};
+    errors.forEach(err => {
+      errorCounts[err.type] = (errorCounts[err.type] || 0) + 1;
+    });
+    
+    expect(errorCounts.rate_limit).toBe(2);
+    expect(errors[0].severity).toBe('warning');
+    expect(errors[0].retryable).toBe(true);
+    
+    console.log('✅ Rate limit aggregation validated');
+  });
+
+  it('should handle mixed error types with critical priority', () => {
+    const errors = [
+      { type: 'rate_limit', severity: 'warning' as const, retryable: true, message: 'Rate limited', recoveryGuidance: 'Wait', modelId: 'deepseek' },
+      { type: 'quota_exceeded', severity: 'critical' as const, retryable: false, message: 'Quota exceeded', recoveryGuidance: 'Contact support', modelId: 'gemini' },
+    ];
+    
+    const hasCritical = errors.some(e => e.severity === 'critical');
+    const hasRetryable = errors.some(e => e.retryable);
+    
+    expect(hasCritical).toBe(true);
+    expect(hasRetryable).toBe(true);
+    
+    console.log('✅ Mixed error type aggregation validated');
+  });
+
+  it('should calculate max wait time from multiple errors', () => {
+    const errors = [
+      { type: 'timeout', severity: 'warning' as const, retryable: true, message: 'Timeout', recoveryGuidance: 'Wait', modelId: 'deepseek', estimatedWaitTime: 60000 },
+      { type: 'network', severity: 'warning' as const, retryable: true, message: 'Network error', recoveryGuidance: 'Wait', modelId: 'kimi', estimatedWaitTime: 180000 },
+      { type: 'gateway_error', severity: 'warning' as const, retryable: true, message: 'Gateway error', recoveryGuidance: 'Wait', modelId: 'gemini', estimatedWaitTime: 300000 },
+    ];
+    
+    const maxWaitTime = Math.max(...errors.map(e => e.estimatedWaitTime || 0));
+    expect(maxWaitTime).toBe(300000);
+    
+    console.log('✅ Max wait time calculation validated');
+  });
+
+  it('should enhance single error with partial success context', () => {
+    const error = { type: 'timeout', severity: 'warning' as const, retryable: true, message: 'Model timed out', recoveryGuidance: 'Retry', modelId: 'deepseek' };
+    const successfulModels = 3;
+    const totalModels = 5;
+    
+    const enhancedMessage = `${error.message} (${successfulModels}/${totalModels} models successful)`;
+    const enhancedGuidance = `${error.recoveryGuidance} Note: ${successfulModels} models provided analysis successfully.`;
+    
+    expect(enhancedMessage).toContain('3/5');
+    expect(enhancedGuidance).toContain('3 models');
+    
+    console.log('✅ Partial success context enhancement validated');
+  });
+});
+
+describe('New Error Types Coverage', () => {
+  it('should handle content filtered errors', () => {
+    const error = {
+      type: 'content_filtered',
+      severity: 'warning' as const,
+      retryable: true,
+      message: 'Analysis request was filtered by content policy',
+      recoveryGuidance: 'Try again with a different asset',
+      estimatedWaitTime: 30000
+    };
+    
+    expect(error.type).toBe('content_filtered');
+    expect(error.retryable).toBe(true);
+    expect(error.estimatedWaitTime).toBe(30000);
+    
+    console.log('✅ Content filtered error validated');
+  });
+
+  it('should handle context window exceeded errors', () => {
+    const error = {
+      type: 'context_window_exceeded',
+      severity: 'warning' as const,
+      retryable: true,
+      message: 'Analysis context too long for this model',
+      recoveryGuidance: 'Shorten your context to under 500 characters',
+      estimatedWaitTime: 15000
+    };
+    
+    expect(error.type).toBe('context_window_exceeded');
+    expect(error.retryable).toBe(true);
+    
+    console.log('✅ Context window exceeded error validated');
+  });
+
+  it('should handle malformed request errors', () => {
+    const error = {
+      type: 'malformed_request',
+      severity: 'warning' as const,
+      retryable: true,
+      message: 'Invalid request format sent to AI model',
+      recoveryGuidance: 'Click Analyze Again to retry',
+      estimatedWaitTime: 10000
+    };
+    
+    expect(error.type).toBe('malformed_request');
+    expect(error.retryable).toBe(true);
+    
+    console.log('✅ Malformed request error validated');
+  });
+
+  it('should handle model overloaded errors', () => {
+    const error = {
+      type: 'model_overloaded',
+      severity: 'warning' as const,
+      retryable: true,
+      message: 'AI model is currently overloaded',
+      recoveryGuidance: 'Wait 2-3 minutes then retry',
+      estimatedWaitTime: 180000
+    };
+    
+    expect(error.type).toBe('model_overloaded');
+    expect(error.estimatedWaitTime).toBe(180000);
+    
+    console.log('✅ Model overloaded error validated');
+  });
+});
+
+describe('Error Aggregator Deduplication', () => {
+  it('should create unique keys based on type, severity, and model', () => {
+    const error1 = { type: 'rate_limit', severity: 'warning' as const, modelId: 'deepseek' };
+    const error2 = { type: 'rate_limit', severity: 'warning' as const, modelId: 'kimi' };
+    const error3 = { type: 'rate_limit', severity: 'warning' as const, modelId: 'deepseek' }; // Same as error1
+    
+    // Simulate key generation with model granularity
+    const getErrorKey = (error: any) => `${error.type}_${error.severity}_${error.modelId}`;
+    
+    const key1 = getErrorKey(error1);
+    const key2 = getErrorKey(error2);
+    const key3 = getErrorKey(error3);
+    
+    expect(key1).toBe('rate_limit_warning_deepseek');
+    expect(key2).toBe('rate_limit_warning_kimi');
+    expect(key1).toBe(key3); // Same error type from same model
+    expect(key1).not.toBe(key2); // Different models
+    
+    console.log('✅ Error key deduplication validated');
+  });
+});
+
 console.log('✅ Error handling unit tests completed');

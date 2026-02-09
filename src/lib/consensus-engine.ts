@@ -436,6 +436,50 @@ function createUserFacingError(error: ConsensusError): UserFacingError {
         estimatedWaitTime: 240000, // 4 minutes
       };
 
+    case ConsensusErrorType.CONTENT_FILTERED:
+      return {
+        type: 'content_filtered',
+        message: 'Analysis request was filtered by content policy',
+        severity: 'warning',
+        recoveryGuidance: 'The AI model flagged this request as potentially violating content policies. This can happen with certain asset symbols or context. Try again with a different asset or simplify your context. If this persists, the system will use alternative models.',
+        retryable: true,
+        modelId,
+        estimatedWaitTime: 30000, // 30 seconds
+      };
+
+    case ConsensusErrorType.CONTEXT_WINDOW_EXCEEDED:
+      return {
+        type: 'context_window_exceeded',
+        message: 'Analysis context too long for this model',
+        severity: 'warning',
+        recoveryGuidance: 'The provided context exceeded the model\'s processing limits. Try shortening your context to under 500 characters. The system will automatically retry with optimized parameters.',
+        retryable: true,
+        modelId,
+        estimatedWaitTime: 15000, // 15 seconds
+      };
+
+    case ConsensusErrorType.MALFORMED_REQUEST:
+      return {
+        type: 'malformed_request',
+        message: 'Invalid request format sent to AI model',
+        severity: 'warning',
+        recoveryGuidance: 'The request format was rejected by the AI service. This is usually temporary. Click "Analyze Again" to retry with corrected parameters. The system automatically validates and corrects request formatting.',
+        retryable: true,
+        modelId,
+        estimatedWaitTime: 10000, // 10 seconds
+      };
+
+    case ConsensusErrorType.MODEL_OVERLOADED:
+      return {
+        type: 'model_overloaded',
+        message: 'AI model is currently overloaded',
+        severity: 'warning',
+        recoveryGuidance: 'This AI model is experiencing exceptionally high demand. Wait 2-3 minutes, then click "Analyze Again". The system will automatically route to less busy backup models.',
+        retryable: true,
+        modelId,
+        estimatedWaitTime: 180000, // 3 minutes
+      };
+
     default:
       return {
         type: 'unknown_error',
