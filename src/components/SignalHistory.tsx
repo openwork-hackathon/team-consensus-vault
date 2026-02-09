@@ -199,7 +199,7 @@ export default function SignalHistory({
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       {/* Signal Type and Confidence */}
-                      <div className="flex items-center gap-2 mb-2">
+                      <div className="flex flex-wrap items-center gap-2 mb-2">
                         <span className="text-xl" aria-hidden="true">{colors.icon}</span>
                         <span className={`font-bold text-lg ${colors.text}`}>
                           {signal.signalType}
@@ -209,7 +209,7 @@ export default function SignalHistory({
                         </span>
                         {/* Trade Outcome & P&L */}
                         {signal.tradeExecuted && (
-                          <div className="ml-auto flex items-center gap-2">
+                          <div className="ml-auto flex flex-wrap items-center gap-2">
                             {signal.pnl !== undefined && (
                               <span 
                                 className={`text-sm font-bold ${
@@ -310,7 +310,7 @@ export default function SignalHistory({
                                   signal.pnl && signal.pnl >= 0 ? 'text-bullish' : 'text-bearish'
                                 }`}>
                                   {signal.pnl !== undefined ? (
-                                    <div className="flex items-center gap-1 truncate">
+                                    <div className="flex items-center gap-1 min-w-0">
                                       <span className="truncate">
                                         {signal.pnl >= 0 ? '+' : ''}${signal.pnl.toFixed(2)}
                                       </span>
