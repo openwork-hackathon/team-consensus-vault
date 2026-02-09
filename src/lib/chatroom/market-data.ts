@@ -8,6 +8,12 @@ import { withEdgeCache, CACHE_TTL, CACHE_TAGS } from '@/lib/cache';
 
 const COINGECKO_API = 'https://api.coingecko.com/api/v3';
 
+/** Safely coerce a value to a finite number, defaulting to 0 */
+function safeNum(val: unknown): number {
+  const n = Number(val);
+  return Number.isFinite(n) ? n : 0;
+}
+
 // Asset mapping for CoinGecko IDs
 const ASSET_ID_MAP: Record<string, string> = {
   'BTC': 'bitcoin',
@@ -78,28 +84,28 @@ async function fetchMarketDataRaw(asset: string): Promise<MarketData> {
     const md = data.market_data;
 
     const marketData: MarketData = {
-      price: md.current_price?.usd || 0,
-      priceChange24h: md.price_change_24h_in_currency?.usd || 0,
-      priceChangePercentage24h: md.price_change_percentage_24h || 0,
-      volume24h: md.total_volume?.usd || 0,
+      price: safeNum(md.current_price?.usd),
+      priceChange24h: safeNum(md.price_change_24h_in_currency?.usd),
+      priceChangePercentage24h: safeNum(md.price_change_percentage_24h),
+      volume24h: safeNum(md.total_volume?.usd),
       volumeChange24h: calculateVolumeChange(md),
-      marketCap: md.market_cap?.usd || 0,
-      high24h: md.high_24h?.usd || 0,
-      low24h: md.low_24h?.usd || 0,
-      ath: md.ath?.usd || 0,
-      athChangePercentage: md.ath_change_percentage || 0,
-      atl: md.atl?.usd || 0,
-      atlChangePercentage: md.atl_change_percentage || 0,
-      circulatingSupply: md.circulating_supply || 0,
-      totalSupply: md.total_supply || null,
-      maxSupply: md.max_supply || null,
+      marketCap: safeNum(md.market_cap?.usd),
+      high24h: safeNum(md.high_24h?.usd),
+      low24h: safeNum(md.low_24h?.usd),
+      ath: safeNum(md.ath?.usd),
+      athChangePercentage: safeNum(md.ath_change_percentage?.usd),
+      atl: safeNum(md.atl?.usd),
+      atlChangePercentage: safeNum(md.atl_change_percentage?.usd),
+      circulatingSupply: safeNum(md.circulating_supply),
+      totalSupply: md.total_supply != null ? safeNum(md.total_supply) : null,
+      maxSupply: md.max_supply != null ? safeNum(md.max_supply) : null,
       lastUpdated: md.last_updated || new Date().toISOString(),
     };
 
     // Calculate derived metrics
     marketData.volatility24h = calculateVolatility(marketData);
-    marketData.volumeToMarketCapRatio = marketData.marketCap > 0 
-      ? marketData.volume24h / marketData.marketCap 
+    marketData.volumeToMarketCapRatio = marketData.marketCap > 0
+      ? marketData.volume24h / marketData.marketCap
       : 0;
 
     return marketData;
@@ -131,9 +137,9 @@ export const fetchMarketData = withEdgeCache(
  */
 function calculateVolumeChange(marketData: any): number {
   // CoinGecko doesn't directly provide volume change, estimate from trends
-  const volume24h = marketData.total_volume?.usd || 0;
+  const volume24h = safeNum(marketData.total_volume?.usd);
   // Use a heuristic based on price movement correlation
-  const priceChange = marketData.price_change_percentage_24h || 0;
+  const priceChange = safeNum(marketData.price_change_percentage_24h);
   // Rough estimate: volume often increases with volatility
   return volume24h * (priceChange / 100) * 0.5;
 }
@@ -151,8 +157,8 @@ function calculateVolatility(data: MarketData): number {
  * Get market metrics interpretation
  */
 export function getMarketMetrics(data: MarketData): MarketMetrics {
-  const priceChange = data.priceChangePercentage24h;
-  
+  const priceChange = safeNum(data.priceChangePercentage24h);
+
   // Price action classification
   let priceAction: MarketMetrics['priceAction'] = 'neutral';
   if (priceChange > 10) priceAction = 'strong_up';
@@ -161,13 +167,13 @@ export function getMarketMetrics(data: MarketData): MarketMetrics {
   else if (priceChange < -3) priceAction = 'down';
 
   // Volume profile
-  const vmcRatio = data.volumeToMarketCapRatio || 0;
+  const vmcRatio = safeNum(data.volumeToMarketCapRatio);
   let volumeProfile: MarketMetrics['volumeProfile'] = 'normal';
   if (vmcRatio > 0.15) volumeProfile = 'high';
   else if (vmcRatio < 0.05) volumeProfile = 'low';
 
   // Volatility
-  const vol = data.volatility24h || 0;
+  const vol = safeNum(data.volatility24h);
   let volatility: MarketMetrics['volatility'] = 'normal';
   if (vol > 8) volatility = 'high';
   else if (vol < 3) volatility = 'low';
@@ -188,21 +194,22 @@ export function formatMarketDataForPrompt(data: MarketData, asset: string = 'BTC
   const priceFormatted = formatPrice(data.price);
   const volumeFormatted = formatLargeNumber(data.volume24h);
   const marketCapFormatted = formatLargeNumber(data.marketCap);
-  
-  const priceChangeEmoji = data.priceChangePercentage24h >= 0 ? '📈' : '📉';
+
+  const pricePct = safeNum(data.priceChangePercentage24h);
+  const priceChangeEmoji = pricePct >= 0 ? '📈' : '📉';
   const volumeChangePct = data.volume24h > 0 && data.volumeChange24h !== 0
-    ? ((data.volumeChange24h / data.volume24h) * 100).toFixed(1)
+    ? safeNum((data.volumeChange24h / data.volume24h) * 100).toFixed(1)
     : '0';
 
   return `
 === CURRENT MARKET DATA (${asset}) ===
-Price: $${priceFormatted} (${data.priceChangePercentage24h >= 0 ? '+' : ''}${data.priceChangePercentage24h.toFixed(2)}% 24h) ${priceChangeEmoji}
+Price: $${priceFormatted} (${pricePct >= 0 ? '+' : ''}${pricePct.toFixed(2)}% 24h) ${priceChangeEmoji}
 24h Volume: $${volumeFormatted} (${volumeChangePct}% change)
 Market Cap: $${marketCapFormatted}
-24h Range: $${formatPrice(data.low24h)} - $${formatPrice(data.high24h)}
-Volatility: ${data.volatility24h?.toFixed(2)}% (24h range)
-Volume/Market Cap: ${(data.volumeToMarketCapRatio || 0).toFixed(3)}
-ATH: $${formatPrice(data.ath)} (${(Number(data.athChangePercentage) || 0).toFixed(1)}% from ATH)
+24h Range: $${formatPrice(safeNum(data.low24h))} - $${formatPrice(safeNum(data.high24h))}
+Volatility: ${safeNum(data.volatility24h).toFixed(2)}% (24h range)
+Volume/Market Cap: ${safeNum(data.volumeToMarketCapRatio).toFixed(3)}
+ATH: $${formatPrice(safeNum(data.ath))} (${safeNum(data.athChangePercentage).toFixed(1)}% from ATH)
 Market Profile: ${metrics.priceAction} price, ${metrics.volumeProfile} volume, ${metrics.volatility} volatility
 Last Updated: ${new Date(data.lastUpdated).toLocaleTimeString()}
 === END MARKET DATA ===
@@ -217,10 +224,11 @@ export function getMarketTalkingPoints(data: MarketData): string[] {
   const metrics = getMarketMetrics(data);
 
   // Price action points
-  if (data.priceChangePercentage24h > 15) {
-    points.push(`Strong breakout: +${data.priceChangePercentage24h.toFixed(1)}% in 24h`);
-  } else if (data.priceChangePercentage24h < -15) {
-    points.push(`Significant correction: ${data.priceChangePercentage24h.toFixed(1)}% in 24h`);
+  const pricePct = safeNum(data.priceChangePercentage24h);
+  if (pricePct > 15) {
+    points.push(`Strong breakout: +${pricePct.toFixed(1)}% in 24h`);
+  } else if (pricePct < -15) {
+    points.push(`Significant correction: ${pricePct.toFixed(1)}% in 24h`);
   }
 
   // Volume analysis
@@ -232,11 +240,11 @@ export function getMarketTalkingPoints(data: MarketData): string[] {
 
   // Volatility
   if (metrics.volatility === 'high') {
-    points.push(`High volatility: ${data.volatility24h?.toFixed(1)}% range - expect sharp moves`);
+    points.push(`High volatility: ${safeNum(data.volatility24h).toFixed(1)}% range - expect sharp moves`);
   }
 
   // Distance from ATH
-  const athPct = Number(data.athChangePercentage) || 0;
+  const athPct = safeNum(data.athChangePercentage);
   if (athPct > -20 && athPct < 0) {
     points.push(`Near ATH: only ${Math.abs(athPct).toFixed(1)}% below all-time high`);
   } else if (athPct < -50) {
@@ -258,12 +266,13 @@ export function getMarketTalkingPoints(data: MarketData): string[] {
  * Format price with appropriate decimals
  */
 function formatPrice(price: number): string {
-  if (price >= 1000) {
-    return price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  } else if (price >= 1) {
-    return price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+  const p = safeNum(price);
+  if (p >= 1000) {
+    return p.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  } else if (p >= 1) {
+    return p.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
   } else {
-    return price.toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 6 });
+    return p.toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 6 });
   }
 }
 
@@ -271,14 +280,15 @@ function formatPrice(price: number): string {
  * Format large numbers (millions, billions)
  */
 function formatLargeNumber(num: number): string {
-  if (num >= 1_000_000_000) {
-    return (num / 1_000_000_000).toFixed(2) + 'B';
-  } else if (num >= 1_000_000) {
-    return (num / 1_000_000).toFixed(2) + 'M';
-  } else if (num >= 1_000) {
-    return (num / 1_000).toFixed(2) + 'K';
+  const n = safeNum(num);
+  if (n >= 1_000_000_000) {
+    return (n / 1_000_000_000).toFixed(2) + 'B';
+  } else if (n >= 1_000_000) {
+    return (n / 1_000_000).toFixed(2) + 'M';
+  } else if (n >= 1_000) {
+    return (n / 1_000).toFixed(2) + 'K';
   }
-  return num.toFixed(2);
+  return n.toFixed(2);
 }
 
 /**
@@ -312,7 +322,7 @@ function getFallbackMarketData(): MarketData {
  */
 export async function fetchMultipleMarketData(assets: string[]): Promise<Record<string, MarketData>> {
   const results: Record<string, MarketData> = {};
-  
+
   // Fetch in parallel with Promise.allSettled to handle partial failures
   const promises = assets.map(async (asset) => {
     try {
@@ -324,7 +334,7 @@ export async function fetchMultipleMarketData(assets: string[]): Promise<Record<
   });
 
   const settled = await Promise.allSettled(promises);
-  
+
   settled.forEach((result) => {
     if (result.status === 'fulfilled') {
       results[result.value.asset] = result.value.data;

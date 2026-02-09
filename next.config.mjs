@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  turbopack: {
+    root: import.meta.dirname || process.cwd(),
+  },
   env: {
     // AI model proxy URL — routes AI API calls through our server which holds the keys.
     // Falls back to direct calls when not set (local dev with keys in .env.local).
