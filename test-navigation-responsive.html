@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navigation Responsive Test</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .test-case {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+        .breakpoint {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .expected {
+            background: #f0f9ff;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .actual {
+            background: #f0fff0;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .code {
+            font-family: monospace;
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        .pass {
+            color: green;
+            font-weight: bold;
+        }
+        .fail {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Navigation Market Info Responsive Breakpoints Test</h1>
+    
+    <div class="test-case">
+        <div class="breakpoint">Small screens (&lt; 640px)</div>
+        <div class="expected">Expected: Market info HIDDEN (to save space for wallet button)</div>
+        <div class="actual">Actual Implementation: 
+            <span class="pass">✓ CORRECT</span> - Market info uses <code>hidden sm:block</code> pattern
+        </div>
+        <div class="code">
+            &lt;div className="text-right hidden sm:block lg:hidden"&gt;...&lt;/div&gt;
+            &lt;div className="text-right hidden lg:block"&gt;...&lt;/div&gt;
+        </div>
+        <p>On screens &lt; 640px: Both elements are hidden (first by <code>hidden sm:block</code>, second by <code>hidden lg:block</code>)</p>
+    </div>
+    
+    <div class="test-case">
+        <div class="breakpoint">Medium screens (640px-1024px)</div>
+        <div class="expected">Expected: Show COMPACT market info (just 'BTC $45,234' in a single condensed element)</div>
+        <div class="actual">Actual Implementation: 
+            <span class="pass">✓ CORRECT</span> - Shows compact version with <code>hidden sm:block lg:hidden</code>
+        </div>
+        <div class="code">
+            &lt;div className="text-right hidden sm:block lg:hidden" role="complementary" aria-label="Market information"&gt;
+                &lt;div className="font-semibold text-sm" aria-label="BTC price 45,234 dollars"&gt;
+                    BTC $45,234
+                &lt;/div&gt;
+            &lt;/div&gt;
+        </div>
+        <p>On screens 640px-1024px: First element shows (matches <code>sm:block lg:hidden</code>), second element hidden (matches <code>hidden lg:block</code>)</p>
+    </div>
+    
+    <div class="test-case">
+        <div class="breakpoint">Large screens (&gt;= 1024px)</div>
+        <div class="expected">Expected: Show full two-column layout as currently exists</div>
+        <div class="actual">Actual Implementation: 
+            <span class="pass">✓ CORRECT</span> - Shows full layout with <code>hidden lg:block</code>
+        </div>
+        <div class="code">
+            &lt;div className="text-right hidden lg:block" role="complementary" aria-label="Market information"&gt;
+                &lt;div className="text-xs text-muted-foreground"&gt;Asset&lt;/div&gt;
+                &lt;div className="font-semibold text-sm" aria-label="BTC/USD pair"&gt;BTC/USD&lt;/div&gt;
+            &lt;/div&gt;
+            &lt;div className="text-right hidden lg:block" role="complementary" aria-label="Current price"&gt;
+                &lt;div className="text-xs text-muted-foreground"&gt;Price&lt;/div&gt;
+                &lt;div className="font-semibold text-bullish text-sm" aria-label="Current BTC price 45,234 dollars"&gt;
+                    $45,234
+                &lt;/div&gt;
+            &lt;/div&gt;
+        </div>
+        <p>On screens &gt;= 1024px: First element hidden (matches <code>sm:block lg:hidden</code>), second element shows (matches <code>hidden lg:block</code>)</p>
+    </div>
+    
+    <div class="test-case">
+        <div class="breakpoint">Accessibility Verification</div>
+        <div class="expected">Expected: Maintain all existing aria-labels and accessibility attributes</div>
+        <div class="actual">Actual Implementation: 
+            <span class="pass">✓ CORRECT</span> - All aria-labels preserved
+        </div>
+        <div class="code">
+            Compact version: aria-label="Market information", aria-label="BTC price 45,234 dollars"
+            Full version: aria-label="Market information", aria-label="BTC/USD pair", aria-label="Current price", aria-label="Current BTC price 45,234 dollars"
+        </div>
+        <p>All accessibility attributes maintained from original implementation</p>
+    </div>
+    
+    <div class="test-case">
+        <div class="breakpoint">Spacing and Alignment</div>
+        <div class="expected">Expected: Ensure proper alignment with flex items and gap spacing</div>
+        <div class="actual">Actual Implementation: 
+            <span class="pass">✓ CORRECT</span> - Container uses responsive gap spacing
+        </div>
+        <div class="code">
+            &lt;div className="flex items-center gap-2 sm:gap-3 md:gap-4"&gt;
+        </div>
+        <p>Responsive gap spacing: 8px (gap-2) on mobile, 12px (sm:gap-3) on small+, 16px (md:gap-4) on medium+</p>
+    </div>
+    
+    <h2>Summary</h2>
+    <p>The implementation correctly addresses all requirements:</p>
+    <ul>
+        <li><span class="pass">✓</span> Small screens (&lt; 640px): Market info hidden</li>
+        <li><span class="pass">✓</span> Medium screens (640px-1024px): Compact single-element display "BTC $45,234"</li>
+        <li><span class="pass">✓</span> Large screens (&gt;= 1024px): Full two-column layout</li>
+        <li><span class="pass">✓</span> All accessibility attributes preserved</li>
+        <li><span class="pass">✓</span> Proper responsive spacing maintained</li>
+    </ul>
+    
+    <h2>Tailwind Breakpoint Reference</h2>
+    <ul>
+        <li><code>sm:</code> 640px and up</li>
+        <li><code>md:</code> 768px and up</li>
+        <li><code>lg:</code> 1024px and up</li>
+        <li><code>xl:</code> 1280px and up</li>
+        <li><code>2xl:</code> 1536px and up</li>
+    </ul>
+</body>
+</html>

@@ -71,41 +71,49 @@ export interface LivePnLProps {
  */
 function formatCurrency(value: number): string {
   const absValue = Math.abs(value);
+  const isNegative = value < 0;
   
   // Use compact notation for large numbers (100K+) to prevent overflow on mobile
+  let formatted: string;
   if (absValue >= 1000000000) {
-    return `$${value.toLocaleString('en-US', { 
+    formatted = Math.abs(value).toLocaleString('en-US', { 
       notation: 'compact', 
       compactDisplay: 'short',
       maximumFractionDigits: 2 
-    })}`;
-  }
-  
-  if (absValue >= 1000000) {
-    return `$${value.toLocaleString('en-US', { 
+    });
+  } else if (absValue >= 1000000) {
+    formatted = Math.abs(value).toLocaleString('en-US', { 
       notation: 'compact', 
       compactDisplay: 'short',
       maximumFractionDigits: 2 
-    })}`;
-  }
-  
-  if (absValue >= 100000) {
-    return `$${value.toLocaleString('en-US', { 
+    });
+  } else if (absValue >= 100000) {
+    formatted = Math.abs(value).toLocaleString('en-US', { 
       notation: 'compact', 
       compactDisplay: 'short',
       maximumFractionDigits: 1 
-    })}`;
+    });
+  } else {
+    // Standard formatting for smaller numbers
+    formatted = Math.abs(value).toLocaleString('en-US', { 
+      minimumFractionDigits: 2, 
+      maximumFractionDigits: 2 
+    });
   }
   
-  // Standard formatting for smaller numbers
-  return `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return isNegative ? `-$${formatted}` : `$${formatted}`;
 }
 
 /**
  * Format full currency value for tooltips (no abbreviation)
  */
 function formatCurrencyFull(value: number): string {
-  return `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const absValue = Math.abs(value);
+  const formatted = absValue.toLocaleString('en-US', { 
+    minimumFractionDigits: 2, 
+    maximumFractionDigits: 2 
+  });
+  return value < 0 ? `-$${formatted}` : `$${formatted}`;
 }
 
 /**
