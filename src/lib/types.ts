@@ -13,6 +13,8 @@ export interface UserFacingError {
   modelId?: string;
   estimatedWaitTime?: number; // For rate limiting, timeouts, etc.
   isProxyError?: boolean; // Flag for proxy-related errors
+  retryCountdown?: number; // Countdown in seconds, updates dynamically
+  retryAvailableAt?: Date; // When retry will be available
 }
 
 // Progress update types for slow models

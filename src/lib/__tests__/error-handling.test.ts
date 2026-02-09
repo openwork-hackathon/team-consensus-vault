@@ -66,7 +66,7 @@ describe('Enhanced Error Handling', () => {
       expect(userError.type).toBe('rate_limit');
       expect(userError.severity).toBe('warning');
       expect(userError.retryable).toBe(true);
-      expect(userError.estimatedWaitTime).toBe(45000);
+      expect(userError.estimatedWaitTime).toBe(60000);
       expect(userError.recoveryGuidance).toContain('too many requests');
     });
 
@@ -81,7 +81,7 @@ describe('Enhanced Error Handling', () => {
       const userError502 = createUserFacingError(error502);
 
       expect(userError502.type).toBe('gateway_error');
-      expect(userError502.estimatedWaitTime).toBe(180000);
+      expect(userError502.estimatedWaitTime).toBe(240000);
       expect(userError502.recoveryGuidance).toContain('server issues');
 
       const error503 = new ConsensusError(
@@ -119,8 +119,8 @@ describe('Enhanced Error Handling', () => {
       const userError = createUserFacingError(error);
 
       expect(userError.type).toBe('network');
-      expect(userError.estimatedWaitTime).toBe(120000);
-      expect(userError.recoveryGuidance).toContain('2-3 minutes');
+      expect(userError.estimatedWaitTime).toBe(180000);
+      expect(userError.recoveryGuidance).toContain('2-5 minutes');
     });
 
     it('should handle missing API key errors with appropriate severity', () => {

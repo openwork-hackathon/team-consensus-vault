@@ -216,6 +216,7 @@ export const logger = ConsensusLogger.getInstance();
  *
  * Transforms internal ConsensusError objects into user-friendly messages
  * with actionable recovery steps and appropriate severity levels.
+ * Includes retry countdown information for retryable errors.
  *
  * @param error - The internal ConsensusError to transform
  * @returns A UserFacingError with friendly message and recovery guidance
@@ -226,7 +227,9 @@ export const logger = ConsensusLogger.getInstance();
  * const userError = createUserFacingError(internalError);
  * // userError.message: "Rate limit exceeded - please wait before trying again"
  * // userError.retryable: true
- * // userError.estimatedWaitTime: 45000
+ * // userError.estimatedWaitTime: 60000
+ * // userError.retryCountdown: 60 (seconds)
+ * // userError.retryAvailableAt: Date object
  * ```
  */
 function createUserFacingError(error: ConsensusError): UserFacingError {
@@ -242,6 +245,8 @@ function createUserFacingError(error: ConsensusError): UserFacingError {
         retryable: true,
         modelId,
         estimatedWaitTime: 60000, // 60 seconds for clarity
+        retryCountdown: 60, // Initial countdown in seconds
+        retryAvailableAt: new Date(Date.now() + 60000),
       };
 
     case ConsensusErrorType.TIMEOUT:
@@ -253,6 +258,8 @@ function createUserFacingError(error: ConsensusError): UserFacingError {
         retryable: true,
         modelId,
         estimatedWaitTime: 60000,
+        retryCountdown: 60,
+        retryAvailableAt: new Date(Date.now() + 60000),
       };
 
     case ConsensusErrorType.NETWORK_ERROR:
@@ -265,6 +272,8 @@ function createUserFacingError(error: ConsensusError): UserFacingError {
         modelId,
         estimatedWaitTime: 180000, // Increased from 120s to 180s for proxy issues
         isProxyError: true,
+        retryCountdown: 180,
+        retryAvailableAt: new Date(Date.now() + 180000),
       };
 
     case ConsensusErrorType.PROXY_CONNECTION_ERROR:
@@ -277,6 +286,8 @@ function createUserFacingError(error: ConsensusError): UserFacingError {
         modelId,
         estimatedWaitTime: 300000, // 5 minutes for proxy issues
         isProxyError: true,
+        retryCountdown: 300,
+        retryAvailableAt: new Date(Date.now() + 300000),
       };
 
     case ConsensusErrorType.AUTHENTICATION_ERROR:
@@ -307,6 +318,8 @@ function createUserFacingError(error: ConsensusError): UserFacingError {
         recoveryGuidance: 'This model is nearing its usage quota. Service may be limited soon. Consider using the analysis sparingly or waiting for quota reset (typically midnight UTC).',
         retryable: true,
         modelId,
+        retryCountdown: 30,
+        retryAvailableAt: new Date(Date.now() + 30000),
       };
 
     case ConsensusErrorType.MISSING_API_KEY:
@@ -327,6 +340,8 @@ function createUserFacingError(error: ConsensusError): UserFacingError {
         recoveryGuidance: 'The AI model returned a response in an unexpected format. This is usually temporary. Click "Analyze Again" to retry immediately. The system automatically retries 2 times before failing.',
         retryable: true,
         modelId,
+        retryCountdown: 5,
+        retryAvailableAt: new Date(Date.now() + 5000),
       };
 
     case ConsensusErrorType.API_ERROR:
@@ -683,6 +698,110 @@ const CIRCUIT_BREAKER_CONFIG = {
 
 const circuitBreakerStates: Record<string, CircuitBreakerState> = {};
 
+// Error rate tracking for time windows (for smarter circuit breaker decisions)
+interface ErrorRateEntry {
+  timestamp: number;
+  success: boolean;
+  modelId: string;
+  errorType?: ConsensusErrorType;
+}
+
+const ERROR_RATE_WINDOWS = {
+  SHORT: 5 * 60 * 1000, // 5 minutes
+  MEDIUM: 15 * 60 * 1000, // 15 minutes
+  LONG: 60 * 60 * 1000, // 1 hour
+};
+
+// Circular buffer for error rate tracking (max 1000 entries per window)
+const errorHistory: ErrorRateEntry[] = [];
+const MAX_ERROR_HISTORY = 1000;
+
+/**
+ * Record an error or success for rate tracking
+ */
+function recordErrorRateEvent(success: boolean, modelId: string, errorType?: ConsensusErrorType): void {
+  errorHistory.push({
+    timestamp: Date.now(),
+    success,
+    modelId,
+    errorType,
+  });
+
+  // Trim history if it gets too large
+  if (errorHistory.length > MAX_ERROR_HISTORY) {
+    errorHistory.shift();
+  }
+}
+
+/**
+ * Calculate error rate for a specific time window and model
+ */
+function getErrorRate(windowMs: number, modelId?: string): {
+  totalRequests: number;
+  errorCount: number;
+  errorRate: number; // 0-1
+  errorTypes: Record<string, number>;
+} {
+  const now = Date.now();
+  const cutoff = now - windowMs;
+
+  const filteredEntries = errorHistory.filter(entry => {
+    const withinWindow = entry.timestamp >= cutoff;
+    const matchesModel = !modelId || entry.modelId === modelId;
+    return withinWindow && matchesModel;
+  });
+
+  const totalRequests = filteredEntries.length;
+  const errorCount = filteredEntries.filter(e => !e.success).length;
+  const errorRate = totalRequests > 0 ? errorCount / totalRequests : 0;
+
+  // Count error types
+  const errorTypes: Record<string, number> = {};
+  filteredEntries
+    .filter(e => !e.success && e.errorType)
+    .forEach(e => {
+      const type = e.errorType!;
+      errorTypes[type] = (errorTypes[type] || 0) + 1;
+    });
+
+  return {
+    totalRequests,
+    errorCount,
+    errorRate,
+    errorTypes,
+  };
+}
+
+/**
+ * Get error rates for all time windows
+ */
+export function getErrorRates(): {
+  last5Minutes: ReturnType<typeof getErrorRate>;
+  last15Minutes: ReturnType<typeof getErrorRate>;
+  lastHour: ReturnType<typeof getErrorRate>;
+} {
+  return {
+    last5Minutes: getErrorRate(ERROR_RATE_WINDOWS.SHORT),
+    last15Minutes: getErrorRate(ERROR_RATE_WINDOWS.MEDIUM),
+    lastHour: getErrorRate(ERROR_RATE_WINDOWS.LONG),
+  };
+}
+
+/**
+ * Get error rates for a specific model
+ */
+export function getModelErrorRates(modelId: string): {
+  last5Minutes: ReturnType<typeof getErrorRate>;
+  last15Minutes: ReturnType<typeof getErrorRate>;
+  lastHour: ReturnType<typeof getErrorRate>;
+} {
+  return {
+    last5Minutes: getErrorRate(ERROR_RATE_WINDOWS.SHORT, modelId),
+    last15Minutes: getErrorRate(ERROR_RATE_WINDOWS.MEDIUM, modelId),
+    lastHour: getErrorRate(ERROR_RATE_WINDOWS.LONG, modelId),
+  };
+}
+
 /**
  * Check if circuit breaker is open for a model
  * @param modelId - The model to check
@@ -722,13 +841,35 @@ function recordCircuitBreakerFailure(modelId: string): void {
   state.failureCount++;
   state.lastFailureTime = Date.now();
 
-  // Open circuit if threshold exceeded
-  if (state.failureCount >= CIRCUIT_BREAKER_CONFIG.FAILURE_THRESHOLD) {
+  // Record error rate event
+  recordErrorRateEvent(false, modelId);
+
+  // Check error rate for smarter circuit breaker decisions
+  const errorRate5Min = getErrorRate(ERROR_RATE_WINDOWS.SHORT, modelId);
+  const errorRate15Min = getErrorRate(ERROR_RATE_WINDOWS.MEDIUM, modelId);
+
+  // Open circuit if threshold exceeded OR if error rate is very high (>80% in 5min)
+  const shouldOpenCircuit = state.failureCount >= CIRCUIT_BREAKER_CONFIG.FAILURE_THRESHOLD ||
+                           (errorRate5Min.totalRequests >= 5 && errorRate5Min.errorRate > 0.8);
+
+  if (shouldOpenCircuit && !state.isOpen) {
     state.isOpen = true;
-    state.openUntil = Date.now() + CIRCUIT_BREAKER_CONFIG.RESET_TIMEOUT;
+    // Calculate reset timeout based on error rate
+    let resetTimeout = CIRCUIT_BREAKER_CONFIG.RESET_TIMEOUT;
+    if (errorRate15Min.errorRate > 0.7) {
+      // Very high error rate - extend timeout
+      resetTimeout = 15 * 60 * 1000; // 15 minutes
+    } else if (errorRate5Min.errorRate > 0.5) {
+      // Moderate error rate - slightly extend timeout
+      resetTimeout = 12 * 60 * 1000; // 12 minutes
+    }
+
+    state.openUntil = Date.now() + resetTimeout;
     console.warn(
-      `[${modelId}] Circuit breaker opened after ${state.failureCount} failures. ` +
-      `Will reset in ${CIRCUIT_BREAKER_CONFIG.RESET_TIMEOUT / 1000}s`
+      `[${modelId}] Circuit breaker opened after ${state.failureCount} failures ` +
+      `(5min error rate: ${(errorRate5Min.errorRate * 100).toFixed(1)}%, ` +
+      `15min error rate: ${(errorRate15Min.errorRate * 100).toFixed(1)}%). ` +
+      `Will reset in ${resetTimeout / 1000}s`
     );
   }
 }
@@ -747,6 +888,9 @@ function recordCircuitBreakerSuccess(modelId: string): void {
   state.failureCount = 0;
   state.isOpen = false;
   delete state.openUntil;
+
+  // Record success for error rate tracking
+  recordErrorRateEvent(true, modelId);
 }
 
 /**
