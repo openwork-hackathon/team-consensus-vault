@@ -1,0 +1,37 @@
+CVAULT-137: Improve error handling and user feedback in consensus engine
+================================================================================
+
+## Task Analysis
+
+### Gaps Identified:
+1. **Consolidate error types**: ChatroomModelError and ChatroomError are duplicated
+2. **Consistent logging**: Mix of console.warn and console.error across files
+3. **Surface chatroom errors to UI**: Chatroom engine returns '[Technical difficulties]' strings without structured errors
+4. **Verify AnalystCard integration**: Ensure userFacingError is displayed (already working)
+5. **Add global error boundary**: Verify ErrorBoundary catches consensus engine errors
+
+## Implementation Plan
+
+### Phase 1: Consolidate Error Types
+- Remove deprecated ChatroomModelError from model-caller.ts
+- Update all usages to use ChatroomError
+- Ensure consistent error type mapping
+
+### Phase 2: Standardize Logging
+- Use console.error for actual errors
+- Use console.warn for retryable/transient issues
+- Add consistent prefixes for log messages
+
+### Phase 3: Surface Chatroom Errors to UI
+- Add error field to ChatMessage type
+- Update chatroom-engine to return structured errors
+- Update SSE stream to emit error events with structured data
+- Update useChatroomStream to expose errors
+- Add error display in ChatRoom component
+
+### Phase 4: Verify ErrorBoundary Integration
+- Review ErrorBoundary implementation
+- Ensure it catches consensus engine errors properly
+
+## Changes Made:
+

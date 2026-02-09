@@ -103,9 +103,12 @@ manual-viewport-test.js
 demo/*.mp4
 demo/generate-*.sh
 
-# All orchestrator-generated report MDs
+# Orchestrator-generated report MDs in repo root (moved to work-logs/)
 *_OPTIMIZATION.md
 *_IMPLEMENTATION.md
 *_STATUS.md
 *_SUMMARY.md
 *_REPORT.md
+
+# Work logs folder IS tracked — shows team coordination for judges
+!work-logs/

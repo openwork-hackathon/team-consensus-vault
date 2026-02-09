@@ -417,19 +417,19 @@ export default function ConsensusVsContrarian({
         </div>
 
         {/* Legend */}
-        <div className={`flex items-center justify-center text-sm ${isMobile ? 'gap-3' : 'gap-8'}`}>
-          <div className={`flex items-center gap-2 bg-bullish/10 px-2 sm:px-3 py-2 rounded-lg ${isMobile ? 'flex-1 max-w-[140px]' : ''}`}>
-            <div className="w-4 h-4 bg-bullish rounded shadow-sm" />
-            <div className="min-w-0">
-              <span className="text-bullish font-medium text-xs sm:text-sm">AI Consensus</span>
-              <p className="text-xs text-muted-foreground hidden sm:block">Trust AI recommendations</p>
+        <div className={`flex items-center justify-center text-sm w-full ${isMobile ? 'gap-2' : 'gap-8'}`}>
+          <div className={`flex items-center gap-1.5 sm:gap-2 bg-bullish/10 px-2 sm:px-3 py-2 rounded-lg flex-1 min-w-0 max-w-[160px] sm:max-w-none`}>
+            <div className="w-3 h-3 sm:w-4 sm:h-4 bg-bullish rounded shadow-sm flex-shrink-0" />
+            <div className="min-w-0 overflow-hidden">
+              <span className="text-bullish font-medium text-[10px] sm:text-sm truncate block">AI Consensus</span>
+              <p className="text-[9px] sm:text-xs text-muted-foreground hidden sm:block truncate">Trust AI recommendations</p>
             </div>
           </div>
-          <div className={`flex items-center gap-2 bg-bearish/10 px-2 sm:px-3 py-2 rounded-lg ${isMobile ? 'flex-1 max-w-[140px]' : ''}`}>
-            <div className="w-4 h-4 bg-bearish rounded shadow-sm" />
-            <div className="min-w-0">
-              <span className="text-bearish font-medium text-xs sm:text-sm">Contrarian</span>
-              <p className="text-xs text-muted-foreground hidden sm:block">Bet against AI consensus</p>
+          <div className={`flex items-center gap-1.5 sm:gap-2 bg-bearish/10 px-2 sm:px-3 py-2 rounded-lg flex-1 min-w-0 max-w-[160px] sm:max-w-none`}>
+            <div className="w-3 h-3 sm:w-4 sm:h-4 bg-bearish rounded shadow-sm flex-shrink-0" />
+            <div className="min-w-0 overflow-hidden">
+              <span className="text-bearish font-medium text-[10px] sm:text-sm truncate block">Contrarian</span>
+              <p className="text-[9px] sm:text-xs text-muted-foreground hidden sm:block truncate">Bet against AI consensus</p>
             </div>
           </div>
         </div>
@@ -458,12 +458,12 @@ export default function ConsensusVsContrarian({
               <AreaChart
                 data={historicalData}
                 margin={{
-                  top: isMobile ? 2 : 5,
-                  right: isMobile ? 2 : 5,
-                  left: isMobile ? -20 : -20,
-                  bottom: 0
+                  top: isMobile ? 5 : 10,
+                  right: isMobile ? 5 : 10,
+                  left: isMobile ? 0 : 0,
+                  bottom: isMobile ? 5 : 0
                 }}
-                barCategoryGap={isMobile ? "5%" : "10%"}
+                barCategoryGap={isMobile ? "10%" : "15%"}
               >
                 <defs>
                   <linearGradient id="cvaultGradient" x1="0" y1="0" x2="0" y2="1">
@@ -476,33 +476,30 @@ export default function ConsensusVsContrarian({
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
-                <XAxis 
-                  dataKey="timestamp" 
-                  tick={{ fontSize: isMobile ? 7 : 11, fill: 'hsl(var(--muted-foreground))' }}
+                <XAxis
+                  dataKey="timestamp"
+                  tick={{ fontSize: isMobile ? 8 : 11, fill: 'hsl(var(--muted-foreground))' }}
                   tickFormatter={(value) => {
                     const date = new Date(value);
-                    return isMobile 
-                      ? date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                    return isMobile
+                      ? date.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' })
                       : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                   }}
                   axisLine={{ stroke: 'hsl(var(--border))' }}
                   tickLine={{ stroke: 'hsl(var(--border))' }}
-                  interval={isMobile ? 0 : 'preserveStartEnd'}
-                  tickMargin={isMobile ? 2 : 5}
+                  interval={isMobile ? 2 : 'preserveStartEnd'}
+                  tickMargin={isMobile ? 4 : 5}
                 />
-                <YAxis 
-                  tick={{ fontSize: isMobile ? 7 : 11, fill: 'hsl(var(--muted-foreground))' }}
+                <YAxis
+                  tick={{ fontSize: isMobile ? 8 : 11, fill: 'hsl(var(--muted-foreground))' }}
                   tickFormatter={(value) => {
                     const valInK = value / 1000;
-                    if (isMobile && valInK >= 100) {
-                      return `$${valInK.toFixed(0)}K`;
-                    }
-                    return `$${valInK.toFixed(0)}K`;
+                    return `${valInK.toFixed(0)}K`;
                   }}
                   axisLine={{ stroke: 'hsl(var(--border))' }}
                   tickLine={{ stroke: 'hsl(var(--border))' }}
-                  width={isMobile ? 25 : 40}
-                  tickMargin={isMobile ? 2 : 5}
+                  width={isMobile ? 30 : 45}
+                  tickMargin={isMobile ? 4 : 5}
                 />
                 <RechartsTooltip content={<CustomTooltip />} />
                 <Area
