@@ -233,9 +233,12 @@ function DirectionBadge({ direction }: { direction: 'long' | 'short' }) {
 
 /**
  * P&L Display - Hero element with large animated numbers
+ * Includes overflow protection and tooltips for mobile
  */
 function PnLDisplay({ dollarPnL, percentChange }: { dollarPnL: number; percentChange: number }) {
   const isProfitable = dollarPnL >= 0;
+  const fullValue = formatCurrencyFull(dollarPnL);
+  const needsAbbreviation = Math.abs(dollarPnL) >= 100000;
   
   return (
     <motion.div
@@ -243,7 +246,7 @@ function PnLDisplay({ dollarPnL, percentChange }: { dollarPnL: number; percentCh
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5, type: 'spring', stiffness: 100 }}
       className={`
-        relative overflow-hidden rounded-2xl p-8 text-center
+        relative overflow-hidden rounded-2xl p-6 sm:p-8 text-center
         ${isProfitable 
           ? 'bg-gradient-to-br from-bullish/20 via-bullish/10 to-transparent border-2 border-bullish/50' 
           : 'bg-gradient-to-br from-bearish/20 via-bearish/10 to-transparent border-2 border-bearish/50'
@@ -262,26 +265,46 @@ function PnLDisplay({ dollarPnL, percentChange }: { dollarPnL: number; percentCh
         <motion.div
           animate={{ y: isProfitable ? [0, -4, 0] : [0, 4, 0] }}
           transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-          className="mb-3"
+          className="mb-2 sm:mb-3"
         >
-          <span className={`text-4xl ${isProfitable ? 'text-bullish' : 'text-bearish'}`}>
+          <span className={`text-3xl sm:text-4xl ${isProfitable ? 'text-bullish' : 'text-bearish'}`}>
             {isProfitable ? '↑' : '↓'}
           </span>
         </motion.div>
         
-        {/* Dollar P&L - Large hero number with responsive sizing */}
-        <div className={`text-[clamp(1.75rem,6vw,3.75rem)] font-bold tracking-tight overflow-hidden text-ellipsis ${isProfitable ? 'text-bullish' : 'text-bearish'}`}>
-          <AnimatedNumber value={dollarPnL} />
+        {/* Dollar P&L - Large hero number with responsive sizing and overflow protection */}
+        <div 
+          className={`
+            text-[clamp(1.5rem,5vw,2.5rem)] sm:text-[clamp(1.75rem,4vw,3.75rem)] 
+            font-bold tracking-tight 
+            ${isProfitable ? 'text-bullish' : 'text-bearish'}
+          `}
+          title={needsAbbreviation ? fullValue : undefined}
+        >
+          <div className="overflow-hidden text-ellipsis whitespace-nowrap px-2">
+            <AnimatedNumber value={dollarPnL} />
+          </div>
         </div>
         
-        {/* Percentage change below */}
-        <div className={`mt-2 text-xl font-medium ${isProfitable ? 'text-bullish/80' : 'text-bearish/80'}`}>
+        {/* Percentage change below with overflow protection */}
+        <div 
+          className={`
+            mt-1 sm:mt-2 text-base sm:text-xl font-medium 
+            ${isProfitable ? 'text-bullish/80' : 'text-bearish/80'}
+            overflow-hidden text-ellipsis whitespace-nowrap px-2
+          `}
+        >
           <AnimatedPercentage value={percentChange} />
         </div>
         
-        {/* Label */}
-        <p className="text-sm text-muted-foreground mt-3">
+        {/* Label with hint about abbreviation */}
+        <p className="text-xs sm:text-sm text-muted-foreground mt-2 sm:mt-3">
           Live Unrealized P&L
+          {needsAbbreviation && (
+            <span className="hidden sm:inline ml-2 text-muted-foreground/60">
+              (Tap for full value)
+            </span>
+          )}
         </p>
       </div>
     </motion.div>
@@ -290,6 +313,7 @@ function PnLDisplay({ dollarPnL, percentChange }: { dollarPnL: number; percentCh
 
 /**
  * AI Council Monitoring Indicator
+ * Includes responsive spacing
  */
 function CouncilIndicator({ 
   status, 
@@ -306,10 +330,10 @@ function CouncilIndicator({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2, duration: 0.4 }}
-      className="flex items-center justify-center gap-3 py-3 px-4 bg-secondary/30 rounded-xl"
+      className="flex items-center justify-center gap-2 sm:gap-3 py-2.5 sm:py-3 px-3 sm:px-4 bg-secondary/30 rounded-xl"
     >
       {/* Pulsing dot */}
-      <div className="relative">
+      <div className="relative flex-shrink-0">
         <motion.div
           className={`w-3 h-3 rounded-full ${isDeliberating ? 'bg-amber-500' : 'bg-emerald-500'}`}
           animate={{ 
@@ -330,8 +354,8 @@ function CouncilIndicator({
       </div>
       
       {/* Status text */}
-      <div className="flex flex-col">
-        <span className="text-sm font-medium text-foreground">
+      <div className="flex flex-col min-w-0 flex-1">
+        <span className="text-sm font-medium text-foreground truncate">
           {isDeliberating ? `Exit Vote: ${exitVotes}/5` : 'AI Council Monitoring'}
         </span>
         {isDeliberating && votesNeeded > 0 && (
@@ -346,6 +370,7 @@ function CouncilIndicator({
 
 /**
  * Pool Summary - Bulls vs Bears
+ * Includes overflow protection for mobile
  */
 function PoolSummary({ 
   pool, 
@@ -369,7 +394,7 @@ function PoolSummary({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.3, duration: 0.4 }}
-      className="bg-secondary/30 rounded-xl p-5 space-y-4"
+      className="bg-secondary/30 rounded-xl p-4 sm:p-5 space-y-4"
     >
       <h3 className="text-sm font-semibold text-muted-foreground">Pool Summary</h3>
       
@@ -377,12 +402,17 @@ function PoolSummary({
       <div className="space-y-3">
         {/* Bulls */}
         <div className="space-y-1.5">
-          <div className="flex items-center justify-between text-sm">
-            <span className="flex items-center gap-2">
+          <div className="flex items-center justify-between text-sm gap-2">
+            <span className="flex items-center gap-2 min-w-fit">
               <span className="w-2 h-2 rounded-full bg-bullish" />
               <span className="font-medium text-bullish">Bulls</span>
             </span>
-            <span className="font-semibold">{formatCurrency(pool.bullish)}</span>
+            <span 
+              className="font-semibold truncate text-right"
+              title={Math.abs(pool.bullish) >= 100000 ? formatCurrencyFull(pool.bullish) : undefined}
+            >
+              {formatCurrency(pool.bullish)}
+            </span>
           </div>
           <div className="h-2 bg-muted rounded-full overflow-hidden">
             <motion.div
@@ -396,12 +426,17 @@ function PoolSummary({
         
         {/* Bears */}
         <div className="space-y-1.5">
-          <div className="flex items-center justify-between text-sm">
-            <span className="flex items-center gap-2">
+          <div className="flex items-center justify-between text-sm gap-2">
+            <span className="flex items-center gap-2 min-w-fit">
               <span className="w-2 h-2 rounded-full bg-bearish" />
               <span className="font-medium text-bearish">Bears</span>
             </span>
-            <span className="font-semibold">{formatCurrency(pool.bearish)}</span>
+            <span 
+              className="font-semibold truncate text-right"
+              title={Math.abs(pool.bearish) >= 100000 ? formatCurrencyFull(pool.bearish) : undefined}
+            >
+              {formatCurrency(pool.bearish)}
+            </span>
           </div>
           <div className="h-2 bg-muted rounded-full overflow-hidden">
             <motion.div
@@ -417,16 +452,22 @@ function PoolSummary({
       {/* Potential outcome at current price */}
       <div className="pt-3 border-t border-border/50">
         <div className="text-xs text-muted-foreground mb-2">Potential Outcome at Current Price</div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className={`p-3 rounded-lg ${isWinningSide ? 'bg-bullish/10 border border-bullish/30' : 'bg-muted/50'}`}>
+        <div className="grid grid-cols-2 gap-2 sm:gap-3">
+          <div className={`p-2.5 sm:p-3 rounded-lg ${isWinningSide ? 'bg-bullish/10 border border-bullish/30' : 'bg-muted/50'}`}>
             <div className="text-xs text-muted-foreground mb-1">If Win</div>
-            <div className={`font-bold ${isWinningSide ? 'text-bullish' : 'text-foreground'}`}>
+            <div 
+              className={`font-bold text-sm sm:text-base ${isWinningSide ? 'text-bullish' : 'text-foreground'} overflow-hidden text-ellipsis whitespace-nowrap`}
+              title={Math.abs(winAmount) >= 100000 ? formatCurrencyFull(winAmount) : undefined}
+            >
               +{formatCurrency(winAmount)}
             </div>
           </div>
-          <div className={`p-3 rounded-lg ${!isWinningSide ? 'bg-bearish/10 border border-bearish/30' : 'bg-muted/50'}`}>
+          <div className={`p-2.5 sm:p-3 rounded-lg ${!isWinningSide ? 'bg-bearish/10 border border-bearish/30' : 'bg-muted/50'}`}>
             <div className="text-xs text-muted-foreground mb-1">If Lose</div>
-            <div className={`font-bold ${!isWinningSide ? 'text-bearish' : 'text-foreground'}`}>
+            <div 
+              className={`font-bold text-sm sm:text-base ${!isWinningSide ? 'text-bearish' : 'text-foreground'} overflow-hidden text-ellipsis whitespace-nowrap`}
+              title={Math.abs(lossAmount) >= 100000 ? formatCurrencyFull(lossAmount) : undefined}
+            >
               -{formatCurrency(lossAmount)}
             </div>
           </div>
@@ -438,6 +479,7 @@ function PoolSummary({
 
 /**
  * Position Info Section
+ * Includes responsive layout and overflow protection
  */
 function PositionInfo({ 
   round, 
@@ -451,16 +493,16 @@ function PositionInfo({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-card rounded-xl border border-border"
+      className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 p-3 sm:p-4 bg-card rounded-xl border border-border"
     >
       {/* Asset and Direction */}
-      <div className="flex items-center gap-3">
-        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-xl font-bold text-primary">
+      <div className="flex items-center gap-2 sm:gap-3">
+        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-primary/10 flex items-center justify-center text-lg sm:text-xl font-bold text-primary flex-shrink-0">
           {round.asset.charAt(0)}
         </div>
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="text-lg font-bold">{round.asset}/USD</span>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-base sm:text-lg font-bold truncate">{round.asset}/USD</span>
             <DirectionBadge direction={round.direction} />
           </div>
           <span className="text-xs text-muted-foreground">
@@ -470,14 +512,14 @@ function PositionInfo({
       </div>
       
       {/* Prices */}
-      <div className="flex items-center gap-6 sm:gap-8">
-        <div className="text-right">
+      <div className="flex items-center gap-4 sm:gap-6 sm:gap-8 overflow-x-auto">
+        <div className="text-right min-w-fit">
           <div className="text-xs text-muted-foreground mb-0.5">Entry Price</div>
-          <div className="font-semibold tabular-nums">{formatCurrency(round.entryPrice)}</div>
+          <div className="font-semibold tabular-nums text-sm sm:text-base">{formatCurrency(round.entryPrice)}</div>
         </div>
-        <div className="text-right">
+        <div className="text-right min-w-fit">
           <div className="text-xs text-muted-foreground mb-0.5">Current Price</div>
-          <div className="font-semibold tabular-nums">{formatCurrency(currentPrice)}</div>
+          <div className="font-semibold tabular-nums text-sm sm:text-base">{formatCurrency(currentPrice)}</div>
         </div>
       </div>
     </motion.div>
@@ -522,7 +564,7 @@ export default function LivePnL({
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="w-full max-w-2xl mx-auto space-y-4 p-4"
+      className="w-full max-w-2xl mx-auto space-y-3 sm:space-y-4 p-2 sm:p-4"
       role="region"
       aria-label="Live Position P&L"
     >

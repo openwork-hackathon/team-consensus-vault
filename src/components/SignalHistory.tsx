@@ -141,7 +141,7 @@ export default function SignalHistory({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`bg-card rounded-xl p-6 border border-border ${className}`}
+      className={`bg-card rounded-xl p-6 border border-border max-w-full overflow-hidden ${className}`}
       role="region"
       aria-label="Signal history"
     >
@@ -196,7 +196,7 @@ export default function SignalHistory({
                   aria-controls={`signal-details-${signal.id}`}
                   tabIndex={0}
                 >
-                  <div className="flex items-start justify-between gap-3">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       {/* Signal Type and Confidence */}
                       <div className="flex items-center gap-2 mb-2">
