@@ -26,6 +26,10 @@ yarn-error.log*
 .env*.local
 .env
 
+# Model configuration files (may contain encrypted API keys)
+.model-configs.json
+model-configs*.json
+
 # vercel
 .vercel
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export interface SignalHistoryEntry {
@@ -34,6 +34,8 @@ export default function SignalHistory({
   className = ''
 }: SignalHistoryProps) {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const [focusedIndex, setFocusedIndex] = useState<number>(-1);
+  const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   const toggleExpand = (id: string) => {
     setExpandedIds(prev => {
@@ -46,6 +48,43 @@ export default function SignalHistory({
       return newSet;
     });
   };
+
+  // Keyboard navigation for signal list
+  const handleKeyDown = useCallback((e: React.KeyboardEvent, index: number, signalId: string) => {
+    const displaySignals = signals.slice(-maxEntries).reverse();
+    
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        if (index < displaySignals.length - 1) {
+          setFocusedIndex(index + 1);
+          buttonRefs.current[index + 1]?.focus();
+        }
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        if (index > 0) {
+          setFocusedIndex(index - 1);
+          buttonRefs.current[index - 1]?.focus();
+        }
+        break;
+      case 'Home':
+        e.preventDefault();
+        setFocusedIndex(0);
+        buttonRefs.current[0]?.focus();
+        break;
+      case 'End':
+        e.preventDefault();
+        setFocusedIndex(displaySignals.length - 1);
+        buttonRefs.current[displaySignals.length - 1]?.focus();
+        break;
+      case 'Enter':
+      case ' ':
+        e.preventDefault();
+        toggleExpand(signalId);
+        break;
+    }
+  }, [signals, maxEntries]);
 
   const formatTimestamp = (timestamp: number): string => {
     const date = new Date(timestamp);
@@ -92,24 +131,36 @@ export default function SignalHistory({
   // Limit to maxEntries most recent signals
   const displaySignals = signals.slice(-maxEntries).reverse();
 
+  // Reset focused index when signals change
+  useEffect(() => {
+    setFocusedIndex(-1);
+    buttonRefs.current = buttonRefs.current.slice(0, displaySignals.length);
+  }, [displaySignals.length]);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className={`bg-card rounded-xl p-6 border border-border ${className}`}
+      role="region"
+      aria-label="Signal history"
     >
       {/* Header */}
       <div className="mb-6">
-        <h2 className="text-xl font-bold mb-1">Signal History</h2>
-        <p className="text-sm text-muted-foreground">
+        <h2 className="text-xl font-bold mb-1" id="signal-history-title">Signal History</h2>
+        <p className="text-sm text-muted-foreground" id="signal-history-description">
           Recent AI consensus signals (last {maxEntries})
         </p>
       </div>
 
       {/* Signal List */}
       {displaySignals.length === 0 ? (
-        <div className="text-center text-muted-foreground py-8">
-          <div className="w-16 h-16 bg-muted/20 rounded-full flex items-center justify-center mx-auto mb-4">
+        <div 
+          className="text-center text-muted-foreground py-8"
+          role="status"
+          aria-live="polite"
+        >
+          <div className="w-16 h-16 bg-muted/20 rounded-full flex items-center justify-center mx-auto mb-4" aria-hidden="true">
             <span className="text-3xl">📊</span>
           </div>
           <p className="text-sm">No signals yet</p>
@@ -118,8 +169,13 @@ export default function SignalHistory({
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
-          {displaySignals.map((signal) => {
+        <div 
+          className="space-y-3"
+          role="list"
+          aria-labelledby="signal-history-title"
+          aria-describedby="signal-history-description"
+        >
+          {displaySignals.map((signal, index) => {
             const colors = signalColors[signal.signalType];
             const isExpanded = expandedIds.has(signal.id);
 

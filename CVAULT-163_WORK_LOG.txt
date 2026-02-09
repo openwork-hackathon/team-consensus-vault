@@ -1,0 +1,43 @@
+CVAULT-163: Add Keyboard Navigation and Screen Reader Accessibility
+====================================================================
+
+TASK DESCRIPTION:
+Add comprehensive keyboard navigation and screen reader accessibility to the Consensus Vault Next.js application.
+
+EXISTING ACCESSIBILITY (Already Implemented):
+- Skip to main content link in Navigation.tsx
+- Focus trapping in DepositModal and WithdrawModal
+- 195 ARIA attributes across components
+- 62 keyboard handlers
+- Visible focus indicators in globals.css
+- aria-live regions for dynamic content
+- Semantic HTML structure
+
+COMPONENTS REQUIRING ENHANCEMENTS:
+1. SignalHistory.tsx - Missing keyboard navigation for expandable items, ARIA attributes
+2. RoundPhaseIndicator.tsx - Missing ARIA attributes for phase changes
+3. ChatRoom.tsx - Needs arrow key navigation for messages
+4. BettingPanel.tsx - Needs keyboard shortcuts, enhanced ARIA
+5. CouncilVotes.tsx - Needs arrow key navigation between model cards
+6. AnalystCard.tsx - Needs keyboard navigation for retry buttons
+7. EmptyState.tsx - Needs proper ARIA attributes
+8. ToastContainer.tsx - Needs focus management
+9. PartialFailureBanner.tsx - Needs ARIA live region
+10. Navigation.tsx - Verify all enhancements complete
+
+PLAN:
+1. Enhance SignalHistory with keyboard navigation (arrow keys, Enter/Space to expand)
+2. Add ARIA attributes to RoundPhaseIndicator
+3. Add arrow key navigation to ChatRoom messages
+4. Add keyboard shortcuts to BettingPanel (Escape to clear, Enter to submit)
+5. Add arrow key navigation to CouncilVotes model cards
+6. Enhance AnalystCard keyboard navigation
+7. Add ARIA attributes to EmptyState
+8. Add focus management to ToastContainer
+9. Add ARIA live region to PartialFailureBanner
+10. Verify Navigation enhancements are complete
+11. Update globals.css if needed for additional focus styles
+12. Test all changes
+13. Update ACTIVITY.log
+
+START TIME: 2026-02-09

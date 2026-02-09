@@ -1,0 +1,93 @@
+{
+  "version": "2.0.0",
+  "user_id": "example_user",
+  "models": [
+    {
+      "id": "claude-haiku",
+      "name": "Claude 3.5 Haiku",
+      "provider_type": "cli",
+      "base_url": "",
+      "api_key_encrypted": "",
+      "encryption_method": "fernet",
+      "model": "claude-3-5-haiku-20241022",
+      "temperature": 0.7,
+      "max_tokens": 4000,
+      "enabled": true,
+      "strengths": [
+        "fast-responses",
+        "simple-tasks",
+        "bash-commands",
+        "file-operations",
+        "cost-effective"
+      ],
+      "weaknesses": [
+        "complex-reasoning",
+        "large-context-analysis",
+        "architecture-design"
+      ]
+    },
+    {
+      "id": "claude-sonnet",
+      "name": "Claude Sonnet 4.5",
+      "provider_type": "cli",
+      "base_url": "",
+      "api_key_encrypted": "",
+      "encryption_method": "fernet",
+      "model": "claude-sonnet-4-5-20250929",
+      "temperature": 0.7,
+      "max_tokens": 8000,
+      "enabled": true,
+      "strengths": [
+        "code-generation",
+        "debugging",
+        "moderate-complexity",
+        "balanced-performance",
+        "general-purpose"
+      ],
+      "weaknesses": [
+        "very-complex-architecture",
+        "extensive-planning"
+      ]
+    },
+    {
+      "id": "example-openai-model",
+      "name": "Example OpenAI Compatible Model",
+      "provider_type": "openai",
+      "base_url": "https://api.example.com/v1",
+      "api_key_encrypted": "gAAAAABh...[encrypted_key_would_go_here]...",
+      "encryption_method": "fernet",
+      "model": "example-model",
+      "temperature": 0.7,
+      "max_tokens": 4000,
+      "enabled": true,
+      "strengths": [],
+      "weaknesses": []
+    }
+  ],
+  "agents": [
+    {
+      "id": "haiku-worker",
+      "name": "Haiku Worker (Fast Tasks)",
+      "model_id": "claude-haiku",
+      "role": null,
+      "system_prompt": "You are a fast, efficient worker focused on executing simple, well-defined tasks. Execute commands, perform file operations, and handle straightforward requests quickly and accurately.",
+      "enabled": true
+    }
+  ],
+  "role_definitions": {
+    "worker": {
+      "name": "Worker",
+      "description": "You are a fast, efficient worker focused on executing simple, well-defined tasks. Execute commands, perform file operations, and handle straightforward requests quickly and accurately.",
+      "strengths": [
+        "speed",
+        "efficiency",
+        "simple-tasks"
+      ],
+      "use_for": [
+        "bash-commands",
+        "file-operations",
+        "simple-queries"
+      ]
+    }
+  }
+}
