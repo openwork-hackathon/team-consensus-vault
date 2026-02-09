@@ -19,12 +19,15 @@ export default function Navigation({
   const pathname = usePathname();
   const isChatroom = pathname === '/chatroom';
   const isRounds = pathname === '/rounds';
+  const isArena = pathname === '/arena';
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navLinks = [
     { href: '/', label: 'Dashboard', shortLabel: '📊' },
     { href: '/predict', label: 'Predict', shortLabel: '🎯' },
-    { href: '/chatroom', label: 'Chatroom', shortLabel: '💬' },
+    { href: '/chatroom', label: 'Chatroom', shortLabel: '🤖' },
+    { href: '/human-chat', label: 'Human Chat', shortLabel: '💬' },
+    { href: '/arena', label: 'Arena', shortLabel: '🎭' },
     { href: '/rounds', label: 'Rounds', shortLabel: '🔄' },
   ];
 
@@ -56,9 +59,9 @@ export default function Navigation({
             <span
               className="text-xl sm:text-2xl md:text-3xl flex-shrink-0"
               role="img"
-              aria-label={isChatroom ? "Debate arena logo" : isRounds ? "Prediction market logo" : "Lobster mascot logo"}
+              aria-label={isArena ? "Dual arena logo" : isChatroom ? "Debate arena logo" : isRounds ? "Prediction market logo" : "Lobster mascot logo"}
             >
-              {isChatroom ? '💬' : isRounds ? '🎯' : '🦞'}
+              {isArena ? '🎭' : isChatroom ? '💬' : isRounds ? '🎯' : '🦞'}
             </span>
             <div className="min-w-0">
               <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold truncate">{title}</h1>

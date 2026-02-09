@@ -6,6 +6,7 @@ import { PERSONAS_BY_ID } from '@/lib/chatroom/personas';
 
 interface ChatMessageProps {
   message: ChatMessageType;
+  onQuote?: (messageId: string) => void;
 }
 
 function formatTime(timestamp: number): string {
@@ -49,20 +50,34 @@ function SentimentBadge({ sentiment, confidence }: { sentiment: string; confiden
   );
 }
 
-export default function ChatMessage({ message }: ChatMessageProps) {
+export default function ChatMessage({ message, onQuote }: ChatMessageProps) {
   const persona = PERSONAS_BY_ID[message.personaId];
   const color = persona?.color || '#888';
 
   const messageAriaLabel = `${message.handle} says: ${message.content}. Sentiment: ${message.sentiment || 'none'}. ${formatTime(message.timestamp)}`;
+
+  const handleClick = () => {
+    if (onQuote) {
+      onQuote(message.id);
+    }
+  };
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="flex gap-2.5 sm:gap-3 px-3 sm:px-4 py-2 sm:py-1.5 hover:bg-white/[0.02] active:bg-white/[0.05] group"
+      className={`flex gap-2.5 sm:gap-3 px-3 sm:px-4 py-2 sm:py-1.5 hover:bg-white/[0.02] active:bg-white/[0.05] group ${onQuote ? 'cursor-pointer hover:bg-accent/10' : ''}`}
       role="article"
       aria-label={messageAriaLabel}
+      onClick={handleClick}
+      tabIndex={onQuote ? 0 : undefined}
+      onKeyDown={(e) => {
+        if (onQuote && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
+          handleClick();
+        }
+      }}
     >
       {/* Avatar - Larger touch target */}
       <div

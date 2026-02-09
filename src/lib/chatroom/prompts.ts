@@ -1,6 +1,7 @@
-import { Persona, ChatMessage, MessageSentiment } from './types';
+import { Persona, ChatMessage, MessageSentiment, DebateSummary } from './types';
 import { MarketData, formatMarketDataForPrompt, getMarketTalkingPoints } from './market-data';
 import { PersuasionState, getPersuasionSummary, shouldAcknowledgeOpposingView, generateAcknowledgmentPrompt } from './persuasion';
+import { formatDebateSummaryForPrompt } from './argument-extractor';
 
 function formatRecentMessages(messages: ChatMessage[], limit: number = 10): string {
   const recent = messages.slice(-limit);
@@ -16,15 +17,17 @@ function formatRecentMessages(messages: ChatMessage[], limit: number = 10): stri
 }
 
 /**
- * Build debate prompt with market data and persuasion context
+ * Build debate prompt with market data, persuasion context, and previous debate summary
  * CVAULT-185: Enhanced with real market data and persuadability
+ * CVAULT-190: Enhanced with previous debate context
  */
 export function buildDebatePrompt(
   persona: Persona, 
   recentMessages: ChatMessage[],
   marketData?: MarketData,
   persuasionState?: PersuasionState,
-  asset: string = 'BTC'
+  asset: string = 'BTC',
+  previousDebateSummary?: DebateSummary
 ): string {
   // Build market data context
   let marketContext = '';
@@ -57,6 +60,14 @@ export function buildDebatePrompt(
     }
   }
 
+  // Build previous debate context (CVAULT-190)
+  let previousDebateContext = '';
+  if (previousDebateSummary) {
+    previousDebateContext = '\n\n=== PREVIOUS DEBATE ROUND CONTEXT ===\n';
+    previousDebateContext += formatDebateSummaryForPrompt(previousDebateSummary);
+    previousDebateContext += '\n\nUse this context to build on strong arguments, counter weak ones, or bring new data that shifts the debate. You can reference specific points made previously or introduce fresh analysis.';
+  }
+
   const systemPrompt = `${persona.personalityPrompt}
 
 ${marketContext}
@@ -66,6 +77,7 @@ You are in a live crypto chat room debating the current market. Stay in characte
 CRITICAL: You MUST reference actual market data in your arguments. Use specific numbers, percentages, and metrics from the market data provided above. Instead of saying "I think it will go up", say something like "The 24h volume spike of 340% combined with holding above $45k support suggests..."
 
 ${persuasionContext}
+${previousDebateContext}
 
 IMPORTANT: End your message with a sentiment tag in this exact format:
 [SENTIMENT: bullish|bearish|neutral, CONFIDENCE: 0-100]
@@ -85,7 +97,8 @@ Guidelines:
 - Cite specific numbers from the market data (prices, percentages, volumes)
 - If you disagree with someone, explain why using data
 - If the data supports your view, highlight the key metrics
-- Be willing to acknowledge strong arguments from others if your conviction is low`;
+- Be willing to acknowledge strong arguments from others if your conviction is low
+- If there's a previous debate summary, build on those arguments or counter them with new data`;
 
   return JSON.stringify({ systemPrompt, userPrompt });
 }
@@ -151,7 +164,7 @@ export function buildModeratorPrompt(
 ): string {
   const availablePersonas = personaIds
     .map(id => {
-      const conviction = persuasionStates?.[id]?.convictionLevel;
+      const conviction = persuasionStates?.[id]?.conviction;
       const stance = persuasionStates?.[id]?.currentStance;
       const extra = conviction ? ` [${stance}, ${conviction} conviction]` : '';
       return `- ${id} (${personaHandles[id]})${extra}`;

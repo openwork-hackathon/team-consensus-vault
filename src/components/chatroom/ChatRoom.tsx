@@ -17,6 +17,7 @@ interface ChatRoomProps {
   isConnected: boolean;
   timeGapInfo?: TimeGapInfo | null;
   showTimeGapIndicator?: boolean;
+  onQuoteMessage?: (messageId: string) => void;
 }
 
 export default function ChatRoom({
@@ -25,6 +26,7 @@ export default function ChatRoom({
   typingPersona,
   cooldownEndsAt,
   isConnected,
+  onQuoteMessage,
 }: ChatRoomProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const isAutoScrollRef = useRef(true);
@@ -147,7 +149,7 @@ export default function ChatRoom({
             role="article"
             aria-label={`Message from ${msg.handle}, ${msg.sentiment} sentiment`}
           >
-            <ChatMessage message={msg} />
+            <ChatMessage message={msg} onQuote={onQuoteMessage} />
           </div>
         ))}
 

@@ -3,12 +3,22 @@
 import { useState, useEffect, useRef } from 'react';
 import { useChatroomStream } from '@/hooks/useChatroomStream';
 import ChatRoom from '@/components/chatroom/ChatRoom';
+import { PERSONAS, getModelDistribution } from '@/lib/chatroom/personas';
 
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount } from 'wagmi';
 import { useVault } from '@/contexts/VaultContext';
 import ToastContainer, { ToastData } from '@/components/ToastContainer';
 import LoadingSkeleton from '@/components/LoadingSkeleton';
+
+// Model display names mapping
+const MODEL_DISPLAY_NAMES: Record<string, string> = {
+  deepseek: 'DeepSeek',
+  kimi: 'Kimi',
+  minimax: 'MiniMax',
+  glm: 'GLM',
+  gemini: 'Gemini',
+};
 
 export default function ChatroomPage() {
   const chatroomData = useChatroomStream();
@@ -17,6 +27,10 @@ export default function ChatroomPage() {
   const [toasts, setToasts] = useState<ToastData[]>([]);
   const [isClient, setIsClient] = useState(false);
   const lcpRef = useRef<HTMLDivElement>(null);
+
+  // Get dynamic persona counts
+  const personaCount = PERSONAS.length;
+  const modelDistribution = getModelDistribution();
 
   // Mark as client-side rendered
   useEffect(() => {
@@ -73,7 +87,7 @@ export default function ChatroomPage() {
                 AI Debate Arena
               </h2>
               <p className="text-muted-foreground">
-                Watch 17 AI personalities debate market trends in real-time. Three-phase system: 
+                Watch {personaCount} AI personalities debate market trends in real-time. Three-phase system: 
                 <span className="font-semibold text-bullish"> DEBATE</span> → 
                 <span className="font-semibold text-blue-500"> CONSENSUS</span> (80% threshold) → 
                 <span className="font-semibold text-purple-500"> COOLDOWN</span>
@@ -153,13 +167,11 @@ export default function ChatroomPage() {
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <h4 className="font-semibold mb-2">AI Models</h4>
+              <h4 className="font-semibold mb-2">AI Models ({personaCount} total personas)</h4>
               <ul className="text-sm text-muted-foreground space-y-1">
-                <li>• DeepSeek (4 personas)</li>
-                <li>• Kimi (4 personas)</li>
-                <li>• MiniMax (3 personas)</li>
-                <li>• GLM (3 personas)</li>
-                <li>• Gemini (3 personas)</li>
+                {Object.entries(modelDistribution).map(([modelId, count]) => (
+                  <li key={modelId}>• {MODEL_DISPLAY_NAMES[modelId] || modelId} ({count} personas)</li>
+                ))}
               </ul>
             </div>
             <div>

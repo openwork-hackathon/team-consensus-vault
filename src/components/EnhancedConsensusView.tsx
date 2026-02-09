@@ -100,7 +100,7 @@ export default function EnhancedConsensusView() {
           🧠 Enhanced Consensus Analysis
         </h1>
         <p className="text-gray-600 text-sm">
-          Combining 17-persona chatroom debate with 5-agent trading council analysis
+          Combining multi-persona chatroom debate with 5-agent trading council analysis
         </p>
 
         {/* Input Form */}
@@ -230,7 +230,7 @@ export default function EnhancedConsensusView() {
             {/* Chatroom Consensus */}
             <div className="bg-white rounded-lg shadow p-6">
               <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                👥 Chatroom Debate (17 Personas)
+                👥 Chatroom Debate
               </h2>
 
               {result.chatroom ? (

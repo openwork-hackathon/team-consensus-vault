@@ -119,7 +119,7 @@ export function useChatroomCouncilBridge(
     };
 
     return (
-      `Market Sentiment Context: The 17-persona AI chatroom has reached ${chatroomStrength}% consensus with a ` +
+      `Market Sentiment Context: The AI chatroom has reached ${chatroomStrength}% consensus with a ` +
       `${sentimentMap[chatroomDirection]} outlook. This crowd sentiment signal should be considered alongside ` +
       `your technical, on-chain, and risk analysis.`
     );

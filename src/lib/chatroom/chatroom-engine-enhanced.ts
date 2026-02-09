@@ -185,10 +185,11 @@ export async function generateNextMessageEnhanced(
     console.warn(`[chatroom-enhanced] Silent failure for persona ${persona.id}, skipping to next speaker`);
     
     // Update persuasion state to reflect temporary unavailability
-    const updatedState = currentState.persuasionStore.updateState(speakerId, {
+    currentState.persuasionStore.updateState(speakerId, {
       ...persuasionState,
       lastUpdated: Date.now(),
     });
+    const updatedState = currentState.persuasionStore.getState(speakerId);
     
     // Return a special result that indicates this persona should be skipped
     return {
@@ -203,7 +204,7 @@ export async function generateNextMessageEnhanced(
         skipped: true, // Special flag to indicate this was skipped
       } as ChatMessage,
       state: currentState,
-      persuasionState: updatedState,
+      persuasionState: updatedState || persuasionState,
     };
   }
 
