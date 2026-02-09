@@ -7,7 +7,7 @@
   "crons": [
     {
       "path": "/api/cron/stale-trades",
-      "schedule": "0 * * * *"
+      "schedule": "0 0 * * *"
     }
   ]
 }

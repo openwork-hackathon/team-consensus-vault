@@ -140,23 +140,28 @@ export async function generateNextMessageEnhanced(
   }
 
   // 6. Check if stance should change based on persuasion
-  if (persuasionState.convictionScore < 30 && recentMessages.length > 0) {
+  // Use persona's stubbornness to set individual thresholds
+  // Low stubbornness (20) → threshold 50, High stubbornness (95) → threshold 20
+  const stanceChangeThreshold = Math.max(20, 55 - Math.floor(persona.stubbornness * 0.4));
+  const confidenceRequired = Math.max(40, 70 - Math.floor((100 - persona.stubbornness) * 0.3));
+
+  if (persuasionState.convictionScore < stanceChangeThreshold && recentMessages.length > 0) {
     // Find the most persuasive recent opposing message
     const currentStance = persuasionState.currentStance;
     const opposingMessages = recentMessages.filter(
       m => m.sentiment && m.sentiment !== currentStance
     );
-    
+
     if (opposingMessages.length > 0) {
       // Pick the one with highest confidence
-      const mostPersuasive = opposingMessages.reduce((best, current) => 
+      const mostPersuasive = opposingMessages.reduce((best, current) =>
         (current.confidence || 0) > (best.confidence || 0) ? current : best
       );
-      
-      if (mostPersuasive.sentiment && mostPersuasive.confidence && mostPersuasive.confidence > 70) {
+
+      if (mostPersuasive.sentiment && mostPersuasive.confidence && mostPersuasive.confidence > confidenceRequired) {
         previousStance = persuasionState.currentStance;
         const newState = updateStance(
-          persuasionState, 
+          persuasionState,
           mostPersuasive.sentiment,
           `Persuaded by ${mostPersuasive.handle}'s data-backed argument`,
           mostPersuasive.id
