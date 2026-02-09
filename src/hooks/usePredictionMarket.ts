@@ -28,12 +28,13 @@ interface PredictionMarketState {
   pnl: number | null;
   isConnected: boolean;
   settlement: SettlementResult | null;
-  
+  phaseForced: boolean;
+
   // Derived state
   isInBettingWindow: boolean;
   bettingTimeRemaining: number;
   canPlaceBet: boolean;
-  
+
   // Actions
   placeBet: (direction: 'up' | 'down', amount: number) => Promise<void>;
 }
@@ -47,6 +48,7 @@ export function usePredictionMarket(): PredictionMarketState {
   const [pnl, setPnl] = useState<number | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [settlement, setSettlement] = useState<SettlementResult | null>(null);
+  const [phaseForced, setPhaseForced] = useState<boolean>(false);
 
 
   // Track user's bets to prevent multiple bets per round
@@ -169,8 +171,11 @@ export function usePredictionMarket(): PredictionMarketState {
   const handlePhaseChange = useCallback((event: MessageEvent) => {
     try {
       const data = JSON.parse(event.data);
-      console.log('[prediction-market] Phase change:', data.from, '→', data.to);
-      
+      console.log('[prediction-market] Phase change:', data.from, '→', data.to, data.forced ? '(forced)' : '');
+
+      // Track if phase change was forced by demo mode
+      setPhaseForced(data.forced || false);
+
       // Reset user bets when starting a new round
       if (data.to === RoundPhase.BETTING_WINDOW && data.from !== RoundPhase.BETTING_WINDOW) {
         setUserBets(new Set());
@@ -309,11 +314,12 @@ export function usePredictionMarket(): PredictionMarketState {
     pnl,
     isConnected,
     settlement,
+    phaseForced,
     // Derived state
     isInBettingWindow,
     bettingTimeRemaining,
     canPlaceBet,
-    
+
     // Actions
     placeBet,
   };

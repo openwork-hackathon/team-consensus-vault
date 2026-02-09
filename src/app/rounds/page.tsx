@@ -115,6 +115,7 @@ export default function RoundsPage() {
                       isLoading: false,
                     })),
                     timestamp: new Date(round.consensusSnapshot.timestamp).getTime(),
+                    forced: round.consensusSnapshot.forced,
                   }}
                   entrySignal={round.consensusSnapshot.signal === 'buy' ? 'BUY' : round.consensusSnapshot.signal === 'sell' ? 'SELL' : null}
                 />

@@ -30,6 +30,7 @@ export default function PredictPage() {
     pnl,
     isConnected: marketConnected,
     settlement,
+    phaseForced,
     isInBettingWindow,
     bettingTimeRemaining,
     canPlaceBet,
@@ -454,6 +455,7 @@ export default function PredictPage() {
               asset={round.asset}
               entryPrice={round.entryPrice}
               bettingTimeRemaining={bettingTimeRemaining}
+              forced={phaseForced}
             />
           </motion.div>
         )}

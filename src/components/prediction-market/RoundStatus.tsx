@@ -9,6 +9,7 @@ export interface RoundStatusProps {
   entryPrice: number;
   bettingTimeRemaining?: number;
   className?: string;
+  forced?: boolean;
 }
 
 // Phase configuration with semantic colors as per CVAULT-126 requirements
@@ -91,12 +92,13 @@ function formatCountdown(seconds: number): string {
  * - POSITION_OPEN = orange (bg-orange-500/20, text-orange-500)
  * - SETTLEMENT = purple (bg-purple-500/20, text-purple-500)
  */
-export default function RoundStatus({ 
-  phase, 
-  asset, 
-  entryPrice, 
-  bettingTimeRemaining = 0, 
-  className = '' 
+export default function RoundStatus({
+  phase,
+  asset,
+  entryPrice,
+  bettingTimeRemaining = 0,
+  className = '',
+  forced = false
 }: RoundStatusProps) {
   const config = phaseConfig[phase];
   const currentPhaseIndex = phaseOrder.indexOf(phase);
@@ -104,20 +106,34 @@ export default function RoundStatus({
   return (
     <div className={`w-full bg-card rounded-xl border border-border p-6 ${className}`}>
       {/* Phase Badge */}
-      <motion.div
-        key={phase}
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className={`inline-flex items-center gap-3 px-4 py-2 rounded-lg border-2 ${config.color} transition-all mb-4`}
-      >
-        <div className="text-xl" aria-hidden="true">
-          {config.icon}
-        </div>
-        <div>
-          <div className="font-bold text-sm">{config.label}</div>
-          <div className="text-xs opacity-80">{config.description}</div>
-        </div>
-      </motion.div>
+      <div className="flex items-center gap-2 mb-4">
+        <motion.div
+          key={phase}
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className={`inline-flex items-center gap-3 px-4 py-2 rounded-lg border-2 ${config.color} transition-all`}
+        >
+          <div className="text-xl" aria-hidden="true">
+            {config.icon}
+          </div>
+          <div>
+            <div className="font-bold text-sm">{config.label}</div>
+            <div className="text-xs opacity-80">{config.description}</div>
+          </div>
+        </motion.div>
+
+        {forced && (
+          <span
+            className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-orange-500/20 text-orange-500 text-xs font-bold border border-orange-500/30"
+            role="status"
+            aria-label="Demo mode - forced phase transition"
+            title="This phase transition was forced by demo mode"
+          >
+            <span aria-hidden="true">⚡</span>
+            DEMO
+          </span>
+        )}
+      </div>
 
       {/* Market Info */}
       <div className="flex items-center justify-between mb-6">

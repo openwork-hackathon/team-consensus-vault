@@ -21,6 +21,7 @@ interface ModelVote {
 interface ConsensusSnapshot {
   models: ModelVote[];
   timestamp?: number;
+  forced?: boolean;
 }
 
 // Component props interface
@@ -356,21 +357,34 @@ export default function CouncilVotes({
 
       {/* Consensus Summary */}
       <div className="pt-2 border-t border-border">
-        <p 
-          className={`
-            text-xs font-medium text-center
-            ${consensus.hasConsensus 
-              ? consensus.consensusVote === 'BUY' 
-                ? 'text-bullish'
-                : consensus.consensusVote === 'SELL'
-                  ? 'text-bearish'
-                  : 'text-neutral'
-              : 'text-muted-foreground'
-            }
-          `}
-        >
-          {consensus.text}
-        </p>
+        <div className="flex items-center justify-center gap-2">
+          <p
+            className={`
+              text-xs font-medium text-center
+              ${consensus.hasConsensus
+                ? consensus.consensusVote === 'BUY'
+                  ? 'text-bullish'
+                  : consensus.consensusVote === 'SELL'
+                    ? 'text-bearish'
+                    : 'text-neutral'
+                : 'text-muted-foreground'
+              }
+            `}
+          >
+            {consensus.text}
+          </p>
+          {consensusSnapshot.forced && (
+            <span
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-orange-500/20 text-orange-500 text-[10px] font-bold border border-orange-500/30"
+              role="status"
+              aria-label="Demo mode - forced signal"
+              title="This consensus was forced by demo mode to progress the demonstration"
+            >
+              <span aria-hidden="true">⚡</span>
+              DEMO
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
