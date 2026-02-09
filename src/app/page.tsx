@@ -416,6 +416,33 @@ export default function Dashboard() {
               recommendation={consensusData.recommendation}
               consensusLevel={consensusData.consensusLevel}
               threshold={consensusData.threshold}
+              onExecuteTrade={() => {
+                // Manually trigger trade execution
+                const executeTrade = async () => {
+                  try {
+                    addToast('Manually executing trade...', 'info');
+                    const response = await fetch('/api/trading/execute', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ asset: 'BTC/USD' }),
+                    });
+
+                    const data = await response.json();
+                    if (data.success) {
+                      addToast(
+                        `Trade executed: ${data.trade.direction.toUpperCase()} BTC/USD at $${data.trade.entryPrice.toLocaleString()}`,
+                        'success'
+                      );
+                    } else {
+                      addToast(`Trade execution failed: ${data.message || data.error}`, 'error');
+                    }
+                  } catch (error) {
+                    const errorMsg = error instanceof Error ? error.message : 'Network error';
+                    addToast(`Trade execution error: ${errorMsg}`, 'error');
+                  }
+                };
+                executeTrade();
+              }}
             />
           </div>
         </section>

@@ -1,7 +1,13 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { ChatMessage, ChatPhase, MessageSentiment } from '@/lib/chatroom/types';
+import { ChatMessage, ChatPhase, MessageSentiment, ChatRoomState } from '@/lib/chatroom/types';
+import { 
+  saveChatHistory, 
+  loadChatHistory, 
+  TimeGapInfo,
+  formatTimeGap 
+} from '@/lib/chatroom/local-storage';
 
 interface TypingPersona {
   id: string;
@@ -18,6 +24,8 @@ interface ChatroomStreamState {
   cooldownEndsAt: number | null;
   isConnected: boolean;
   systemError: string | null;
+  timeGapInfo: TimeGapInfo | null;
+  showTimeGapIndicator: boolean;
 }
 
 export function useChatroomStream(): ChatroomStreamState {
@@ -29,23 +37,88 @@ export function useChatroomStream(): ChatroomStreamState {
   const [cooldownEndsAt, setCooldownEndsAt] = useState<number | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [systemError, setSystemError] = useState<string | null>(null);
+  const [timeGapInfo, setTimeGapInfo] = useState<TimeGapInfo | null>(null);
+  const [showTimeGapIndicator, setShowTimeGapIndicator] = useState(false);
 
   const retryCountRef = useRef(0);
   const maxRetries = 5;
   const eventSourceRef = useRef<EventSource | null>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const messageIdsRef = useRef<Set<string>>(new Set());
+  const lastSavedStateRef = useRef<ChatRoomState | null>(null);
 
   const addMessage = useCallback((msg: ChatMessage) => {
     // Deduplicate by message ID
     if (messageIdsRef.current.has(msg.id)) return;
     messageIdsRef.current.add(msg.id);
-    setMessages(prev => [...prev, msg]);
+    setMessages(prev => {
+      const newMessages = [...prev, msg];
+      
+      // Save to localStorage when new message arrives
+      try {
+        const currentState: ChatRoomState = {
+          phase,
+          phaseStartedAt: Date.now(), // This should come from server state
+          cooldownEndsAt,
+          lastMessageAt: msg.timestamp,
+          lastSpeakerId: msg.personaId,
+          messageCount: newMessages.length,
+          nextSpeakerId: null, // This should come from server state
+          consensusDirection,
+          consensusStrength,
+          recentSpeakers: [], // This should come from server state
+        };
+        
+        // Only save if state has changed significantly
+        if (!lastSavedStateRef.current || 
+            lastSavedStateRef.current.phase !== currentState.phase ||
+            lastSavedStateRef.current.consensusDirection !== currentState.consensusDirection ||
+            lastSavedStateRef.current.consensusStrength !== currentState.consensusStrength) {
+          
+          saveChatHistory(newMessages, currentState);
+          lastSavedStateRef.current = currentState;
+        }
+      } catch (error) {
+        console.error('[chatroom] Failed to save to localStorage:', error);
+      }
+      
+      return newMessages;
+    });
+    
     // Clear typing when message arrives
     setTypingPersona(null);
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
       typingTimeoutRef.current = null;
+    }
+  }, [phase, cooldownEndsAt, consensusDirection, consensusStrength]);
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    const { messages: storedMessages, state: storedState, timeGapInfo: storedTimeGapInfo } = loadChatHistory();
+    
+    if (storedMessages.length > 0) {
+      setMessages(storedMessages);
+      messageIdsRef.current = new Set(storedMessages.map(m => m.id));
+      
+      if (storedState) {
+        setPhase(storedState.phase);
+        setCooldownEndsAt(storedState.cooldownEndsAt);
+        setConsensusDirection(storedState.consensusDirection);
+        setConsensusStrength(storedState.consensusStrength);
+        lastSavedStateRef.current = storedState;
+      }
+      
+      setTimeGapInfo(storedTimeGapInfo);
+      
+      // Show time gap indicator if there's a significant gap
+      if (storedTimeGapInfo.hasGap && storedTimeGapInfo.lastVisitTime) {
+        setShowTimeGapIndicator(true);
+        // Auto-hide after 10 seconds
+        setTimeout(() => {
+          setShowTimeGapIndicator(false);
+        }, 10000);
+      }
     }
   }, []);
 
@@ -69,11 +142,46 @@ export function useChatroomStream(): ChatroomStreamState {
         try {
           const data = JSON.parse(event.data);
           const historyMessages: ChatMessage[] = data.messages || [];
-          // Reset messages with history
-          messageIdsRef.current = new Set(historyMessages.map(m => m.id));
-          setMessages(historyMessages);
+          
+          // Merge with localStorage messages (prefer server messages for duplicates)
+          const storedData = loadChatHistory();
+          const mergedMessages = [...storedData.messages];
+          const mergedIds = new Set(mergedMessages.map(m => m.id));
+          
+          for (const msg of historyMessages) {
+            if (!mergedIds.has(msg.id)) {
+              mergedMessages.push(msg);
+              mergedIds.add(msg.id);
+            }
+          }
+          
+          // Sort by timestamp
+          mergedMessages.sort((a, b) => a.timestamp - b.timestamp);
+          
+          // Reset messages with merged history
+          messageIdsRef.current = new Set(mergedMessages.map(m => m.id));
+          setMessages(mergedMessages);
+          
           if (data.phase) setPhase(data.phase);
           if (data.cooldownEndsAt) setCooldownEndsAt(data.cooldownEndsAt);
+          
+          // Save merged state
+          if (data.phase && data.cooldownEndsAt) {
+            const currentState: ChatRoomState = {
+              phase: data.phase,
+              phaseStartedAt: Date.now(),
+              cooldownEndsAt: data.cooldownEndsAt,
+              lastMessageAt: mergedMessages.length > 0 ? mergedMessages[mergedMessages.length - 1].timestamp : Date.now(),
+              lastSpeakerId: mergedMessages.length > 0 ? mergedMessages[mergedMessages.length - 1].personaId : null,
+              messageCount: mergedMessages.length,
+              nextSpeakerId: null,
+              consensusDirection,
+              consensusStrength,
+              recentSpeakers: [],
+            };
+            saveChatHistory(mergedMessages, currentState);
+            lastSavedStateRef.current = currentState;
+          }
         } catch (e) {
           console.error('[chatroom] Failed to parse history:', e);
         }
@@ -112,6 +220,22 @@ export function useChatroomStream(): ChatroomStreamState {
             setConsensusDirection(null);
             setConsensusStrength(0);
           }
+          
+          // Save updated state to localStorage
+          const currentState: ChatRoomState = {
+            phase: data.to,
+            phaseStartedAt: Date.now(),
+            cooldownEndsAt: data.cooldownEndsAt || null,
+            lastMessageAt: messages.length > 0 ? messages[messages.length - 1].timestamp : Date.now(),
+            lastSpeakerId: messages.length > 0 ? messages[messages.length - 1].personaId : null,
+            messageCount: messages.length,
+            nextSpeakerId: null,
+            consensusDirection,
+            consensusStrength,
+            recentSpeakers: [],
+          };
+          saveChatHistory(messages, currentState);
+          lastSavedStateRef.current = currentState;
         } catch (e) {
           console.error('[chatroom] Failed to parse phase_change:', e);
         }
@@ -122,6 +246,22 @@ export function useChatroomStream(): ChatroomStreamState {
           const data = JSON.parse(event.data);
           if (data.direction !== undefined) setConsensusDirection(data.direction);
           if (data.strength !== undefined) setConsensusStrength(data.strength);
+          
+          // Save updated state to localStorage
+          const currentState: ChatRoomState = {
+            phase,
+            phaseStartedAt: Date.now(),
+            cooldownEndsAt,
+            lastMessageAt: messages.length > 0 ? messages[messages.length - 1].timestamp : Date.now(),
+            lastSpeakerId: messages.length > 0 ? messages[messages.length - 1].personaId : null,
+            messageCount: messages.length,
+            nextSpeakerId: null,
+            consensusDirection: data.direction !== undefined ? data.direction : consensusDirection,
+            consensusStrength: data.strength !== undefined ? data.strength : consensusStrength,
+            recentSpeakers: [],
+          };
+          saveChatHistory(messages, currentState);
+          lastSavedStateRef.current = currentState;
         } catch (e) {
           console.error('[chatroom] Failed to parse consensus_update:', e);
         }
@@ -189,5 +329,7 @@ export function useChatroomStream(): ChatroomStreamState {
     cooldownEndsAt,
     isConnected,
     systemError,
+    timeGapInfo,
+    showTimeGapIndicator,
   };
 }

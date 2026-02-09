@@ -7,9 +7,10 @@ interface TradeSignalProps {
   consensusLevel: number;
   threshold: number;
   isForced?: boolean;
+  onExecuteTrade?: () => void;
 }
 
-export default function TradeSignal({ recommendation, consensusLevel, threshold, isForced }: TradeSignalProps) {
+export default function TradeSignal({ recommendation, consensusLevel, threshold, isForced, onExecuteTrade }: TradeSignalProps) {
   const isActive = consensusLevel >= threshold && recommendation !== null;
 
   const signalColors = {
@@ -103,6 +104,8 @@ export default function TradeSignal({ recommendation, consensusLevel, threshold,
               whileTap={{ scale: 0.98 }}
               className="w-full bg-white/20 hover:bg-white/30 active:bg-white/40 backdrop-blur-sm text-white font-semibold py-3 px-6 rounded-lg transition-colors touch-manipulation min-h-[48px]"
               aria-label={`Execute ${recommendation} trade`}
+              onClick={onExecuteTrade}
+              disabled={!onExecuteTrade}
             >
               Execute Trade
             </motion.button>

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { ChatMessage as ChatMessageType, ChatPhase } from '@/lib/chatroom/types';
+import { TimeGapInfo, formatTimeGap } from '@/lib/chatroom/local-storage';
 import ChatMessage from './ChatMessage';
 import TypingIndicator from './TypingIndicator';
 import PhaseIndicator from './PhaseIndicator';
@@ -13,6 +14,8 @@ interface ChatRoomProps {
   typingPersona: { id: string; handle: string; avatar: string } | null;
   cooldownEndsAt: number | null;
   isConnected: boolean;
+  timeGapInfo?: TimeGapInfo | null;
+  showTimeGapIndicator?: boolean;
 }
 
 export default function ChatRoom({

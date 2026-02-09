@@ -13,6 +13,7 @@
 import { ConsensusResponse, Signal } from '../models';
 import { getCurrentPrice } from '../price-service';
 import { getCurrentPool } from './state';
+import { recordPredictionMarketSettlement } from '../paper-trading-engine';
 import {
   RoundState,
   RoundPhase,
@@ -231,6 +232,21 @@ async function transitionToSettlement(round: Round): Promise<Round> {
 
   // Calculate settlement result
   const settlementResult = calculateSettlement(round, round.bettingPool, bets);
+
+  // Bridge to paper trading: record settlement as paper trades
+  try {
+    const createdTradeIds = await recordPredictionMarketSettlement(
+      settlementResult,
+      round.entryPrice,
+      exitPrice,
+      round.asset
+    );
+    
+    console.log(`Recorded ${createdTradeIds.length} paper trades for settlement of round ${round.id}`);
+  } catch (error) {
+    console.error('Failed to record prediction market settlement to paper trading:', error);
+    // Continue with settlement even if paper trade recording fails
+  }
 
   return {
     ...round,

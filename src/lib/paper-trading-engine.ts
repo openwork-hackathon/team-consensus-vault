@@ -50,6 +50,7 @@ export async function executePaperTrade(
     entryPrice: price,
     consensusStrength: getConsensusStrength(voteCount),
     consensusSignal: signal,
+    source: 'consensus',
     status: 'open',
   };
 
