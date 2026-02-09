@@ -122,6 +122,7 @@ Your turn. Keep it casual and fun. 1-3 sentences. No market analysis or sentimen
 
 /**
  * Build consensus phase prompt (acknowledging the consensus)
+ * CVAULT-190: Enhanced with debate context injection
  */
 export function buildConsensusPrompt(
   persona: Persona,
@@ -129,25 +130,33 @@ export function buildConsensusPrompt(
   consensusDirection: MessageSentiment,
   consensusStrength: number,
   marketData?: MarketData,
-  asset: string = 'BTC'
+  asset: string = 'BTC',
+  debateContext?: DebateContextForConsensus
 ): string {
   let marketContext = '';
   if (marketData) {
     marketContext = formatMarketDataForPrompt(marketData, asset);
   }
 
+  // CVAULT-190: Inject debate context into consensus prompt
+  let debateContextSection = '';
+  if (debateContext) {
+    debateContextSection = '\n\n' + formatDebateContextForPrompt(debateContext);
+    debateContextSection += '\n\nAs you form your consensus reaction, consider the arguments made during the debate. Reference specific points that influenced the outcome or that you found particularly compelling.';
+  }
+
   const systemPrompt = `${persona.personalityPrompt}
 
-${marketContext}
+${marketContext}${debateContextSection}
 
-The chat room has reached a ${consensusDirection.toUpperCase()} consensus with ${consensusStrength}% agreement. The debate phase is concluding. React to the consensus — do you agree with the group's assessment? Did the market data support this conclusion? Stay in character. Be brief (1-2 sentences).
+The chat room has reached a ${consensusDirection.toUpperCase()} consensus with ${consensusStrength}% agreement. The debate phase is concluding. React to the consensus — do you agree with the group's assessment? Did the market data support this conclusion? Reference specific arguments from the debate context if provided. Stay in character. Be brief (1-2 sentences).
 
 End with [SENTIMENT: ${consensusDirection}, CONFIDENCE: ${consensusStrength}]`;
 
   const userPrompt = `Recent chat:
 ${formatRecentMessages(recentMessages)}
 
-The room has reached consensus: ${consensusDirection.toUpperCase()} (${consensusStrength}% strength). Give your final thoughts on whether this consensus is justified by the data. 1-2 sentences max.`;
+The room has reached consensus: ${consensusDirection.toUpperCase()} (${consensusStrength}% strength). Give your final thoughts on whether this consensus is justified by the data and debate arguments. 1-2 sentences max.`;
 
   return JSON.stringify({ systemPrompt, userPrompt });
 }

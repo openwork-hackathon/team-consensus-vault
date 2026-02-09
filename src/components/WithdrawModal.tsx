@@ -214,7 +214,7 @@ export default function WithdrawModal({ isOpen, onClose, onWithdraw, depositedBa
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-4">
               <h2 id="withdraw-modal-title" className="text-2xl font-bold">Withdraw from Vault</h2>
               <button
                 ref={closeButtonRef}
@@ -227,6 +227,18 @@ export default function WithdrawModal({ isOpen, onClose, onWithdraw, depositedBa
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
+            </div>
+
+            {/* Paper Trading Mode Banner */}
+            <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg flex items-center gap-2" role="status" aria-live="polite">
+              <svg className="w-5 h-5 text-amber-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div className="flex-1">
+                <span className="text-sm font-semibold text-amber-600 dark:text-amber-400">Paper Trading Mode</span>
+                <p className="text-xs text-amber-600/80 dark:text-amber-400/80">Withdrawals are simulated - no real funds transferred</p>
+              </div>
+              <span className="px-2 py-1 text-xs font-bold bg-amber-500 text-white rounded-full">SIMULATED</span>
             </div>
 
             {/* Balance Display */}
@@ -286,6 +298,9 @@ export default function WithdrawModal({ isOpen, onClose, onWithdraw, depositedBa
               <div id="withdraw-modal-description" className="mb-6 p-3 bg-accent/10 border border-accent/20 rounded-lg" role="note">
                 <p className="text-xs text-muted-foreground">
                   Withdraw your deposited funds from the vault. Your withdrawal will be processed instantly.
+                </p>
+                <p className="text-xs text-amber-600 dark:text-amber-400 mt-2 font-medium">
+                  ℹ️ This is a paper trading simulation - no real cryptocurrency will be transferred.
                 </p>
               </div>
 

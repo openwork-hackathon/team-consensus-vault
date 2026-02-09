@@ -26,12 +26,14 @@ interface SignalHistoryProps {
   signals?: SignalHistoryEntry[];
   maxEntries?: number;
   className?: string;
+  isDemoData?: boolean;
 }
 
 export default function SignalHistory({
   signals = [],
   maxEntries = 10,
-  className = ''
+  className = '',
+  isDemoData = false
 }: SignalHistoryProps) {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [focusedIndex, setFocusedIndex] = useState<number>(-1);
@@ -145,9 +147,44 @@ export default function SignalHistory({
       role="region"
       aria-label="Signal history"
     >
+      {/* Demo Data Banner - Prominent Alert */}
+      {isDemoData && displaySignals.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6 p-4 bg-amber-500/10 border-2 border-amber-500/30 rounded-lg"
+          role="alert"
+          aria-live="polite"
+        >
+          <div className="flex items-start gap-3">
+            <svg className="w-6 h-6 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div className="flex-1">
+              <h3 className="text-sm font-bold text-amber-600 dark:text-amber-400 mb-1">
+                Viewing Example Data
+              </h3>
+              <p className="text-xs text-amber-700 dark:text-amber-300">
+                This trade history is for demonstration purposes only. Real trading data will appear here after you execute your first consensus signal.
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       {/* Header */}
       <div className="mb-6">
-        <h2 className="text-xl font-bold mb-1" id="signal-history-title">Signal History</h2>
+        <div className="flex items-center gap-3 mb-1">
+          <h2 className="text-xl font-bold" id="signal-history-title">Signal History</h2>
+          {isDemoData && (
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-600 dark:text-amber-400 border-2 border-amber-500/40">
+              <svg className="w-3.5 h-3.5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              DEMO
+            </span>
+          )}
+        </div>
         <p className="text-sm text-muted-foreground" id="signal-history-description">
           Recent AI consensus signals (last {maxEntries})
         </p>

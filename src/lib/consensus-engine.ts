@@ -28,6 +28,7 @@ import type { UserFacingError, ProgressUpdate } from './types';
 import { proxyFetch, isProxyConfigured, ProxyError, ProxyErrorType, isRetryableProxyError } from './proxy-fetch';
 import { withAICaching, consensusDeduplicator, getPerformanceMetrics as getAIPerformanceMetrics, AI_CACHE_TTL } from './ai-cache';
 import { recordTiming, recordCacheEvent } from './performance-metrics';
+import { getDebateContextForConsensus, mergeDebateContextWithUserContext, type DebateContextInjection } from './chatroom/consensus-context-bridge';
 
 // Rate limiting - track last request time per model
 const lastRequestTime: Record<string, number> = {};
@@ -1020,9 +1021,55 @@ export function getSystemHealthSummary() {
 /**
  * Build enhanced prompt with better structure and context
  */
-function buildEnhancedPrompt(asset: string, context?: string): string {
+/**
+ * CVAULT-190: Build enhanced prompt with debate context injection
+ * 
+ * This function has been enhanced to optionally include recent debate insights
+ * from the chatroom debate phase, allowing consensus analysts to benefit
+ * from the AI panel's collective reasoning before reaching consensus.
+ */
+async function buildEnhancedPrompt(asset: string, context?: string): Promise<string> {
   const basePrompt = `Analyze ${asset.toUpperCase()} for a trading signal.`;
 
+  try {
+    // Check for recent debate context
+    const debateContext: DebateContextInjection = await getDebateContextForConsensus();
+    
+    if (debateContext.shouldInclude) {
+      console.log('[CVAULT-190] Including debate context in consensus prompt:', {
+        direction: debateContext.metadata.debateDirection,
+        strength: debateContext.metadata.debateStrength,
+        ageMinutes: Math.round(debateContext.metadata.ageMs / 60000),
+        reason: debateContext.metadata.reason
+      });
+      
+      // Merge debate context with user context
+      const mergedContext = mergeDebateContextWithUserContext(
+        debateContext.contextString,
+        context?.trim()
+      );
+      
+      return `${basePrompt}
+
+${mergedContext}
+
+Instructions:
+1. Consider the provided context and debate insights alongside your specialized expertise
+2. Reference specific arguments or data points from the debate that influence your analysis
+3. Focus on actionable insights relevant to current market conditions
+4. Be specific about key levels, metrics, or indicators
+5. Provide clear, concise reasoning for your signal
+6. Note how (if at all) the debate insights influenced your final decision
+
+Remember: Respond ONLY with valid JSON in the exact format specified.`;
+    } else {
+      console.log('[CVAULT-190] Skipping debate context:', debateContext.metadata.reason);
+    }
+  } catch (error) {
+    console.warn('[CVAULT-190] Error fetching debate context, proceeding without:', error);
+  }
+
+  // Fallback to original prompt without debate context
   if (context && context.trim()) {
     return `${basePrompt}
 
@@ -1111,7 +1158,8 @@ async function callModel(
   lastRequestTime[config.id] = Date.now();
 
   // Enhanced user prompt with better context and structure
-  const userPrompt = buildEnhancedPrompt(asset, context);
+  // CVAULT-190: Enhanced to include debate context when available
+  const userPrompt = await buildEnhancedPrompt(asset, context);
 
   // Ensure timeout is within acceptable bounds
   const timeout = Math.min(

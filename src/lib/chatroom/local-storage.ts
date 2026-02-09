@@ -1,8 +1,8 @@
 import { ChatMessage, ChatRoomState, ChatPhase } from './types';
 
 const STORAGE_KEY = 'cvault-chatroom-history';
-const MAX_MESSAGES = 200;
-const MAX_STORAGE_SIZE = 1024 * 1024; // 1MB
+const MAX_MESSAGES = 500; // CVAULT-179: Increased to 500 messages for better history
+const MAX_STORAGE_SIZE = 2 * 1024 * 1024; // 2MB - increased to accommodate more messages
 const TIME_GAP_THRESHOLD_HOUR = 60 * 60 * 1000; // 1 hour in ms
 const TIME_GAP_THRESHOLD_DAY = 24 * 60 * 60 * 1000; // 24 hours in ms
 
@@ -18,6 +18,14 @@ export interface TimeGapInfo {
   gapHours?: number;
   gapDays?: number;
   lastVisitTime?: number;
+}
+
+export interface MissedMessagesInfo {
+  hasMissedMessages: boolean;
+  missedMessageCount: number;
+  lastVisitTimestamp: number;
+  firstMissedMessageTimestamp?: number;
+  lastMissedMessageTimestamp?: number;
 }
 
 const CURRENT_VERSION = '1.0.0';
@@ -200,5 +208,136 @@ export function formatTimeGap(lastVisitTimestamp: number): string {
   } else {
     const minutes = Math.floor(timeSinceLastVisit / (60 * 1000));
     return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
+  }
+}
+
+/**
+ * Detect missed messages based on last visit timestamp and server messages
+ * Returns information about messages that were sent during user's absence
+ */
+export function detectMissedMessages(
+  lastVisitTimestamp: number,
+  serverMessages: ChatMessage[],
+  minGapMs: number = TIME_GAP_THRESHOLD_HOUR
+): MissedMessagesInfo {
+  const now = Date.now();
+  const timeSinceLastVisit = now - lastVisitTimestamp;
+  
+  // Only consider it a gap if it's been more than the threshold
+  if (timeSinceLastVisit < minGapMs) {
+    return {
+      hasMissedMessages: false,
+      missedMessageCount: 0,
+      lastVisitTimestamp,
+    };
+  }
+
+  // Find messages that occurred after last visit
+  const missedMessages = serverMessages.filter(
+    msg => msg.timestamp > lastVisitTimestamp
+  );
+
+  if (missedMessages.length === 0) {
+    return {
+      hasMissedMessages: false,
+      missedMessageCount: 0,
+      lastVisitTimestamp,
+    };
+  }
+
+  // Sort by timestamp to get first and last
+  const sorted = [...missedMessages].sort((a, b) => a.timestamp - b.timestamp);
+
+  return {
+    hasMissedMessages: true,
+    missedMessageCount: missedMessages.length,
+    lastVisitTimestamp,
+    firstMissedMessageTimestamp: sorted[0].timestamp,
+    lastMissedMessageTimestamp: sorted[sorted.length - 1].timestamp,
+  };
+}
+
+/**
+ * Get missed messages that need summarization (more than threshold)
+ */
+export function getMissedMessagesForSummary(
+  lastVisitTimestamp: number,
+  serverMessages: ChatMessage[],
+  minMessagesThreshold: number = 5
+): ChatMessage[] | null {
+  const info = detectMissedMessages(lastVisitTimestamp, serverMessages);
+  
+  if (!info.hasMissedMessages || info.missedMessageCount < minMessagesThreshold) {
+    return null;
+  }
+
+  return serverMessages.filter(msg => msg.timestamp > lastVisitTimestamp);
+}
+
+const SUMMARY_CACHE_KEY = 'cvault-chatroom-summary-cache';
+const SUMMARY_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+export interface CachedSummary {
+  summary: string;
+  generatedAt: number;
+  lastVisitTimestamp: number;
+  messageCount: number;
+}
+
+/**
+ * Get cached summary if still valid
+ */
+export function getCachedSummary(lastVisitTimestamp: number): string | null {
+  try {
+    const stored = localStorage.getItem(SUMMARY_CACHE_KEY);
+    if (!stored) return null;
+
+    const cached: CachedSummary = JSON.parse(stored);
+    const now = Date.now();
+    
+    // Check if cache is still valid (within TTL and for same visit gap)
+    if (
+      now - cached.generatedAt < SUMMARY_CACHE_TTL_MS &&
+      cached.lastVisitTimestamp === lastVisitTimestamp
+    ) {
+      return cached.summary;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('[chatroom-storage] Failed to get cached summary:', error);
+    return null;
+  }
+}
+
+/**
+ * Cache a summary to avoid regenerating on quick reconnects
+ */
+export function cacheSummary(
+  summary: string,
+  lastVisitTimestamp: number,
+  messageCount: number
+): void {
+  try {
+    const cached: CachedSummary = {
+      summary,
+      generatedAt: Date.now(),
+      lastVisitTimestamp,
+      messageCount,
+    };
+    localStorage.setItem(SUMMARY_CACHE_KEY, JSON.stringify(cached));
+  } catch (error) {
+    console.error('[chatroom-storage] Failed to cache summary:', error);
+  }
+}
+
+/**
+ * Clear cached summary
+ */
+export function clearCachedSummary(): void {
+  try {
+    localStorage.removeItem(SUMMARY_CACHE_KEY);
+  } catch (error) {
+    console.error('[chatroom-storage] Failed to clear cached summary:', error);
   }
 }

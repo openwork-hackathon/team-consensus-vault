@@ -7,7 +7,12 @@ import { ChatMessage, ChatRoomState, ChatPhase, MessageSentiment } from './types
 import { PERSONAS, PERSONAS_BY_ID } from './personas';
 import { callModelRaw } from './model-caller';
 import { ChatroomError, createUserFacingError } from './error-types';
-import { buildDebatePrompt, buildCooldownPrompt, buildModeratorPrompt } from './prompts';
+import { buildDebatePrompt, buildCooldownPrompt, buildModeratorPrompt, buildConsensusPrompt } from './prompts';
+import { 
+  buildDebateContextForConsensus, 
+  applyInfluenceWeighting,
+  DebateContextForConsensus 
+} from './debate-consensus-bridge';
 import { calculateRollingConsensus } from './consensus-calc';
 import { fetchMarketData, MarketData } from './market-data';
 import { 
@@ -19,6 +24,7 @@ import {
   shouldAcknowledgeOpposingView,
   generateAcknowledgmentPrompt
 } from './persuasion';
+import { getDebateSummary } from './kv-store';
 
 const CONSENSUS_THRESHOLD = 80;
 const COOLDOWN_MIN_MINUTES = 15;
@@ -167,6 +173,38 @@ export async function generateNextMessageEnhanced(
 
   if (currentState.phase === 'COOLDOWN') {
     promptData = JSON.parse(buildCooldownPrompt(persona, history));
+  } else if (currentState.phase === 'CONSENSUS') {
+    // CVAULT-190: Build consensus prompt with debate context
+    // First, try to get the actual debate summary from storage
+    let debateContext: DebateContextForConsensus | undefined;
+    try {
+      const debateSummary = await getDebateSummary();
+      if (debateSummary) {
+        // Build proper debate context using the actual summary
+        debateContext = buildDebateContextForConsensus(
+          history,
+          debateSummary,
+          Object.fromEntries(
+            PERSONAS.map(p => [p.id, currentState.persuasionStore.getState(p.id)]).filter(([, s]) => s)
+          ) as Record<string, PersuasionState>
+        );
+        console.log(`[CVAULT-190] Using debate summary for consensus prompt: Round ${debateSummary.roundNumber}, ${debateSummary.consensusDirection} @ ${debateSummary.consensusStrength}%`);
+      } else {
+        console.log('[CVAULT-190] No debate summary available for consensus prompt');
+      }
+    } catch (error) {
+      console.warn('[CVAULT-190] Error fetching debate summary for consensus prompt:', error);
+    }
+    
+    promptData = JSON.parse(buildConsensusPrompt(
+      persona,
+      history,
+      currentState.consensusDirection || 'neutral',
+      currentState.consensusStrength,
+      marketData,
+      asset,
+      debateContext
+    ));
   } else {
     promptData = JSON.parse(buildDebatePrompt(persona, history, marketData, persuasionState, asset));
   }
@@ -288,15 +326,27 @@ export async function generateNextMessageEnhanced(
     ...currentState.recentSpeakers.filter(id => id !== persona.id),
   ].slice(0, RECENT_SPEAKERS_LIMIT);
 
-  // 14. Calculate consensus
+  // 14. Calculate consensus with CVAULT-190 influence weighting
   let consensusUpdate: EnhancedGenerationResult['consensusUpdate'] | undefined;
 
   if (currentState.phase === 'DEBATE' || currentState.phase === 'CONSENSUS') {
     const allMessages = [...history, message];
     const consensus = calculateRollingConsensus(allMessages);
+    
+    // CVAULT-190: Apply influence weighting based on argument quality
+    const persuasionStates = Object.fromEntries(
+      PERSONAS.map(p => [p.id, currentState.persuasionStore.getState(p.id)]).filter(([, s]) => s)
+    ) as Record<string, PersuasionState>;
+    
+    const weightedStrength = applyInfluenceWeighting(
+      consensus.strength,
+      allMessages,
+      persuasionStates
+    );
+    
     currentState.consensusDirection = consensus.direction;
-    currentState.consensusStrength = consensus.strength;
-    consensusUpdate = consensus;
+    currentState.consensusStrength = weightedStrength;
+    consensusUpdate = { direction: consensus.direction, strength: weightedStrength };
 
     // Check consensus threshold
     if (
@@ -381,11 +431,13 @@ async function pickNextSpeakerEnhanced(
       60
     );
 
-    const jsonMatch = response.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0]);
-      if (parsed.nextSpeakerId && personaIds.includes(parsed.nextSpeakerId)) {
-        return parsed.nextSpeakerId;
+    if (response) {
+      const jsonMatch = response.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        if (parsed.nextSpeakerId && personaIds.includes(parsed.nextSpeakerId)) {
+          return parsed.nextSpeakerId;
+        }
       }
     }
   } catch (error) {

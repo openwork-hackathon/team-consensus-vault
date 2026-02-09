@@ -1,7 +1,7 @@
 /**
  * Chatroom-Council Bridge
  *
- * Connects the 17-persona chatroom consensus system to the 5-agent trading council.
+ * Connects the multi-persona chatroom consensus system to the 5-agent trading council.
  *
  * Architecture:
  * - Event-based: Chatroom consensus triggers council evaluation
@@ -140,7 +140,7 @@ export function buildCouncilContext(
     neutral: 'neutral and undecided',
   };
 
-  return `Market Sentiment Context: The 17-persona AI chatroom has reached ${chatroomStrength}% consensus with a ${sentimentMap[chatroomDirection]} outlook. ` +
+  return `Market Sentiment Context: The AI chatroom has reached ${chatroomStrength}% consensus with a ${sentimentMap[chatroomDirection]} outlook. ` +
     `This crowd sentiment signal should be considered alongside your technical, on-chain, and risk analysis. ` +
     `The chatroom consensus represents collective AI opinion from diverse analytical perspectives.`;
 }

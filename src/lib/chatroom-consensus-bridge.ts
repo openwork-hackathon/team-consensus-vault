@@ -1,7 +1,7 @@
 /**
  * Chatroom-to-Trading-Council Bridge
  *
- * Connects the 17-persona chatroom consensus system to the 5-agent trading council.
+ * Connects the multi-persona chatroom consensus system to the 5-agent trading council.
  *
  * Flow:
  * 1. Chatroom generates consensus: direction (bullish/bearish/neutral) + strength (0-100)
@@ -13,6 +13,7 @@
 import { getState, getMessages } from './chatroom/kv-store';
 import { calculateRollingConsensus } from './chatroom/consensus-calc';
 import { MessageSentiment } from './chatroom/types';
+import { getPersonaCount } from './chatroom/personas';
 
 export interface ChatroomConsensusSnapshot {
   direction: MessageSentiment | null;
@@ -31,7 +32,7 @@ export interface BridgedAnalysisContext {
 /**
  * Fetch current chatroom consensus state
  *
- * Returns the latest rolling consensus from the 17-persona debate.
+ * Returns the latest rolling consensus from the multi-persona debate.
  * Returns null if chatroom has insufficient data or is in cooldown.
  */
 export async function getChatroomConsensus(): Promise<ChatroomConsensusSnapshot | null> {
@@ -86,7 +87,7 @@ function formatConsensusSummary(
   const sentiment = direction === 'bullish' ? 'bullish' : 'bearish';
   const phaseDesc = phase === 'CONSENSUS' ? 'Consensus reached' : 'Active debate';
 
-  return `${phaseDesc}: ${intensity} ${sentiment} consensus (${strength}% agreement) from 17-persona crypto chatroom debate.`;
+  return `${phaseDesc}: ${intensity} ${sentiment} consensus (${strength}% agreement) from ${getPersonaCount()}-persona crypto chatroom debate.`;
 }
 
 /**

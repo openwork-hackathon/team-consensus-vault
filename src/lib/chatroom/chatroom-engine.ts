@@ -2,11 +2,13 @@ import { ChatMessage, ChatRoomState, ChatPhase, MessageSentiment, DebateSummary 
 import { PERSONAS, PERSONAS_BY_ID } from './personas';
 import { callModelRaw } from './model-caller';
 import { ChatroomError, ChatroomErrorType, createUserFacingError } from './error-types';
-import { buildDebatePrompt, buildCooldownPrompt, buildModeratorPrompt } from './prompts';
+import { buildDebatePrompt, buildCooldownPrompt, buildModeratorPrompt, buildConsensusPrompt } from './prompts';
 import { calculateRollingConsensus } from './consensus-calc';
 import { fetchMarketData, MarketData } from './market-data';
 import { PersuasionStore, initializePersuasionState, PersuasionState } from './persuasion';
 import { extractDebateSummary, updateStanceChangeHandles } from './argument-extractor';
+import { getDebateSummary } from './kv-store';
+import { buildDebateContextForConsensus, DebateContextForConsensus } from './debate-consensus-bridge';
 
 const CONSENSUS_THRESHOLD = 80;
 const COOLDOWN_MIN_MINUTES = 15;
@@ -90,6 +92,35 @@ export async function generateNextMessage(
 
   if (currentState.phase === 'COOLDOWN') {
     promptData = JSON.parse(buildCooldownPrompt(persona, history));
+  } else if (currentState.phase === 'CONSENSUS') {
+    // CVAULT-190: Build consensus prompt with debate context
+    let debateContext: DebateContextForConsensus | undefined;
+    try {
+      const debateSummary = await getDebateSummary();
+      if (debateSummary) {
+        // Build proper debate context using the actual summary
+        debateContext = buildDebateContextForConsensus(
+          history,
+          debateSummary,
+          currentState.persuasionStates
+        );
+        console.log(`[CVAULT-190] Using debate summary for consensus prompt in regular engine: Round ${debateSummary.roundNumber}, ${debateSummary.consensusDirection} @ ${debateSummary.consensusStrength}%`);
+      } else {
+        console.log('[CVAULT-190] No debate summary available for consensus prompt in regular engine');
+      }
+    } catch (error) {
+      console.warn('[CVAULT-190] Error fetching debate summary for consensus prompt in regular engine:', error);
+    }
+    
+    promptData = JSON.parse(buildConsensusPrompt(
+      persona,
+      history,
+      currentState.consensusDirection || 'neutral',
+      currentState.consensusStrength,
+      marketData,
+      currentState.currentAsset || 'BTC',
+      debateContext
+    ));
   } else {
     promptData = JSON.parse(buildDebatePrompt(
       persona,
@@ -102,7 +133,7 @@ export async function generateNextMessage(
   }
 
   // 5. Call persona's model with error handling - silently skip on failure
-  let rawResponse: string;
+  let rawResponse: string | null;
   
   try {
     rawResponse = await callModelRaw(
@@ -198,6 +229,21 @@ export async function generateNextMessage(
     // Retry generation with next available speaker
     return generateNextMessage(history, currentState);
   }
+
+  // CVAULT-184: Handle silent failure from model caller (returns null on error)
+  if (!rawResponse) {
+    console.warn(`[chatroom-engine] Silent failure for ${persona.handle} - skipping to next speaker`);
+
+    // Mark current speaker as unavailable and retry
+    const unavailablePersonas = new Set(currentState.unavailablePersonas || []);
+    unavailablePersonas.add(speakerId);
+    currentState.unavailablePersonas = Array.from(unavailablePersonas);
+    currentState.retryCount = (currentState.retryCount || 0) + 1;
+
+    // Recursively try next speaker
+    return generateNextMessage(history, currentState);
+  }
+
 
   // 6. Strip model reasoning tags (e.g. DeepSeek <think>...</think>) and parse sentiment
   let content = rawResponse.trim();
@@ -382,6 +428,9 @@ async function pickNextSpeaker(
     );
 
     // Parse JSON from response
+    if (!response) {
+      throw new Error('Empty response from moderator');
+    }
     const jsonMatch = response.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0]);

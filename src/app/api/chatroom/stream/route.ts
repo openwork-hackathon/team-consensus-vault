@@ -23,6 +23,7 @@ import {
 } from '@/lib/chatroom/chatroom-engine-enhanced';
 import { PERSONAS_BY_ID } from '@/lib/chatroom/personas';
 import { ChatRoomState } from '@/lib/chatroom/types';
+import { precomputeTypingDuration } from '@/lib/chatroom/typing-duration';
 
 // Message interval ranges (ms)
 const DEBATE_INTERVAL_MIN = 60_000;  // 60s
@@ -90,13 +91,17 @@ export async function GET(request: NextRequest) {
       }
 
       // Send typing indicator if next speaker is pre-selected
+      // CVAULT-178: Include estimated typing duration based on persona
       if (state.nextSpeakerId) {
         const nextPersona = PERSONAS_BY_ID[state.nextSpeakerId];
         if (nextPersona) {
+          const typingConfig = precomputeTypingDuration(nextPersona);
           send('typing', {
             id: nextPersona.id,
             handle: nextPersona.handle,
             avatar: nextPersona.avatar,
+            durationMs: typingConfig.durationMs,
+            expectedLength: typingConfig.charCount,
           });
         }
       }
@@ -135,15 +140,23 @@ export async function GET(request: NextRequest) {
                 const minInterval = isDebate ? DEBATE_INTERVAL_MIN * 0.8 : COOLDOWN_INTERVAL_MIN * 0.8;
 
                 if (freshTimeSince >= minInterval || freshState.messageCount === 0) {
-                  // Send typing indicator
+                  // Send typing indicator with duration
+                  // CVAULT-178: Calculate realistic typing duration based on persona and expected message length
                   const nextId = freshState.nextSpeakerId;
+                  let typingDurationMs = 2000; // Default fallback
+                  
                   if (nextId) {
                     const persona = PERSONAS_BY_ID[nextId];
                     if (persona) {
+                      const typingConfig = precomputeTypingDuration(persona);
+                      typingDurationMs = typingConfig.durationMs;
+                      
                       send('typing', {
                         id: persona.id,
                         handle: persona.handle,
                         avatar: persona.avatar,
+                        durationMs: typingConfig.durationMs,
+                        expectedLength: typingConfig.charCount,
                       });
                     }
                   }
@@ -202,6 +215,14 @@ export async function GET(request: NextRequest) {
                       return; // Skip normal message flow
                     }
 
+                    // CVAULT-184: Check for skipped messages (silent persona failures)
+                    // Don't append or broadcast skipped messages - just update state
+                    if ((result.message as any).skipped) {
+                      await setState(result.state);
+                      lastKnownIndex = await getMessageIndex();
+                      return; // Skip normal message flow
+                    }
+
                   } catch (genError) {
                     // This should rarely happen since enhanced engine handles errors internally
                     console.error('[chatroom-stream] Unexpected generation error (should be rare):', {
@@ -211,6 +232,20 @@ export async function GET(request: NextRequest) {
 
                     // Release lock and continue to next iteration WITHOUT sending error to frontend
                     continue;
+                  }
+
+                  // CVAULT-178: Wait for typing duration before showing message
+                  // This simulates the persona "typing" the message
+                  const elapsedSinceTyping = Date.now() - freshNow;
+                  const remainingTypingTime = Math.max(0, typingDurationMs - elapsedSinceTyping);
+                  
+                  if (remainingTypingTime > 0 && !request.signal.aborted) {
+                    await new Promise(r => setTimeout(r, remainingTypingTime));
+                  }
+                  
+                  // Check if connection is still alive before broadcasting
+                  if (request.signal.aborted) {
+                    return;
                   }
 
                   // CVAULT-185: Save persuasion states
@@ -296,16 +331,20 @@ export async function GET(request: NextRequest) {
                   }
 
                   // Send next typing indicator
+                  // CVAULT-178: Include typing duration for next speaker
                   if (result.state.nextSpeakerId) {
                     const nextPersona = PERSONAS_BY_ID[result.state.nextSpeakerId];
                     if (nextPersona) {
                       // Delay typing indicator slightly for realism
                       await new Promise(r => setTimeout(r, 2000));
                       if (!request.signal.aborted) {
+                        const nextTypingConfig = precomputeTypingDuration(nextPersona);
                         send('typing', {
                           id: nextPersona.id,
                           handle: nextPersona.handle,
                           avatar: nextPersona.avatar,
+                          durationMs: nextTypingConfig.durationMs,
+                          expectedLength: nextTypingConfig.charCount,
                         });
                       }
                     }

@@ -37,9 +37,9 @@ This is not a wrapper around one API. It is a genuine multi-model consensus syst
 
 Each analyst operates independently. They do not communicate or influence each other. They simply vote.
 
-### Chatroom (17 AI Personas)
+### Chatroom (49 AI Personas)
 
-The chatroom features 17 distinct AI personalities across 5 foundation models, each with unique trading styles and perspectives:
+The chatroom features 49 distinct AI personalities across 5 foundation models, each with unique trading styles and perspectives:
 
 #### DeepSeek (3 personas)
 - **nxbl** 🔮 — Cryptic minimalist technical trader
@@ -728,7 +728,7 @@ Every analyst has a full fallback chain covering all other models.
 
 - **Core consensus engine** with 4/5 supermajority voting, fallback chains, and retry logic
 - **5 fully integrated AI analysts** spanning 5 providers and 3 API protocols
-- **17 AI personas** in the chatroom debate arena with unique personalities
+- **49 AI personas** in the chatroom debate arena with unique personalities
 - **Real-time streaming UI** with Server-Sent Events showing votes as they arrive
 - **Proxy-based AI routing** through Cloudflare Tunnel for secure API key management
 - **Paper trading engine** with simulated execution and P&L tracking
@@ -759,14 +759,14 @@ Every analyst has a full fallback chain covering all other models.
 - ✅ Implemented resilient error handling with retries, timeouts, and fallbacks
 - ✅ Built real-time streaming UI with Server-Sent Events
 - ✅ Deployed production-ready architecture with proxy-based security
-- ✅ Created 17 distinct AI personas for the chatroom debate arena
+- ✅ Created 49 distinct AI personas for the chatroom debate arena
 - ✅ Achieved 100% TypeScript strict mode compliance
 - ✅ Comprehensive test coverage for consensus logic
 
 ### Demo Highlights
 
 1. **Analyze BTC** — Watch 5 AI analysts vote in real time
-2. **Chatroom** — See 17 AI personas debate market conditions
+2. **Chatroom** — See 49 AI personas debate market conditions
 3. **Consensus Meter** — Visual representation of agreement level
 4. **Trade Signals** — Clear BUY/SELL/HOLD recommendations when consensus reached
 5. **Paper Trading** — Simulated position tracking with P&L

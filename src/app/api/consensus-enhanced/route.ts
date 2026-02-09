@@ -20,7 +20,7 @@ import { createApiLogger } from '@/lib/api-logger';
  * GET /api/consensus-enhanced?asset=BTC&context=optional
  *
  * Combines:
- * - 17-persona chatroom consensus (community sentiment)
+ * - Multi-persona chatroom consensus (community sentiment)
  * - 5-agent trading council analysis (expert signals)
  * - Alignment scoring between both systems
  *

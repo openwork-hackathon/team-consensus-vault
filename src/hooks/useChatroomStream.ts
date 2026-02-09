@@ -2,17 +2,24 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { ChatMessage, ChatPhase, MessageSentiment, ChatRoomState } from '@/lib/chatroom/types';
-import { 
-  saveChatHistory, 
-  loadChatHistory, 
+import {
+  saveChatHistory,
+  loadChatHistory,
+  clearChatHistory,
+  clearCachedSummary,
   TimeGapInfo,
-  formatTimeGap 
+  formatTimeGap,
+  getMissedMessagesForSummary,
+  getCachedSummary,
+  cacheSummary
 } from '@/lib/chatroom/local-storage';
 
 interface TypingPersona {
   id: string;
   handle: string;
   avatar: string;
+  durationMs?: number;  // CVAULT-178: Expected typing duration from server
+  expectedLength?: number;  // CVAULT-178: Expected message length
 }
 
 interface ChatroomStreamState {
@@ -26,9 +33,28 @@ interface ChatroomStreamState {
   systemError: string | null;
   timeGapInfo: TimeGapInfo | null;
   showTimeGapIndicator: boolean;
+  missedSummary: string | null;
+  isFetchingSummary: boolean;
+  storageInfo: {
+    hasData: boolean;
+    messageCount: number;
+    estimatedSize: number;
+  };
 }
 
-export function useChatroomStream(): ChatroomStreamState {
+interface ChatroomStreamActions {
+  clearHistory: () => void;
+  dismissTimeGap: () => void;
+  refreshStorageInfo: () => void;
+}
+
+/**
+ * CVAULT-179: Enhanced Chatroom Stream Hook with Persistence
+ * 
+ * Manages real-time SSE connection to chatroom with full localStorage persistence.
+ * Handles time gap detection, missed message summaries, and graceful reconnection.
+ */
+export function useChatroomStream(): ChatroomStreamState & ChatroomStreamActions {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [phase, setPhase] = useState<ChatPhase>('DEBATE');
   const [typingPersona, setTypingPersona] = useState<TypingPersona | null>(null);
@@ -39,6 +65,13 @@ export function useChatroomStream(): ChatroomStreamState {
   const [systemError, setSystemError] = useState<string | null>(null);
   const [timeGapInfo, setTimeGapInfo] = useState<TimeGapInfo | null>(null);
   const [showTimeGapIndicator, setShowTimeGapIndicator] = useState(false);
+  const [missedSummary, setMissedSummary] = useState<string | null>(null);
+  const [isFetchingSummary, setIsFetchingSummary] = useState(false);
+  const [storageInfo, setStorageInfo] = useState({
+    hasData: false,
+    messageCount: 0,
+    estimatedSize: 0,
+  });
 
   const retryCountRef = useRef(0);
   const maxRetries = 5;
@@ -46,6 +79,7 @@ export function useChatroomStream(): ChatroomStreamState {
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const messageIdsRef = useRef<Set<string>>(new Set());
   const lastSavedStateRef = useRef<ChatRoomState | null>(null);
+  const storageCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const addMessage = useCallback((msg: ChatMessage) => {
     // Deduplicate by message ID
@@ -77,6 +111,8 @@ export function useChatroomStream(): ChatroomStreamState {
           
           saveChatHistory(newMessages, currentState);
           lastSavedStateRef.current = currentState;
+          // Update storage info after save
+          updateStorageInfo();
         }
       } catch (error) {
         console.error('[chatroom] Failed to save to localStorage:', error);
@@ -93,14 +129,34 @@ export function useChatroomStream(): ChatroomStreamState {
     }
   }, [phase, cooldownEndsAt, consensusDirection, consensusStrength]);
 
+  // Update storage info
+  const updateStorageInfo = useCallback(() => {
+    try {
+      const stored = localStorage.getItem('cvault-chatroom-history');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        setStorageInfo({
+          hasData: true,
+          messageCount: parsed.messages?.length || 0,
+          estimatedSize: stored.length,
+        });
+      } else {
+        setStorageInfo({ hasData: false, messageCount: 0, estimatedSize: 0 });
+      }
+    } catch (error) {
+      console.error('[chatroom] Failed to get storage info:', error);
+    }
+  }, []);
+
   // Load from localStorage on mount
   useEffect(() => {
     const { messages: storedMessages, state: storedState, timeGapInfo: storedTimeGapInfo } = loadChatHistory();
-    
+    let timeGapTimeoutId: NodeJS.Timeout | null = null;
+
     if (storedMessages.length > 0) {
       setMessages(storedMessages);
       messageIdsRef.current = new Set(storedMessages.map(m => m.id));
-      
+
       if (storedState) {
         setPhase(storedState.phase);
         setCooldownEndsAt(storedState.cooldownEndsAt);
@@ -108,19 +164,129 @@ export function useChatroomStream(): ChatroomStreamState {
         setConsensusStrength(storedState.consensusStrength);
         lastSavedStateRef.current = storedState;
       }
-      
+
       setTimeGapInfo(storedTimeGapInfo);
-      
+
       // Show time gap indicator if there's a significant gap
       if (storedTimeGapInfo.hasGap && storedTimeGapInfo.lastVisitTime) {
         setShowTimeGapIndicator(true);
         // Auto-hide after 10 seconds
-        setTimeout(() => {
+        timeGapTimeoutId = setTimeout(() => {
           setShowTimeGapIndicator(false);
         }, 10000);
+
+        // Fetch summary if there are missed messages
+        fetchMissedSummaryIfNeeded(storedTimeGapInfo.lastVisitTime, storedMessages, storedState);
       }
     }
+
+    updateStorageInfo();
+
+    // Set up periodic storage info updates
+    storageCheckIntervalRef.current = setInterval(updateStorageInfo, 30000); // Every 30 seconds
+
+    return () => {
+      if (storageCheckIntervalRef.current) {
+        clearInterval(storageCheckIntervalRef.current);
+      }
+      if (timeGapTimeoutId) {
+        clearTimeout(timeGapTimeoutId);
+      }
+    };
+  }, [updateStorageInfo]);
+
+  // Fetch missed conversation summary
+  const fetchMissedSummaryIfNeeded = async (
+    lastVisitTimestamp: number,
+    currentMessages: ChatMessage[],
+    currentState: ChatRoomState | null
+  ) => {
+    try {
+      // Check cache first
+      const cachedSummary = getCachedSummary(lastVisitTimestamp);
+      if (cachedSummary) {
+        console.log('[chatroom] Using cached summary');
+        setMissedSummary(cachedSummary);
+        return;
+      }
+
+      // Check if there are enough missed messages to warrant a summary
+      const missedMessages = getMissedMessagesForSummary(lastVisitTimestamp, currentMessages, 5);
+      if (!missedMessages || missedMessages.length === 0) {
+        console.log('[chatroom] Not enough missed messages for summary');
+        return;
+      }
+
+      console.log(`[chatroom] Fetching summary for ${missedMessages.length} missed messages`);
+      setIsFetchingSummary(true);
+
+      // Call the summarize API
+      const response = await fetch('/api/chatroom/summarize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: missedMessages,
+          lastVisitTimestamp,
+          currentPhase: currentState?.phase,
+          currentConsensus: currentState?.consensusDirection
+            ? {
+                direction: currentState.consensusDirection,
+                strength: currentState.consensusStrength || 0,
+              }
+            : null,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error('[chatroom] Failed to fetch summary:', response.status);
+        return;
+      }
+
+      const data = await response.json();
+      if (data.summary) {
+        console.log('[chatroom] Summary fetched successfully');
+        setMissedSummary(data.summary);
+        // Cache the summary
+        cacheSummary(data.summary, lastVisitTimestamp, missedMessages.length);
+      }
+    } catch (error) {
+      console.error('[chatroom] Error fetching summary:', error);
+    } finally {
+      setIsFetchingSummary(false);
+    }
+  };
+
+  // Clear history action
+  const clearHistory = useCallback(() => {
+    try {
+      clearChatHistory();
+      clearCachedSummary();
+      setMessages([]);
+      setPhase('DEBATE');
+      setCooldownEndsAt(null);
+      setConsensusDirection(null);
+      setConsensusStrength(0);
+      setTimeGapInfo(null);
+      setShowTimeGapIndicator(false);
+      setMissedSummary(null);
+      messageIdsRef.current.clear();
+      lastSavedStateRef.current = null;
+      setStorageInfo({ hasData: false, messageCount: 0, estimatedSize: 0 });
+      console.log('[chatroom] History cleared successfully');
+    } catch (error) {
+      console.error('[chatroom] Failed to clear history:', error);
+    }
   }, []);
+
+  // Dismiss time gap indicator
+  const dismissTimeGap = useCallback(() => {
+    setShowTimeGapIndicator(false);
+  }, []);
+
+  // Refresh storage info
+  const refreshStorageInfo = useCallback(() => {
+    updateStorageInfo();
+  }, [updateStorageInfo]);
 
   useEffect(() => {
     let reconnectTimeout: NodeJS.Timeout | null = null;
@@ -181,6 +347,7 @@ export function useChatroomStream(): ChatroomStreamState {
             };
             saveChatHistory(mergedMessages, currentState);
             lastSavedStateRef.current = currentState;
+            updateStorageInfo();
           }
         } catch (e) {
           console.error('[chatroom] Failed to parse history:', e);
@@ -200,11 +367,15 @@ export function useChatroomStream(): ChatroomStreamState {
         try {
           const data: TypingPersona = JSON.parse(event.data);
           setTypingPersona(data);
-          // Auto-clear typing after 30s (safety net)
+          
+          // CVAULT-178: Use server-provided duration or fallback to 30s safety net
+          // The server calculates realistic typing duration based on message length and persona
+          const durationMs = data.durationMs ?? 30_000;
+          
           if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
           typingTimeoutRef.current = setTimeout(() => {
             setTypingPersona(null);
-          }, 30_000);
+          }, durationMs);
         } catch (e) {
           console.error('[chatroom] Failed to parse typing:', e);
         }
@@ -236,6 +407,7 @@ export function useChatroomStream(): ChatroomStreamState {
           };
           saveChatHistory(messages, currentState);
           lastSavedStateRef.current = currentState;
+          updateStorageInfo();
         } catch (e) {
           console.error('[chatroom] Failed to parse phase_change:', e);
         }
@@ -262,32 +434,14 @@ export function useChatroomStream(): ChatroomStreamState {
           };
           saveChatHistory(messages, currentState);
           lastSavedStateRef.current = currentState;
+          updateStorageInfo();
         } catch (e) {
           console.error('[chatroom] Failed to parse consensus_update:', e);
         }
       });
 
-      es.addEventListener('generation_error', (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          setSystemError(`Generation error: ${data.error}`);
-          // Clear error after 10 seconds
-          setTimeout(() => setSystemError(null), 10000);
-        } catch (e) {
-          console.error('[chatroom] Failed to parse generation_error:', e);
-        }
-      });
-
-      es.addEventListener('system_error', (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          setSystemError(data.message);
-          // Clear error after 10 seconds
-          setTimeout(() => setSystemError(null), 10000);
-        } catch (e) {
-          console.error('[chatroom] Failed to parse system_error:', e);
-        }
-      });
+      // CVAULT-184: Error events are no longer sent to the client - errors are handled silently server-side
+      // No error event listeners should be registered
 
       es.onerror = () => {
         setIsConnected(false);
@@ -331,5 +485,11 @@ export function useChatroomStream(): ChatroomStreamState {
     systemError,
     timeGapInfo,
     showTimeGapIndicator,
+    missedSummary,
+    isFetchingSummary,
+    storageInfo,
+    clearHistory,
+    dismissTimeGap,
+    refreshStorageInfo,
   };
 }

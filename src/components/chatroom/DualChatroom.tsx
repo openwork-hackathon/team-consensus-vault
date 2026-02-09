@@ -172,7 +172,7 @@ export default function DualChatroom() {
                 </div>
               )}
 
-              {/* Chatroom */}
+              {/* Chatroom with persistence */}
               <div className="flex-1 overflow-hidden">
                 <ChatRoom
                   messages={chatroomData.messages}
@@ -180,6 +180,13 @@ export default function DualChatroom() {
                   typingPersona={chatroomData.typingPersona}
                   cooldownEndsAt={chatroomData.cooldownEndsAt}
                   isConnected={chatroomData.isConnected}
+                  timeGapInfo={chatroomData.timeGapInfo}
+                  showTimeGapIndicator={chatroomData.showTimeGapIndicator}
+                  missedSummary={chatroomData.missedSummary}
+                  isFetchingSummary={chatroomData.isFetchingSummary}
+                  storageInfo={chatroomData.storageInfo}
+                  onClearHistory={chatroomData.clearHistory}
+                  onDismissTimeGap={chatroomData.dismissTimeGap}
                 />
               </div>
 
@@ -325,7 +332,7 @@ export default function DualChatroom() {
           </div>
         )}
 
-        {/* Chatroom */}
+        {/* Chatroom with persistence */}
         <div className="flex-1 overflow-hidden">
           <ChatRoom
             messages={chatroomData.messages}
@@ -333,6 +340,13 @@ export default function DualChatroom() {
             typingPersona={chatroomData.typingPersona}
             cooldownEndsAt={chatroomData.cooldownEndsAt}
             isConnected={chatroomData.isConnected}
+            timeGapInfo={chatroomData.timeGapInfo}
+            showTimeGapIndicator={chatroomData.showTimeGapIndicator}
+            missedSummary={chatroomData.missedSummary}
+            isFetchingSummary={chatroomData.isFetchingSummary}
+            storageInfo={chatroomData.storageInfo}
+            onClearHistory={chatroomData.clearHistory}
+            onDismissTimeGap={chatroomData.dismissTimeGap}
           />
         </div>
 

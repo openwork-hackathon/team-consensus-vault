@@ -70,6 +70,12 @@ export default function ChatroomPage() {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
   };
 
+  // Handle clear history with toast notification
+  const handleClearHistory = () => {
+    chatroomData.clearHistory();
+    addToast('Chat history cleared successfully', 'success');
+  };
+
   const userDeposits = address ? getDepositsByAddress(address) : [];
   const userTotalDeposited = userDeposits.reduce((sum, d) => sum + parseFloat(d.amount), 0).toFixed(6);
 
@@ -120,6 +126,13 @@ export default function ChatroomPage() {
               typingPersona={chatroomData.typingPersona}
               cooldownEndsAt={chatroomData.cooldownEndsAt}
               isConnected={chatroomData.isConnected}
+              timeGapInfo={chatroomData.timeGapInfo}
+              showTimeGapIndicator={chatroomData.showTimeGapIndicator}
+              missedSummary={chatroomData.missedSummary}
+              isFetchingSummary={chatroomData.isFetchingSummary}
+              storageInfo={chatroomData.storageInfo}
+              onClearHistory={handleClearHistory}
+              onDismissTimeGap={chatroomData.dismissTimeGap}
             />
           </div>
         </section>
@@ -154,6 +167,44 @@ export default function ChatroomPage() {
                 </div>
               </div>
             </div>
+          </section>
+        )}
+
+        {/* Persistence Info */}
+        {chatroomData.storageInfo.hasData && (
+          <section 
+            className="mb-6 bg-muted/30 rounded-xl p-4 border border-border"
+            aria-labelledby="persistence-info-heading"
+          >
+            <h3 id="persistence-info-heading" className="text-sm font-semibold mb-2 flex items-center gap-2">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+              </svg>
+              Session Persistence
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+              <div>
+                <span className="text-muted-foreground">Stored Messages:</span>{' '}
+                <span className="font-medium">{chatroomData.storageInfo.messageCount}</span>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Storage Used:</span>{' '}
+                <span className="font-medium">
+                  {(chatroomData.storageInfo.estimatedSize / 1024).toFixed(1)} KB
+                </span>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Last Visit:</span>{' '}
+                <span className="font-medium">
+                  {chatroomData.timeGapInfo?.lastVisitTime 
+                    ? new Date(chatroomData.timeGapInfo.lastVisitTime).toLocaleString()
+                    : 'N/A'}
+                </span>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Your chat history is stored locally on this device. Use the &quot;Clear&quot; button in the chat footer to remove stored data.
+            </p>
           </section>
         )}
 
@@ -195,6 +246,9 @@ export default function ChatroomPage() {
           </p>
           <p className="mt-1 text-sm sm:text-sm">
             Messages stream in real-time as AI personalities debate market trends
+          </p>
+          <p className="mt-1 text-xs opacity-75">
+            CVAULT-179: Chat history persists across page loads with graceful time gap handling
           </p>
         </footer>
       </div>

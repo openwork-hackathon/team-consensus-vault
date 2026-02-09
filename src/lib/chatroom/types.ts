@@ -105,7 +105,8 @@ export type ChatSSEEventType =
   | 'phase_change'
   | 'consensus_update'
   | 'connected'
-  | 'stance_change'; // CVAULT-185: Notify when persona changes stance
+  | 'stance_change' // CVAULT-185: Notify when persona changes stance
+  | 'debate_context'; // CVAULT-190: Broadcast when debate context is captured
 
 export interface ChatSSEEvent {
   type: ChatSSEEventType;
@@ -119,6 +120,15 @@ export interface StanceChangeEvent {
   from: MessageSentiment;
   to: MessageSentiment;
   convictionScore: number;
+}
+
+// CVAULT-178: Typing indicator event data with duration
+export interface TypingEvent {
+  id: string;
+  handle: string;
+  avatar: string;
+  durationMs: number;  // How long the typing indicator should show
+  expectedLength?: number;  // Expected message length (for UI animation timing)
 }
 
 // CVAULT-188: Moderation types

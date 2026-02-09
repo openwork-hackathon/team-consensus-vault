@@ -20,12 +20,13 @@ import { useAccount } from 'wagmi';
 import { useVault } from '@/contexts/VaultContext';
 import { TokenBalance } from '@/components/TokenBalance';
 import { useOpenworkBalance } from '@/hooks/useOpenworkBalance';
+import { useTradingHistory } from '@/hooks/useTradingHistory';
 
 // Lazy load heavy components to reduce initial bundle size
-const ConsensusVsContrarian = lazy(() => 
+const ConsensusVsContrarian = lazy(() =>
   import('@/components/ConsensusVsContrarian').then(m => ({ default: m.default }))
 );
-const TradingPerformance = lazy(() => 
+const TradingPerformance = lazy(() =>
   import('@/components/TradingPerformance').then(m => ({ default: m.default }))
 );
 
@@ -34,6 +35,7 @@ export default function Dashboard() {
   const { address, isConnected } = useAccount();
   const { addDeposit, removeDeposit, totalValueLocked, getDepositsByAddress } = useVault();
   const { formatted: openworkBalance, isLoading: balanceLoading } = useOpenworkBalance(address);
+  const { data: tradingHistoryData } = useTradingHistory();
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
   const [isSwapWidgetOpen, setIsSwapWidgetOpen] = useState(false);
@@ -79,91 +81,35 @@ export default function Dashboard() {
     if (!isClient || !isConnected || balanceLoading) return;
 
     const hasOpenworkBalance = parseFloat(openworkBalance) > 0;
-    
+
     // Show onboarding if user has zero OPENWORK balance and hasn't skipped
     if (!hasOpenworkBalance && !hasSkippedOnboarding) {
       // Small delay to ensure UI is ready
       const timer = setTimeout(() => {
         setIsOnboardingWizardOpen(true);
       }, 1000);
-      
+
       return () => clearTimeout(timer);
     }
   }, [isClient, isConnected, balanceLoading, openworkBalance, hasSkippedOnboarding]);
 
-  // Mock signal history data for demonstration
-  const signalHistory: SignalHistoryEntry[] = [
-    {
-      id: '1',
-      timestamp: Date.now() - 1000 * 60 * 30, // 30 minutes ago
-      query: 'BTC analysis on current market conditions',
-      signalType: 'BUY',
-      confidence: 87,
-      reasoning: 'Strong bullish momentum detected across multiple indicators. RSI shows oversold conditions recovering, MACD crossover confirmed, and volume profile supports upward movement. Market sentiment analysis indicates retail FOMO building.',
-      asset: 'BTC/USD',
-      tradeExecuted: true,
-      tradeId: 'trade_001',
-      entryPrice: 45234,
-      exitPrice: 46125,
-      pnl: 891,
-      pnlPercentage: 1.97,
-      tradeStatus: 'closed'
-    },
-    {
-      id: '2',
-      timestamp: Date.now() - 1000 * 60 * 90, // 1.5 hours ago
-      query: 'ETH technical analysis for short term',
-      signalType: 'SELL',
-      confidence: 92,
-      reasoning: 'Bearish divergence spotted on 4H chart. Failed to break resistance at $2,850 level three times. Volume decreasing on bounces, suggesting exhaustion. Short-term correction expected.',
-      asset: 'ETH/USD',
-      tradeExecuted: true,
-      tradeId: 'trade_002',
-      entryPrice: 2847,
-      exitPrice: 2789,
-      pnl: -58,
-      pnlPercentage: -2.04,
-      tradeStatus: 'closed'
-    },
-    {
-      id: '3',
-      timestamp: Date.now() - 1000 * 60 * 180, // 3 hours ago
-      query: 'Market outlook for major cryptocurrencies',
-      signalType: 'HOLD',
-      confidence: 65,
-      reasoning: 'Mixed signals across different timeframes. While daily trend remains bullish, 4H showing signs of consolidation. Waiting for clearer directional bias before taking position. Risk management suggests patience.',
-      asset: 'BTC/USD',
-      tradeExecuted: false,
-      tradeStatus: 'cancelled'
-    },
-    {
-      id: '4',
-      timestamp: Date.now() - 1000 * 60 * 360, // 6 hours ago
-      query: 'Bitcoin momentum analysis',
-      signalType: 'BUY',
-      confidence: 78,
-      reasoning: 'Accumulation phase detected. Whale wallet activity increasing, exchange inflows decreasing, and on-chain metrics show strong hands holding. Next leg up likely to begin soon.',
-      asset: 'BTC/USD',
-      tradeExecuted: true,
-      tradeId: 'trade_003',
-      entryPrice: 44156,
-      exitPrice: 45234,
-      pnl: 1078,
-      pnlPercentage: 2.44,
-      tradeStatus: 'closed'
-    },
-    {
-      id: '5',
-      timestamp: Date.now() - 1000 * 60 * 720, // 12 hours ago
-      query: 'ETH/BTC pair analysis',
-      signalType: 'HOLD',
-      confidence: 71,
-      reasoning: 'ETH/BTC ratio in accumulation zone. Both assets showing independent strength. No clear alpha opportunity between the pairs. Better to wait for divergence.',
-      asset: 'ETH/BTC',
-      tradeExecuted: false,
-      tradeStatus: 'cancelled'
-    }
-  ];
+  // Convert real trading history to signal history format
+  const signalHistory: SignalHistoryEntry[] = tradingHistoryData?.trades.map(trade => ({
+    id: trade.id,
+    timestamp: new Date(trade.timestamp).getTime(),
+    query: `${trade.direction.toUpperCase()} ${trade.asset} - ${trade.consensusStrength} consensus`,
+    signalType: trade.direction === 'long' ? 'BUY' : trade.direction === 'short' ? 'SELL' : 'HOLD',
+    confidence: trade.consensusStrength === '5/5' ? 100 : 80,
+    reasoning: `Trade executed based on ${trade.consensusStrength} AI consensus. ${trade.direction.toUpperCase()} signal triggered at ${trade.entryPrice}.`,
+    asset: trade.asset,
+    tradeExecuted: true,
+    tradeId: trade.id,
+    entryPrice: trade.entryPrice,
+    exitPrice: trade.exitPrice,
+    pnl: trade.pnl,
+    pnlPercentage: trade.pnlPercentage,
+    tradeStatus: trade.status as 'pending' | 'open' | 'closed' | 'cancelled'
+  })) || [];
 
   const addToast = useCallback((message: string, type: ToastData['type']) => {
     const id = `${Date.now()}-${Math.random()}`;
@@ -406,6 +352,15 @@ export default function Dashboard() {
             </div>
           )}
           
+          {/* Paper Trading Mode Indicator */}
+          <div className="mb-4 p-2 bg-amber-500/10 border border-amber-500/30 rounded-lg flex items-center gap-2 w-fit" role="status" aria-live="polite">
+            <svg className="w-4 h-4 text-amber-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="text-xs font-semibold text-amber-600 dark:text-amber-400">Paper Trading Mode</span>
+            <span className="text-xs text-amber-600/70 dark:text-amber-400/70">- Simulated transactions only</span>
+          </div>
+
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="flex flex-wrap gap-6">
               <div role="status" aria-live="polite">
@@ -598,7 +553,11 @@ export default function Dashboard() {
           className="mb-6"
           aria-labelledby="signal-history-heading"
         >
-          <SignalHistory signals={signalHistory} maxEntries={5} />
+          <SignalHistory
+            signals={signalHistory}
+            maxEntries={5}
+            isDemoData={!tradingHistoryData || tradingHistoryData.trades.length === 0}
+          />
         </section>
 
         {/* Footer Info */}

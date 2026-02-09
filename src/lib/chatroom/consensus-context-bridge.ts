@@ -153,7 +153,7 @@ function formatConsensusContext(summary: DebateSummary): string {
 
   // Header with clear labeling
   parts.push('=== AI PANEL DEBATE INSIGHTS ===');
-  parts.push(`The 17-persona AI chatroom recently reached ${summary.consensusStrength}% ${summary.consensusDirection.toUpperCase()} consensus.`);
+  parts.push(`The AI chatroom recently reached ${summary.consensusStrength}% ${summary.consensusDirection.toUpperCase()} consensus.`);
   parts.push('');
 
   // Key arguments from the winning side

@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { ChatMessage as ChatMessageType } from '@/lib/chatroom/types';
 import { PERSONAS_BY_ID } from '@/lib/chatroom/personas';
+import UserModerationStatus from './UserModerationStatus';
 
 interface ChatMessageProps {
   message: ChatMessageType;
@@ -97,6 +98,12 @@ export default function ChatMessage({ message, onQuote }: ChatMessageProps) {
           >
             {message.handle}
           </span>
+          {message.moderation?.userId && (
+            <UserModerationStatus
+              userId={message.moderation.userId}
+              isAI={false}
+            />
+          )}
           <span className="text-[11px] text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
             {formatTime(message.timestamp)}
           </span>
