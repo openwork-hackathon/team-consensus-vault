@@ -10,6 +10,7 @@ import SignalHistory, { SignalHistoryEntry } from '@/components/SignalHistory';
 import DepositModal from '@/components/DepositModal';
 import WithdrawModal from '@/components/WithdrawModal';
 import SwapWidget from '@/components/SwapWidget';
+import TokenOnboardingWizard from '@/components/TokenOnboardingWizard';
 import ToastContainer, { ToastData } from '@/components/ToastContainer';
 import LoadingSkeleton from '@/components/LoadingSkeleton';
 import PartialFailureBanner from '@/components/PartialFailureBanner';
@@ -18,6 +19,7 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount } from 'wagmi';
 import { useVault } from '@/contexts/VaultContext';
 import { TokenBalance } from '@/components/TokenBalance';
+import { useOpenworkBalance } from '@/hooks/useOpenworkBalance';
 
 // Lazy load heavy components to reduce initial bundle size
 const ConsensusVsContrarian = lazy(() => 
@@ -31,9 +33,12 @@ export default function Dashboard() {
   const consensusData = useConsensusStream();
   const { address, isConnected } = useAccount();
   const { addDeposit, removeDeposit, totalValueLocked, getDepositsByAddress } = useVault();
+  const { formatted: openworkBalance, isLoading: balanceLoading } = useOpenworkBalance(address);
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
   const [isSwapWidgetOpen, setIsSwapWidgetOpen] = useState(false);
+  const [isOnboardingWizardOpen, setIsOnboardingWizardOpen] = useState(false);
+  const [hasSkippedOnboarding, setHasSkippedOnboarding] = useState(false);
   const [toasts, setToasts] = useState<ToastData[]>([]);
   const [autoTradingEnabled, setAutoTradingEnabled] = useState(true);
   const [isClient, setIsClient] = useState(false);
@@ -68,6 +73,23 @@ export default function Dashboard() {
       return () => observer.disconnect();
     }
   }, []);
+
+  // Detect zero OPENWORK balance and trigger onboarding
+  useEffect(() => {
+    if (!isClient || !isConnected || balanceLoading) return;
+
+    const hasOpenworkBalance = parseFloat(openworkBalance) > 0;
+    
+    // Show onboarding if user has zero OPENWORK balance and hasn't skipped
+    if (!hasOpenworkBalance && !hasSkippedOnboarding) {
+      // Small delay to ensure UI is ready
+      const timer = setTimeout(() => {
+        setIsOnboardingWizardOpen(true);
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isClient, isConnected, balanceLoading, openworkBalance, hasSkippedOnboarding]);
 
   // Mock signal history data for demonstration
   const signalHistory: SignalHistoryEntry[] = [
@@ -330,6 +352,13 @@ export default function Dashboard() {
         onClose={() => setIsSwapWidgetOpen(false)}
       />
 
+      {/* Token Onboarding Wizard */}
+      <TokenOnboardingWizard
+        isOpen={isOnboardingWizardOpen}
+        onClose={() => setIsOnboardingWizardOpen(false)}
+        onSkip={() => setHasSkippedOnboarding(true)}
+      />
+
       <div id="main-content" className="container mx-auto px-4 py-6 lg:py-8 max-w-7xl">
         {/* Vault Stats + Deposit Button */}
         <section
@@ -337,6 +366,46 @@ export default function Dashboard() {
           aria-labelledby="vault-stats-heading"
         >
           <h2 id="vault-stats-heading" className="sr-only">Vault Statistics and Actions</h2>
+          
+          {/* Zero OPENWORK Balance Banner */}
+          {isConnected && !balanceLoading && parseFloat(openworkBalance) === 0 && !hasSkippedOnboarding && (
+            <div className="mb-4 p-4 bg-accent/10 border border-accent/30 rounded-lg">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-10 h-10 bg-accent/20 rounded-full flex items-center justify-center">
+                  <svg className="w-5 h-5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold mb-1">Get OPENWORK Tokens to Get Started</h3>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    You need OPENWORK tokens to participate in prediction markets and earn rewards.
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setIsOnboardingWizardOpen(true)}
+                      className="px-4 py-2 bg-accent text-accent-foreground rounded-lg font-medium hover:bg-accent/90 transition-colors text-sm"
+                    >
+                      Start Guided Setup
+                    </button>
+                    <button
+                      onClick={() => setIsSwapWidgetOpen(true)}
+                      className="px-4 py-2 bg-primary/10 text-primary rounded-lg font-medium hover:bg-primary/20 transition-colors text-sm border border-primary/30"
+                    >
+                      Get OPENWORK Directly
+                    </button>
+                    <button
+                      onClick={() => setHasSkippedOnboarding(true)}
+                      className="px-4 py-2 bg-secondary text-secondary-foreground rounded-lg font-medium hover:bg-secondary/80 transition-colors text-sm"
+                    >
+                      Skip for Now
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="flex flex-wrap gap-6">
               <div role="status" aria-live="polite">
@@ -359,6 +428,18 @@ export default function Dashboard() {
                   <div role="status" aria-live="polite" className="hidden sm:block">
                     <div className="text-xs text-muted-foreground mb-1">CONSENSUS Balance</div>
                     <TokenBalance className="text-2xl font-bold text-accent" showRefresh={false} showSymbol={true} />
+                  </div>
+                  <div role="status" aria-live="polite" className="hidden sm:block">
+                    <div className="text-xs text-muted-foreground mb-1">OPENWORK Balance</div>
+                    <div className="text-2xl font-bold text-primary">
+                      {balanceLoading ? (
+                        <div className="h-6 w-20 bg-muted rounded animate-pulse"></div>
+                      ) : (
+                        <span aria-label={`${openworkBalance} OPENWORK tokens`}>
+                          {openworkBalance} OPENWORK
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </>
               )}

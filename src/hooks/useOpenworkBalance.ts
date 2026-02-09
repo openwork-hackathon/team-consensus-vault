@@ -1,9 +1,7 @@
 'use client';
 
 import { useTokenBalance } from './useTokenBalance';
-
-// OPENWORK token address on Base
-const OPENWORK_TOKEN_ADDRESS = '0x299c30DD5974BF4D5bFE42C340CA40462816AB07' as const;
+import { OPENWORK_TOKEN } from '@/lib/wagmi';
 
 /**
  * Hook to read OPENWORK token balance for a given address
@@ -18,7 +16,7 @@ const OPENWORK_TOKEN_ADDRESS = '0x299c30DD5974BF4D5bFE42C340CA40462816AB07' as c
  * ```
  */
 export function useOpenworkBalance(address: string | undefined) {
-  return useTokenBalance(address, OPENWORK_TOKEN_ADDRESS);
+  return useTokenBalance(address, OPENWORK_TOKEN.address);
 }
 
 export default useOpenworkBalance;

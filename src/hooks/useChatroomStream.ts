@@ -23,6 +23,7 @@ interface ChatroomStreamState {
   consensusStrength: number;
   cooldownEndsAt: number | null;
   isConnected: boolean;
+  systemError: string | null;
   timeGapInfo: TimeGapInfo | null;
   showTimeGapIndicator: boolean;
 }

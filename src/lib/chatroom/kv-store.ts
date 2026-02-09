@@ -161,3 +161,66 @@ export async function initializeIfEmpty(): Promise<void> {
     await setState(defaultState());
   }
 }
+
+/**
+ * CVAULT-185: Get persuasion states for all personas
+ */
+export async function getPersuasionStates(): Promise<Record<string, PersonaPersuasionState>> {
+  if (isKVAvailable()) {
+    try {
+      const { kv } = await import('@vercel/kv');
+      const states = await kv.get<Record<string, PersonaPersuasionState>>(KEYS.persuasion);
+      return states || {};
+    } catch (error) {
+      console.error('[chatroom-kv] Error fetching persuasion states:', error);
+    }
+  }
+  return memPersuasionStates;
+}
+
+/**
+ * CVAULT-185: Set persuasion states for all personas
+ */
+export async function setPersuasionStates(states: Record<string, PersonaPersuasionState>): Promise<void> {
+  if (isKVAvailable()) {
+    try {
+      const { kv } = await import('@vercel/kv');
+      await kv.set(KEYS.persuasion, states, { ex: PERSUASION_TTL_SECONDS });
+      return;
+    } catch (error) {
+      console.error('[chatroom-kv] Error setting persuasion states:', error);
+    }
+  }
+  memPersuasionStates = states;
+}
+
+/**
+ * CVAULT-185: Get market data cache
+ */
+export async function getMarketDataCache(): Promise<any> {
+  if (isKVAvailable()) {
+    try {
+      const { kv } = await import('@vercel/kv');
+      return await kv.get(KEYS.marketData);
+    } catch (error) {
+      console.error('[chatroom-kv] Error fetching market data:', error);
+    }
+  }
+  return null;
+}
+
+/**
+ * CVAULT-185: Set market data cache
+ */
+export async function setMarketDataCache(data: any): Promise<void> {
+  if (isKVAvailable()) {
+    try {
+      const { kv } = await import('@vercel/kv');
+      // Cache market data for 60 seconds
+      await kv.set(KEYS.marketData, data, { ex: 60 });
+      return;
+    } catch (error) {
+      console.error('[chatroom-kv] Error setting market data:', error);
+    }
+  }
+}

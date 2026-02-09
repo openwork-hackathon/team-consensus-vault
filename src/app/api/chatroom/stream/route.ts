@@ -8,9 +8,17 @@ import {
   releaseLock,
   getMessageIndex,
   initializeIfEmpty,
+  getPersuasionStates,
+  setPersuasionStates,
 } from '@/lib/chatroom/kv-store';
-import { generateNextMessage } from '@/lib/chatroom/chatroom-engine';
+import {
+  generateNextMessageEnhanced,
+  initializeEnhancedState,
+  serializeEnhancedState,
+  deserializeEnhancedState,
+} from '@/lib/chatroom/chatroom-engine-enhanced';
 import { PERSONAS_BY_ID } from '@/lib/chatroom/personas';
+import { ChatRoomState } from '@/lib/chatroom/types';
 
 // Message interval ranges (ms)
 const DEBATE_INTERVAL_MIN = 60_000;  // 60s
@@ -136,20 +144,47 @@ export async function GET(request: NextRequest) {
                     }
                   }
 
-                  // Generate message with error handling
-                  // CVAULT-184: generateNextMessage now handles errors internally by skipping failed personas
-                  // No error events are sent to frontend - all failures are silent
+                  // Generate message with enhanced engine (market data + persuasion)
+                  // CVAULT-185: Using enhanced engine with real market data and persuadable personas
                   const currentHistory = await getMessages();
+
+                  // Load persuasion states
+                  const savedPersuasionStates = await getPersuasionStates();
+
+                  // Build enhanced state
+                  const enhancedState = initializeEnhancedState();
+                  Object.assign(enhancedState, freshState);
+
+                  // Restore persuasion states
+                  if (Object.keys(savedPersuasionStates).length > 0) {
+                    for (const [personaId, pState] of Object.entries(savedPersuasionStates)) {
+                      enhancedState.persuasionStore.updateState(personaId, {
+                        personaId,
+                        currentStance: pState.currentStance,
+                        conviction: pState.convictionLevel,
+                        convictionScore: pState.convictionScore,
+                        stanceHistory: [{
+                          stance: pState.currentStance,
+                          conviction: pState.convictionScore,
+                          timestamp: pState.lastStanceChangeAt || Date.now(),
+                        }],
+                        persuasionFactors: [],
+                        lastUpdated: Date.now(),
+                      });
+                    }
+                  }
+
                   let result;
 
                   try {
-                    result = await generateNextMessage(currentHistory, freshState);
-                    
+                    // CVAULT-185: Call enhanced engine with BTC market data
+                    result = await generateNextMessageEnhanced(currentHistory, enhancedState, 'BTC');
+
                     // Check if this is a system message (empty content) indicating cooldown
                     if (result.message.personaId === 'system' && !result.message.content) {
                       // Just update state, don't append empty message
                       await setState(result.state);
-                      
+
                       // Broadcast phase change if any
                       if (result.phaseChange) {
                         send('phase_change', {
@@ -158,29 +193,56 @@ export async function GET(request: NextRequest) {
                           cooldownEndsAt: result.state.cooldownEndsAt,
                         });
                       }
-                      
+
                       lastKnownIndex = await getMessageIndex();
                       return; // Skip normal message flow
                     }
-                    
+
                   } catch (genError) {
-                    // CVAULT-184: This should rarely happen since generateNextMessage handles errors internally
-                    // But as a last resort, log and continue silently
+                    // This should rarely happen since enhanced engine handles errors internally
                     console.error('[chatroom-stream] Unexpected generation error (should be rare):', {
                       error: genError instanceof Error ? genError.message : String(genError),
                       timestamp: new Date().toISOString(),
                     });
-                    
+
                     // Release lock and continue to next iteration WITHOUT sending error to frontend
                     continue;
                   }
 
+                  // CVAULT-185: Save persuasion states
+                  const newPersuasionStates: Record<string, any> = {};
+                  const allStates = result.state.persuasionStore.getAllStates();
+                  for (const [personaId, pState] of Object.entries(allStates)) {
+                    newPersuasionStates[personaId] = {
+                      currentStance: pState.currentStance,
+                      convictionLevel: pState.conviction,
+                      convictionScore: pState.convictionScore,
+                      stanceChanges: Math.max(0, pState.stanceHistory.length - 1),
+                      lastStanceChangeAt: pState.stanceHistory[pState.stanceHistory.length - 1]?.timestamp,
+                    };
+                  }
+                  await setPersuasionStates(newPersuasionStates);
+
                   // Store message and state
                   await appendMessage(result.message);
-                  await setState(result.state);
+
+                  // Convert enhanced state to basic state for storage
+                  const { persuasionStore, lastMarketData, marketDataTimestamp, ...basicState } = result.state;
+                  await setState(basicState as ChatRoomState);
 
                   // Broadcast message
                   send('message', result.message);
+
+                  // CVAULT-185: Broadcast stance change if it occurred
+                  if (result.stanceChanged && result.previousStance) {
+                    send('stance_change', {
+                      personaId: result.message.personaId,
+                      handle: result.message.handle,
+                      from: result.previousStance,
+                      to: result.persuasionState.currentStance,
+                      convictionScore: result.persuasionState.convictionScore,
+                    });
+                  }
 
                   // Broadcast phase change if any
                   if (result.phaseChange) {

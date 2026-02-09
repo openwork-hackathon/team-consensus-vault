@@ -54,6 +54,9 @@ export interface ChatRoomState {
   unavailablePersonas?: string[];
   // CVAULT-184: Retry counter to prevent infinite loops
   retryCount?: number;
+  // CVAULT-185: Market data integration
+  currentAsset?: string;
+  persuasionStates?: Record<string, any>;
 }
 
 export interface Persona {
@@ -75,9 +78,19 @@ export type ChatSSEEventType =
   | 'typing'
   | 'phase_change'
   | 'consensus_update'
-  | 'connected';
+  | 'connected'
+  | 'stance_change'; // CVAULT-185: Notify when persona changes stance
 
 export interface ChatSSEEvent {
   type: ChatSSEEventType;
   data: unknown;
+}
+
+// CVAULT-185: Stance change event data
+export interface StanceChangeEvent {
+  personaId: string;
+  handle: string;
+  from: MessageSentiment;
+  to: MessageSentiment;
+  convictionScore: number;
 }

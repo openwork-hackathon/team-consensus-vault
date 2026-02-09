@@ -27,8 +27,17 @@ export const CONSENSUS_TOKEN = {
   name: 'CONSENSUS',
 } as const;
 
+// OPENWORK Token Configuration
+export const OPENWORK_TOKEN = {
+  address: '0x299c30DD5974BF4D5bFE42C340CA40462816AB07' as `0x${string}`,
+  symbol: 'OPENWORK',
+  decimals: 18,
+  name: 'OPENWORK',
+} as const;
+
 // Token URLs
 export const TOKEN_URLS = {
   mintClub: 'https://mint.club/token/base/0xF6d67996312152c3AdEB8d7F95EDE8d7D20AB7fa',
   baseScan: 'https://basescan.org/token/0xF6d67996312152c3AdEB8d7F95EDE8d7D20AB7fa',
+  openworkBaseScan: 'https://basescan.org/token/0x299c30DD5974BF4D5bFE42C340CA40462816AB07',
 } as const;

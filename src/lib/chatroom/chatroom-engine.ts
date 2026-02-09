@@ -4,6 +4,8 @@ import { callModelRaw } from './model-caller';
 import { ChatroomError, ChatroomErrorType, createUserFacingError } from './error-types';
 import { buildDebatePrompt, buildCooldownPrompt, buildModeratorPrompt } from './prompts';
 import { calculateRollingConsensus } from './consensus-calc';
+import { fetchMarketData, MarketData } from './market-data';
+import { PersuasionStore, initializePersuasionState, PersuasionState } from './persuasion';
 
 const CONSENSUS_THRESHOLD = 80;
 const COOLDOWN_MIN_MINUTES = 15;
@@ -46,16 +48,53 @@ export async function generateNextMessage(
     throw new Error(`Unknown persona: ${speakerId}`);
   }
 
-  // 3. Build prompt based on phase
+  // 3. Fetch market data and prepare persuasion state
+  let marketData: MarketData | undefined;
+  let persuasionState: PersuasionState | undefined;
+
+  if (currentState.phase === 'DEBATE' || currentState.phase === 'CONSENSUS') {
+    // Fetch market data for the current asset
+    const asset = currentState.currentAsset || 'BTC';
+    try {
+      marketData = await fetchMarketData(asset);
+    } catch (error) {
+      console.warn('[chatroom-engine] Failed to fetch market data:', error);
+      // Continue without market data if fetch fails
+    }
+
+    // Initialize persuasion states if not present
+    if (!currentState.persuasionStates) {
+      currentState.persuasionStates = {};
+      // Initialize all personas with neutral stance
+      for (const p of PERSONAS) {
+        currentState.persuasionStates[p.id] = initializePersuasionState(p.id, 'neutral', 50);
+      }
+    }
+
+    // Get this persona's persuasion state
+    persuasionState = currentState.persuasionStates[speakerId];
+    if (!persuasionState) {
+      persuasionState = initializePersuasionState(speakerId, 'neutral', 50);
+      currentState.persuasionStates[speakerId] = persuasionState;
+    }
+  }
+
+  // 4. Build prompt based on phase
   let promptData: { systemPrompt: string; userPrompt: string };
 
   if (currentState.phase === 'COOLDOWN') {
     promptData = JSON.parse(buildCooldownPrompt(persona, history));
   } else {
-    promptData = JSON.parse(buildDebatePrompt(persona, history));
+    promptData = JSON.parse(buildDebatePrompt(
+      persona,
+      history,
+      marketData,
+      persuasionState,
+      currentState.currentAsset || 'BTC'
+    ));
   }
 
-  // 4. Call persona's model with error handling - silently skip on failure
+  // 5. Call persona's model with error handling - silently skip on failure
   let rawResponse: string;
   
   try {
@@ -153,7 +192,7 @@ export async function generateNextMessage(
     return generateNextMessage(history, currentState);
   }
 
-  // 5. Strip model reasoning tags (e.g. DeepSeek <think>...</think>) and parse sentiment
+  // 6. Strip model reasoning tags (e.g. DeepSeek <think>...</think>) and parse sentiment
   let content = rawResponse.trim();
   // Remove <think>...</think> blocks (DeepSeek chain-of-thought)
   content = content.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
@@ -178,7 +217,7 @@ export async function generateNextMessage(
     }
   }
 
-  // 6. Create message
+  // 7. Create message
   const message: ChatMessage = {
     id: `msg_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
     personaId: persona.id,
@@ -189,10 +228,25 @@ export async function generateNextMessage(
     confidence,
     timestamp: Date.now(),
     phase: currentState.phase,
-    error: messageError,
   };
 
-  // 7. Update state
+  // 8. Process persuasion updates
+  if (currentState.persuasionStates && message.sentiment) {
+    const persuasionStore = new PersuasionStore('current-debate');
+
+    // Load all current states into the store
+    for (const [pid, state] of Object.entries(currentState.persuasionStates)) {
+      persuasionStore.updateState(pid, state as PersuasionState);
+    }
+
+    // Process this message's impact on all personas
+    persuasionStore.processMessage(message, [...history, message]);
+
+    // Save updated states back to currentState
+    currentState.persuasionStates = persuasionStore.getAllStates();
+  }
+
+  // 9. Update state
   currentState.lastMessageAt = message.timestamp;
   currentState.lastSpeakerId = persona.id;
   currentState.messageCount++;
@@ -201,7 +255,7 @@ export async function generateNextMessage(
     ...currentState.recentSpeakers.filter(id => id !== persona.id),
   ].slice(0, RECENT_SPEAKERS_LIMIT);
 
-  // 8. If DEBATE: calculate rolling consensus
+  // 10. If DEBATE: calculate rolling consensus
   let consensusUpdate: GenerationResult['consensusUpdate'] | undefined;
 
   if (currentState.phase === 'DEBATE' || currentState.phase === 'CONSENSUS') {
@@ -247,7 +301,7 @@ export async function generateNextMessage(
     }
   }
 
-  // 9. Pre-select next speaker for typing indicator
+  // 11. Pre-select next speaker for typing indicator
   try {
     const nextSpeaker = await pickNextSpeaker([...history, message], currentState);
     currentState.nextSpeakerId = nextSpeaker;
