@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TradingPerformance Tablet Fix Verification</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .breakpoint-indicator {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #000;
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-family: monospace;
+            z-index: 9999;
+        }
+        .width-indicator {
+            position: fixed;
+            top: 60px;
+            right: 10px;
+            background: #2563eb;
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-family: monospace;
+            z-index: 9999;
+        }
+        .status-indicator {
+            position: fixed;
+            top: 110px;
+            right: 10px;
+            background: #16a34a;
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-family: monospace;
+            z-index: 9999;
+        }
+        .scrollbar-thin {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+        }
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background-color: rgba(156, 163, 175, 0.5);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-4 sm:p-8">
+    <div class="breakpoint-indicator" id="breakpoint">Detecting...</div>
+    <div class="width-indicator" id="width">0px</div>
+    <div class="status-indicator" id="status">Checking...</div>
+
+    <div class="max-w-7xl mx-auto">
+        <h1 class="text-2xl sm:text-3xl font-bold mb-2">TradingPerformance Tablet Fix Verification</h1>
+        <p class="text-gray-600 mb-6">Resize browser to test tablet breakpoints (768px - 1024px)</p>
+
+        <!-- Fix Summary -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <h2 class="text-lg font-bold text-blue-900 mb-2">✅ Applied Fixes</h2>
+            <ul class="list-disc list-inside text-sm text-blue-800 space-y-1">
+                <li>Added <code class="bg-blue-100 px-1 rounded">&lt;colgroup&gt;</code> with explicit column widths</li>
+                <li>Reorganized P&L display to stack vertically (price + percentage)</li>
+                <li>Added proper overflow container with <code class="bg-blue-100 px-1 rounded">scrollbar-thin</code> class</li>
+                <li>Total table width at tablet (7 cols): ~730px (fits in 768px viewport)</li>
+                <li>Total table width at desktop (8 cols): ~820px (fits in 1024px viewport)</li>
+            </ul>
+        </div>
+
+        <!-- Test Container - simulating the component structure -->
+        <div class="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-gray-200">
+            <h2 class="text-xl font-bold mb-1">Paper Trading Performance</h2>
+            <p class="text-sm text-gray-500 mb-4">Simulated trades based on AI consensus signals</p>
+
+            <h3 class="text-lg font-bold mb-3">Recent Trades</h3>
+
+            <!-- Mobile Card Layout (hidden on sm+) -->
+            <div class="sm:hidden space-y-3 mb-4">
+                <div class="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                    <div class="font-semibold text-blue-800">Mobile View Active</div>
+                    <div class="text-sm text-blue-600">Card layout - no horizontal scroll</div>
+                </div>
+            </div>
+
+            <!-- Desktop Table Layout (hidden on sm-) -->
+            <div class="hidden sm:block -mx-2 px-2">
+                <div class="overflow-x-auto scrollbar-thin">
+                    <table class="w-full text-sm">
+                        <colgroup>
+                            <col class="w-[80px]" />
+                            <col class="w-[70px]" />
+                            <col class="w-[80px]" />
+                            <col class="w-[100px]" />
+                            <col class="w-[100px]" />
+                            <col class="w-[130px] hidden md:table-column" />
+                            <col class="w-[90px] hidden lg:table-column" />
+                            <col class="w-[80px]" />
+                        </colgroup>
+                        <thead>
+                            <tr class="border-b border-gray-300 bg-gray-50">
+                                <th class="text-left py-2 px-2 font-semibold">Time</th>
+                                <th class="text-left py-2 px-2 font-semibold">Asset</th>
+                                <th class="text-left py-2 px-2 font-semibold">Direction</th>
+                                <th class="text-right py-2 px-2 font-semibold">Entry</th>
+                                <th class="text-right py-2 px-2 font-semibold">Exit</th>
+                                <th class="text-right py-2 px-2 font-semibold hidden md:table-cell bg-yellow-50">P&L</th>
+                                <th class="text-center py-2 px-2 font-semibold hidden lg:table-cell bg-purple-50">Consensus</th>
+                                <th class="text-center py-2 px-2 font-semibold">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b border-gray-200 hover:bg-gray-50">
+                                <td class="py-2 px-2 text-gray-600 whitespace-nowrap">10:30:45 AM</td>
+                                <td class="py-2 px-2 font-medium">BTC</td>
+                                <td class="py-2 px-2 text-green-600 font-medium">LONG</td>
+                                <td class="py-2 px-2 text-right whitespace-nowrap">$43,250.00</td>
+                                <td class="py-2 px-2 text-right whitespace-nowrap">$44,100.00</td>
+                                <td class="py-2 px-2 text-right font-medium whitespace-nowrap hidden md:table-cell">
+                                    <div class="flex flex-col items-end gap-0.5">
+                                        <span class="text-green-600">+$850.00</span>
+                                        <span class="text-xs opacity-75">(+1.97%)</span>
+                                    </div>
+                                </td>
+                                <td class="py-2 px-2 text-center hidden lg:table-cell">
+                                    <span class="text-xs bg-blue-100 px-2 py-1 rounded">5/5</span>
+                                </td>
+                                <td class="py-2 px-2 text-center">
+                                    <span class="text-xs px-2 py-1 rounded bg-green-100 text-green-700">closed</span>
+                                </td>
+                            </tr>
+                            <tr class="border-b border-gray-200 hover:bg-gray-50">
+                                <td class="py-2 px-2 text-gray-600 whitespace-nowrap">09:15:22 AM</td>
+                                <td class="py-2 px-2 font-medium">ETH</td>
+                                <td class="py-2 px-2 text-red-600 font-medium">SHORT</td>
+                                <td class="py-2 px-2 text-right whitespace-nowrap">$2,280.00</td>
+                                <td class="py-2 px-2 text-right whitespace-nowrap">$2,310.00</td>
+                                <td class="py-2 px-2 text-right font-medium whitespace-nowrap hidden md:table-cell">
+                                    <div class="flex flex-col items-end gap-0.5">
+                                        <span class="text-red-600">-$30.00</span>
+                                        <span class="text-xs opacity-75">(-1.32%)</span>
+                                    </div>
+                                </td>
+                                <td class="py-2 px-2 text-center hidden lg:table-cell">
+                                    <span class="text-xs bg-blue-100 px-2 py-1 rounded">4/5</span>
+                                </td>
+                                <td class="py-2 px-2 text-center">
+                                    <span class="text-xs px-2 py-1 rounded bg-green-100 text-green-700">closed</span>
+                                </td>
+                            </tr>
+                            <tr class="border-b border-gray-200 hover:bg-gray-50">
+                                <td class="py-2 px-2 text-gray-600 whitespace-nowrap">08:45:10 AM</td>
+                                <td class="py-2 px-2 font-medium">SOL</td>
+                                <td class="py-2 px-2 text-green-600 font-medium">LONG</td>
+                                <td class="py-2 px-2 text-right whitespace-nowrap">$98.50</td>
+                                <td class="py-2 px-2 text-right whitespace-nowrap">$102.30</td>
+                                <td class="py-2 px-2 text-right font-medium whitespace-nowrap hidden md:table-cell">
+                                    <div class="flex flex-col items-end gap-0.5">
+                                        <span class="text-green-600">+$3.80</span>
+                                        <span class="text-xs opacity-75">(+3.86%)</span>
+                                    </div>
+                                </td>
+                                <td class="py-2 px-2 text-center hidden lg:table-cell">
+                                    <span class="text-xs bg-blue-100 px-2 py-1 rounded">5/5</span>
+                                </td>
+                                <td class="py-2 px-2 text-center">
+                                    <span class="text-xs px-2 py-1 rounded bg-blue-100 text-blue-700">open</span>
+                                </td>
+                            </tr>
+                            <tr class="border-b border-gray-200 hover:bg-gray-50">
+                                <td class="py-2 px-2 text-gray-600 whitespace-nowrap">08:20:33 AM</td>
+                                <td class="py-2 px-2 font-medium">AVAX</td>
+                                <td class="py-2 px-2 text-red-600 font-medium">SHORT</td>
+                                <td class="py-2 px-2 text-right whitespace-nowrap">$35.80</td>
+                                <td class="py-2 px-2 text-right whitespace-nowrap">$36.20</td>
+                                <td class="py-2 px-2 text-right font-medium whitespace-nowrap hidden md:table-cell">
+                                    <div class="flex flex-col items-end gap-0.5">
+                                        <span class="text-red-600">-$0.40</span>
+                                        <span class="text-xs opacity-75">(-1.12%)</span>
+                                    </div>
+                                </td>
+                                <td class="py-2 px-2 text-center hidden lg:table-cell">
+                                    <span class="text-xs bg-blue-100 px-2 py-1 rounded">4/5</span>
+                                </td>
+                                <td class="py-2 px-2 text-center">
+                                    <span class="text-xs px-2 py-1 rounded bg-green-100 text-green-700">closed</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Expected Behavior -->
+            <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+                <h3 class="font-bold mb-2">Expected Behavior at Current Breakpoint:</h3>
+                <div id="behavior" class="text-sm text-gray-700"></div>
+            </div>
+
+            <!-- Table Width Calculation -->
+            <div class="mt-4 p-4 bg-gray-50 rounded-lg">
+                <h3 class="font-bold mb-2">Table Width Calculation:</h3>
+                <div id="calculation" class="text-sm text-gray-700 font-mono"></div>
+            </div>
+        </div>
+
+        <!-- Test Checklist -->
+        <div class="mt-6 bg-white rounded-lg p-6 shadow">
+            <h2 class="text-xl font-bold mb-4">✅ Verification Checklist</h2>
+            <div class="space-y-2 text-sm">
+                <div class="flex items-start gap-2">
+                    <input type="checkbox" id="check1" class="mt-1">
+                    <label for="check1">No horizontal scroll on tablet (768px-1024px)</label>
+                </div>
+                <div class="flex items-start gap-2">
+                    <input type="checkbox" id="check2" class="mt-1">
+                    <label for="check2">All columns fit within viewport width</label>
+                </div>
+                <div class="flex items-start gap-2">
+                    <input type="checkbox" id="check3" class="mt-1">
+                    <label for="check3">P&L column displays price and percentage vertically stacked</label>
+                </div>
+                <div class="flex items-start gap-2">
+                    <input type="checkbox" id="check4" class="mt-1">
+                    <label for="check4">Consensus column hidden on tablet (&lt;1024px)</label>
+                </div>
+                <div class="flex items-start gap-2">
+                    <input type="checkbox" id="check5" class="mt-1">
+                    <label for="check5">Mobile card layout works on &lt;640px</label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateBreakpoint() {
+            const width = window.innerWidth;
+            const widthEl = document.getElementById('width');
+            const bpEl = document.getElementById('breakpoint');
+            const statusEl = document.getElementById('status');
+            const behaviorEl = document.getElementById('behavior');
+            const calcEl = document.getElementById('calculation');
+
+            widthEl.textContent = width + 'px';
+
+            let breakpoint, status, behavior, calculation;
+
+            if (width < 640) {
+                breakpoint = 'Mobile (< 640px)';
+                status = '✅ Card Layout';
+                behavior = `
+                    <ul class="list-disc list-inside">
+                        <li><strong>Layout:</strong> Card-based (sm:hidden)</li>
+                        <li><strong>Table:</strong> Hidden (hidden sm:block)</li>
+                        <li><strong>Result:</strong> ✅ No horizontal scroll, all data in cards</li>
+                    </ul>
+                `;
+                calculation = 'N/A - Using card layout';
+            } else if (width >= 640 && width < 768) {
+                breakpoint = 'Small Tablet (640px - 767px)';
+                const tableWidth = 80 + 70 + 80 + 100 + 100 + 80; // 6 cols (no P&L, no Consensus)
+                const availableWidth = width - 32; // minus padding
+                const fits = tableWidth <= availableWidth;
+                status = fits ? '✅ Fits' : '⚠️ Scroll';
+                behavior = `
+                    <ul class="list-disc list-inside">
+                        <li><strong>Layout:</strong> Table with 6 columns (Time, Asset, Direction, Entry, Exit, Status)</li>
+                        <li><strong>Table width:</strong> ${tableWidth}px</li>
+                        <li><strong>Available:</strong> ${availableWidth}px</li>
+                        <li><strong>Hidden columns:</strong> P&L (md:), Consensus (lg:)</li>
+                        <li><strong>Result:</strong> ${fits ? '✅' : '⚠️'} ${fits ? 'No horizontal scroll' : 'May need horizontal scroll'}</li>
+                    </ul>
+                `;
+                calculation = `80 + 70 + 80 + 100 + 100 + 80 = ${tableWidth}px (6 columns)`;
+            } else if (width >= 768 && width < 1024) {
+                breakpoint = 'Tablet (768px - 1023px)';
+                const tableWidth = 80 + 70 + 80 + 100 + 100 + 130 + 80; // 7 cols (with P&L, no Consensus)
+                const availableWidth = width - 32; // minus padding
+                const fits = tableWidth <= availableWidth;
+                status = fits ? '✅ Fits' : '⚠️ Scroll';
+                behavior = `
+                    <ul class="list-disc list-inside">
+                        <li><strong>Layout:</strong> Table with 7 columns (includes P&L)</li>
+                        <li><strong>Table width:</strong> ${tableWidth}px</li>
+                        <li><strong>Available:</strong> ${availableWidth}px</li>
+                        <li><strong>Hidden columns:</strong> Consensus only (lg:)</li>
+                        <li><strong>P&L format:</strong> Stacked vertically (price + %)</li>
+                        <li><strong>Result:</strong> ${fits ? '✅' : '⚠️'} ${fits ? 'No horizontal scroll' : 'May need horizontal scroll'}</li>
+                    </ul>
+                `;
+                calculation = `80 + 70 + 80 + 100 + 100 + 130 + 80 = ${tableWidth}px (7 columns)`;
+            } else {
+                breakpoint = 'Desktop (≥ 1024px)';
+                const tableWidth = 80 + 70 + 80 + 100 + 100 + 130 + 90 + 80; // 8 cols (all visible)
+                const availableWidth = width - 32; // minus padding
+                const fits = tableWidth <= availableWidth;
+                status = fits ? '✅ Fits' : '⚠️ Scroll';
+                behavior = `
+                    <ul class="list-disc list-inside">
+                        <li><strong>Layout:</strong> Table with all 8 columns</li>
+                        <li><strong>Table width:</strong> ${tableWidth}px</li>
+                        <li><strong>Available:</strong> ${availableWidth}px</li>
+                        <li><strong>Hidden columns:</strong> None</li>
+                        <li><strong>Result:</strong> ${fits ? '✅' : '⚠️'} ${fits ? 'No horizontal scroll' : 'May need horizontal scroll'}</li>
+                    </ul>
+                `;
+                calculation = `80 + 70 + 80 + 100 + 100 + 130 + 90 + 80 = ${tableWidth}px (8 columns)`;
+            }
+
+            bpEl.textContent = breakpoint;
+            statusEl.textContent = status;
+            behaviorEl.innerHTML = behavior;
+            calcEl.textContent = calculation;
+
+            // Update status color
+            statusEl.style.background = status.includes('✅') ? '#16a34a' : '#ca8a04';
+        }
+
+        window.addEventListener('resize', updateBreakpoint);
+        updateBreakpoint();
+    </script>
+</body>
+</html>

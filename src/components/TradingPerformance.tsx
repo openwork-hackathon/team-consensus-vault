@@ -213,8 +213,19 @@ export default function TradingPerformance({ className = '' }: TradingPerformanc
             </div>
 
             {/* Desktop Table Layout */}
-            <div className="hidden sm:block overflow-x-auto -mx-2 px-2">
-              <table className="w-full text-sm min-w-[500px] lg:min-w-[640px]">
+            <div className="hidden sm:block -mx-2 px-2">
+              <div className="overflow-x-auto scrollbar-thin">
+                <table className="w-full text-sm">
+                <colgroup>
+                  <col className="w-[80px]" />
+                  <col className="w-[70px]" />
+                  <col className="w-[80px]" />
+                  <col className="w-[100px]" />
+                  <col className="w-[100px]" />
+                  <col className="w-[130px] hidden md:table-column" />
+                  <col className="w-[90px] hidden lg:table-column" />
+                  <col className="w-[80px]" />
+                </colgroup>
                 <thead>
                   <tr className="border-b border-border">
                     <th className="text-left py-2 px-2">Time</th>
@@ -245,12 +256,14 @@ export default function TradingPerformance({ className = '' }: TradingPerformanc
                       </td>
                       <td className="py-2 px-2 text-right font-medium whitespace-nowrap hidden md:table-cell">
                         {trade.pnl !== undefined ? (
-                          <span className={trade.pnl >= 0 ? 'text-bullish' : 'text-bearish'}>
-                            {formatPnL(trade.pnl)}
-                            <span className="text-xs ml-1">
-                              ({formatPercentage(trade.pnlPercentage || 0)})
+                          <div className="flex flex-col items-end gap-0.5">
+                            <span className={trade.pnl >= 0 ? 'text-bullish' : 'text-bearish'}>
+                              {formatPnL(trade.pnl)}
                             </span>
-                          </span>
+                            <span className="text-xs opacity-75">
+                              {formatPercentage(trade.pnlPercentage || 0)}
+                            </span>
+                          </div>
                         ) : (
                           '-'
                         )}
@@ -273,6 +286,7 @@ export default function TradingPerformance({ className = '' }: TradingPerformanc
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
           </>
         )}

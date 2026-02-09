@@ -165,22 +165,26 @@ export default function ConsensusVsContrarian({
       const ratio = total > 0 ? Math.round((cvaultValue / total) * 100) : 50;
       
       return (
-        <div className="bg-card border border-border rounded-lg p-3 shadow-lg max-w-xs">
-          <p className="text-sm font-medium text-foreground mb-2">
-            {new Date(label).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+        <div className="bg-card border border-border rounded-lg p-3 shadow-lg max-w-[280px] sm:max-w-xs">
+          <p className="text-sm font-medium text-foreground mb-2 truncate">
+            {new Date(label).toLocaleDateString('en-US', { 
+              month: isMobile ? 'short' : 'long', 
+              day: 'numeric', 
+              year: isMobile ? undefined : 'numeric' 
+            })}
           </p>
           <div className="space-y-1">
-            <p className="text-sm text-bullish flex items-center justify-between gap-4">
-              <span>Consensus TVL:</span>
-              <span className="font-semibold">${(cvaultValue / 1000).toFixed(1)}K</span>
+            <p className="text-sm text-bullish flex items-center justify-between gap-2 sm:gap-4">
+              <span className="truncate">Consensus TVL:</span>
+              <span className="font-semibold whitespace-nowrap">${(cvaultValue / 1000).toFixed(isMobile ? 0 : 1)}K</span>
             </p>
-            <p className="text-sm text-bearish flex items-center justify-between gap-4">
-              <span>Contrarian TVL:</span>
-              <span className="font-semibold">${(dissentValue / 1000).toFixed(1)}K</span>
+            <p className="text-sm text-bearish flex items-center justify-between gap-2 sm:gap-4">
+              <span className="truncate">Contrarian TVL:</span>
+              <span className="font-semibold whitespace-nowrap">${(dissentValue / 1000).toFixed(isMobile ? 0 : 1)}K</span>
             </p>
           </div>
           <div className="mt-2 pt-2 border-t border-border">
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground truncate">
               Market Belief: <span className="font-semibold text-foreground">{ratio}%</span> AI Trust
             </p>
           </div>
@@ -456,7 +460,7 @@ export default function ConsensusVsContrarian({
                 margin={{
                   top: 5,
                   right: 5,
-                  left: -20,
+                  left: isMobile ? -15 : -20,
                   bottom: 0
                 }}
                 barCategoryGap="10%"
@@ -474,7 +478,7 @@ export default function ConsensusVsContrarian({
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
                 <XAxis 
                   dataKey="timestamp" 
-                  tick={{ fontSize: isMobile ? 9 : 11, fill: 'hsl(var(--muted-foreground))' }}
+                  tick={{ fontSize: isMobile ? 8 : 11, fill: 'hsl(var(--muted-foreground))' }}
                   tickFormatter={(value) => {
                     const date = new Date(value);
                     return isMobile 
@@ -483,13 +487,20 @@ export default function ConsensusVsContrarian({
                   }}
                   axisLine={{ stroke: 'hsl(var(--border))' }}
                   tickLine={{ stroke: 'hsl(var(--border))' }}
-                  interval="preserveStartEnd"
+                  interval={isMobile ? 'equidistantPreserveStart' : 'preserveStartEnd'}
                 />
                 <YAxis 
-                  tick={{ fontSize: isMobile ? 9 : 11, fill: 'hsl(var(--muted-foreground))' }}
-                  tickFormatter={(value) => `$${(value / 1000).toFixed(0)}K`}
+                  tick={{ fontSize: isMobile ? 8 : 11, fill: 'hsl(var(--muted-foreground))' }}
+                  tickFormatter={(value) => {
+                    const valInK = value / 1000;
+                    if (isMobile && valInK >= 100) {
+                      return `$${valInK.toFixed(0)}K`;
+                    }
+                    return `$${valInK.toFixed(0)}K`;
+                  }}
                   axisLine={{ stroke: 'hsl(var(--border))' }}
                   tickLine={{ stroke: 'hsl(var(--border))' }}
+                  width={isMobile ? 30 : 40}
                 />
                 <RechartsTooltip content={<CustomTooltip />} />
                 <Area
