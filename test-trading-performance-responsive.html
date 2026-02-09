@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TradingPerformance Responsive Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .breakpoint-indicator {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #000;
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-family: monospace;
+            z-index: 9999;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="breakpoint-indicator" id="breakpoint">Detecting...</div>
+
+    <div class="max-w-7xl mx-auto">
+        <h1 class="text-3xl font-bold mb-2">TradingPerformance Table Responsive Test</h1>
+        <p class="text-gray-600 mb-6">Resize your browser to test different breakpoints</p>
+
+        <!-- Breakpoint Guide -->
+        <div class="bg-white rounded-lg p-6 mb-6 shadow">
+            <h2 class="text-xl font-bold mb-4">Breakpoint Reference</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div>
+                    <div class="font-semibold text-blue-600">Mobile</div>
+                    <div>&lt; 640px (sm)</div>
+                    <div class="text-gray-500">Card layout</div>
+                </div>
+                <div>
+                    <div class="font-semibold text-green-600">Small Tablet</div>
+                    <div>640px - 767px</div>
+                    <div class="text-gray-500">6 cols, no P&L/Consensus</div>
+                </div>
+                <div>
+                    <div class="font-semibold text-yellow-600">Tablet</div>
+                    <div>768px - 1023px</div>
+                    <div class="text-gray-500">7 cols, no Consensus</div>
+                </div>
+                <div>
+                    <div class="font-semibold text-purple-600">Desktop</div>
+                    <div>&ge; 1024px (lg)</div>
+                    <div class="text-gray-500">8 cols, all visible</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test Table (mimicking TradingPerformance structure) -->
+        <div class="bg-white rounded-lg p-6 shadow">
+            <h2 class="text-xl font-bold mb-4">Test Table (min-width: 500px, lg:min-width: 640px)</h2>
+
+            <!-- Mobile Card Layout -->
+            <div class="sm:hidden space-y-3 mb-6">
+                <div class="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                    <div class="font-semibold text-blue-800 mb-2">Mobile View Active</div>
+                    <div class="text-sm text-blue-600">Card layout displayed</div>
+                    <div class="text-xs text-blue-500 mt-2">All data visible in card format</div>
+                </div>
+            </div>
+
+            <!-- Desktop Table Layout -->
+            <div class="hidden sm:block overflow-x-auto -mx-2 px-2 border-2 border-dashed border-gray-300 rounded-lg p-2">
+                <table class="w-full text-sm min-w-[500px] lg:min-w-[640px]">
+                    <thead>
+                        <tr class="border-b border-gray-300 bg-gray-50">
+                            <th class="text-left py-2 px-2">Time</th>
+                            <th class="text-left py-2 px-2">Asset</th>
+                            <th class="text-left py-2 px-2">Direction</th>
+                            <th class="text-right py-2 px-2">Entry</th>
+                            <th class="text-right py-2 px-2">Exit</th>
+                            <th class="text-right py-2 px-2 hidden md:table-cell bg-yellow-100">P&L (hidden &lt;768px)</th>
+                            <th class="text-center py-2 px-2 hidden lg:table-cell bg-purple-100">Consensus (hidden &lt;1024px)</th>
+                            <th class="text-center py-2 px-2">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b border-gray-200">
+                            <td class="py-2 px-2 text-gray-600 whitespace-nowrap">10:30:45 AM</td>
+                            <td class="py-2 px-2 font-medium">BTC</td>
+                            <td class="py-2 px-2 text-green-600">LONG</td>
+                            <td class="py-2 px-2 text-right whitespace-nowrap">$43,250.00</td>
+                            <td class="py-2 px-2 text-right whitespace-nowrap">$44,100.00</td>
+                            <td class="py-2 px-2 text-right font-medium whitespace-nowrap hidden md:table-cell bg-yellow-50">
+                                <span class="text-green-600">+$850.00 (+1.97%)</span>
+                            </td>
+                            <td class="py-2 px-2 text-center hidden lg:table-cell bg-purple-50">
+                                <span class="text-xs bg-blue-200 px-2 py-1 rounded">5/5</span>
+                            </td>
+                            <td class="py-2 px-2 text-center">
+                                <span class="text-xs px-2 py-1 rounded bg-green-100 text-green-700">closed</span>
+                            </td>
+                        </tr>
+                        <tr class="border-b border-gray-200">
+                            <td class="py-2 px-2 text-gray-600 whitespace-nowrap">09:15:22 AM</td>
+                            <td class="py-2 px-2 font-medium">ETH</td>
+                            <td class="py-2 px-2 text-red-600">SHORT</td>
+                            <td class="py-2 px-2 text-right whitespace-nowrap">$2,280.00</td>
+                            <td class="py-2 px-2 text-right whitespace-nowrap">$2,310.00</td>
+                            <td class="py-2 px-2 text-right font-medium whitespace-nowrap hidden md:table-cell bg-yellow-50">
+                                <span class="text-red-600">-$30.00 (-1.32%)</span>
+                            </td>
+                            <td class="py-2 px-2 text-center hidden lg:table-cell bg-purple-50">
+                                <span class="text-xs bg-blue-200 px-2 py-1 rounded">4/5</span>
+                            </td>
+                            <td class="py-2 px-2 text-center">
+                                <span class="text-xs px-2 py-1 rounded bg-green-100 text-green-700">closed</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Expected Behavior -->
+            <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+                <h3 class="font-bold mb-2">Expected Behavior at Current Breakpoint:</h3>
+                <div id="behavior" class="text-sm text-gray-700">Loading...</div>
+            </div>
+        </div>
+
+        <!-- Width Indicator -->
+        <div class="mt-6 bg-white rounded-lg p-4 shadow">
+            <div class="text-center">
+                <span class="text-sm text-gray-500">Current viewport width:</span>
+                <span id="width" class="text-2xl font-bold ml-2">0px</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateBreakpoint() {
+            const width = window.innerWidth;
+            const widthEl = document.getElementById('width');
+            const bpEl = document.getElementById('breakpoint');
+            const behaviorEl = document.getElementById('behavior');
+
+            widthEl.textContent = width + 'px';
+
+            let breakpoint, behavior;
+
+            if (width < 640) {
+                breakpoint = 'Mobile (< 640px)';
+                behavior = `
+                    <ul class="list-disc list-inside">
+                        <li><strong>Layout:</strong> Card-based (sm:hidden)</li>
+                        <li><strong>Table:</strong> Hidden (hidden sm:block)</li>
+                        <li><strong>Result:</strong> No horizontal scroll, all data in cards</li>
+                    </ul>
+                `;
+            } else if (width >= 640 && width < 768) {
+                breakpoint = 'Small Tablet (640px - 767px)';
+                behavior = `
+                    <ul class="list-disc list-inside">
+                        <li><strong>Layout:</strong> Table with 6 columns</li>
+                        <li><strong>Min-width:</strong> 500px</li>
+                        <li><strong>Hidden columns:</strong> P&L (hidden md:table-cell), Consensus (hidden lg:table-cell)</li>
+                        <li><strong>Result:</strong> Minimal horizontal scroll (500px vs 640px viewport)</li>
+                    </ul>
+                `;
+            } else if (width >= 768 && width < 1024) {
+                breakpoint = 'Tablet (768px - 1023px)';
+                behavior = `
+                    <ul class="list-disc list-inside">
+                        <li><strong>Layout:</strong> Table with 7 columns</li>
+                        <li><strong>Min-width:</strong> 500px</li>
+                        <li><strong>Hidden columns:</strong> Consensus only (hidden lg:table-cell)</li>
+                        <li><strong>Visible:</strong> P&L column (md:table-cell)</li>
+                        <li><strong>Result:</strong> No horizontal scroll (500px table fits in 768px+ viewport)</li>
+                    </ul>
+                `;
+            } else {
+                breakpoint = 'Desktop (≥ 1024px)';
+                behavior = `
+                    <ul class="list-disc list-inside">
+                        <li><strong>Layout:</strong> Table with all 8 columns</li>
+                        <li><strong>Min-width:</strong> 640px (lg:min-w-[640px])</li>
+                        <li><strong>Hidden columns:</strong> None</li>
+                        <li><strong>Result:</strong> No horizontal scroll (640px table fits in 1024px+ viewport)</li>
+                    </ul>
+                `;
+            }
+
+            bpEl.textContent = breakpoint;
+            behaviorEl.innerHTML = behavior;
+        }
+
+        window.addEventListener('resize', updateBreakpoint);
+        updateBreakpoint();
+    </script>
+</body>
+</html>
