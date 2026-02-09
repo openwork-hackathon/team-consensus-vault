@@ -1,0 +1,176 @@
+{
+  "timestamp": "2026-02-09T04:51:20.317Z",
+  "config": {
+    "baseUrl": "http://localhost:3000",
+    "iterations": 3
+  },
+  "results": [
+    {
+      "endpoint": "Health check endpoint",
+      "iteration": 0,
+      "responseTime": 7,
+      "statusCode": 200,
+      "cacheStatus": "NONE",
+      "cached": false
+    },
+    {
+      "endpoint": "Health check endpoint",
+      "iteration": 1,
+      "responseTime": 8,
+      "statusCode": 200,
+      "cacheStatus": "NONE",
+      "cached": false
+    },
+    {
+      "endpoint": "Health check endpoint",
+      "iteration": 2,
+      "responseTime": 28,
+      "statusCode": 200,
+      "cacheStatus": "NONE",
+      "cached": false
+    },
+    {
+      "endpoint": "Price endpoint with caching",
+      "iteration": 0,
+      "responseTime": 1043,
+      "statusCode": 200,
+      "cacheStatus": "MISS",
+      "cached": false
+    },
+    {
+      "endpoint": "Price endpoint with caching",
+      "iteration": 1,
+      "responseTime": 7,
+      "statusCode": 200,
+      "cacheStatus": "HIT",
+      "cached": true
+    },
+    {
+      "endpoint": "Price endpoint with caching",
+      "iteration": 2,
+      "responseTime": 6,
+      "statusCode": 200,
+      "cacheStatus": "HIT",
+      "cached": true
+    },
+    {
+      "endpoint": "Trading history with 5s cache",
+      "iteration": 0,
+      "responseTime": 324,
+      "statusCode": 200,
+      "cacheStatus": "HIT",
+      "cached": true
+    },
+    {
+      "endpoint": "Trading history with 5s cache",
+      "iteration": 1,
+      "responseTime": 10,
+      "statusCode": 200,
+      "cacheStatus": "HIT",
+      "cached": true
+    },
+    {
+      "endpoint": "Trading history with 5s cache",
+      "iteration": 2,
+      "responseTime": 5,
+      "statusCode": 200,
+      "cacheStatus": "HIT",
+      "cached": true
+    },
+    {
+      "endpoint": "Consensus detailed GET with 60s cache",
+      "iteration": 0,
+      "responseTime": 4270,
+      "statusCode": 200,
+      "cacheStatus": "MISS",
+      "cached": false
+    },
+    {
+      "endpoint": "Consensus detailed GET with 60s cache",
+      "iteration": 1,
+      "responseTime": 16,
+      "statusCode": 200,
+      "cacheStatus": "HIT",
+      "cached": true
+    },
+    {
+      "endpoint": "Consensus detailed GET with 60s cache",
+      "iteration": 2,
+      "responseTime": 36,
+      "statusCode": 200,
+      "cacheStatus": "HIT",
+      "cached": true
+    },
+    {
+      "endpoint": "Prediction market pool state",
+      "iteration": 0,
+      "responseTime": 335,
+      "statusCode": 200,
+      "cacheStatus": "HIT",
+      "cached": true
+    },
+    {
+      "endpoint": "Prediction market pool state",
+      "iteration": 1,
+      "responseTime": 13,
+      "statusCode": 200,
+      "cacheStatus": "HIT",
+      "cached": true
+    },
+    {
+      "endpoint": "Prediction market pool state",
+      "iteration": 2,
+      "responseTime": 21,
+      "statusCode": 200,
+      "cacheStatus": "HIT",
+      "cached": true
+    }
+  ],
+  "summary": {
+    "Health check endpoint": {
+      "responseTimes": [
+        7,
+        8,
+        28
+      ],
+      "cacheHits": 0,
+      "totalRequests": 3
+    },
+    "Price endpoint with caching": {
+      "responseTimes": [
+        1043,
+        7,
+        6
+      ],
+      "cacheHits": 2,
+      "totalRequests": 3
+    },
+    "Trading history with 5s cache": {
+      "responseTimes": [
+        324,
+        10,
+        5
+      ],
+      "cacheHits": 3,
+      "totalRequests": 3
+    },
+    "Consensus detailed GET with 60s cache": {
+      "responseTimes": [
+        4270,
+        16,
+        36
+      ],
+      "cacheHits": 2,
+      "totalRequests": 3
+    },
+    "Prediction market pool state": {
+      "responseTimes": [
+        335,
+        13,
+        21
+      ],
+      "cacheHits": 3,
+      "totalRequests": 3
+    }
+  }
+}

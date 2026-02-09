@@ -148,8 +148,8 @@ describe('Error Handling Core Functions', () => {
       }
       
       expect(delays[0]).toBe(1000); // First attempt (no retry)
-      expect(delays[1]).toBe(1000); // First retry
-      expect(delays[2]).toBe(2000); // Second retry
+      expect(delays[1]).toBe(2000); // First retry (1 * 2^1)
+      expect(delays[2]).toBe(4000); // Second retry (1 * 2^2)
       
       console.log('✅ Exponential backoff logic validated');
     });

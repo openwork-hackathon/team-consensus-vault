@@ -575,6 +575,10 @@ export async function POST(request: NextRequest) {
     response.headers.set('X-RateLimit-Remaining', String(rateLimitResult.remaining));
     response.headers.set('X-RateLimit-Reset', String(rateLimitResult.reset));
 
+    // Add cache status header (CVAULT-165)
+    response.headers.set('X-Cache-Status', cachedCount > 0 ? 'PARTIAL' : 'MISS');
+    response.headers.set('X-Response-Time', `${total_time_ms}ms`);
+
     return response;
   } catch (error) {
     console.error('Consensus API error:', error);

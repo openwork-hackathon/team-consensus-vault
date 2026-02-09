@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { useState } from 'react';
 
 // Vote types for AI models
 type VoteType = 'BUY' | 'SELL' | 'HOLD' | null;
@@ -132,13 +133,21 @@ function VoteIndicator({
 }
 
 // Individual model vote card
+interface ModelVoteCardProps {
+  model: ModelVote;
+  isHighlighted: boolean;
+  index: number;
+  onFocus?: (index: number) => void;
+  onKeyDown?: (e: React.KeyboardEvent, index: number) => void;
+}
+
 function ModelVoteCard({ 
   model, 
-  isHighlighted 
-}: { 
-  model: ModelVote; 
-  isHighlighted: boolean;
-}) {
+  isHighlighted,
+  index,
+  onFocus,
+  onKeyDown
+}: ModelVoteCardProps) {
   const voteStatusText = model.isLoading
     ? 'is voting'
     : model.vote
@@ -149,15 +158,18 @@ function ModelVoteCard({
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
+      tabIndex={0}
+      onFocus={() => onFocus?.(index)}
+      onKeyDown={(e) => onKeyDown?.(e, index)}
       className={`
         flex flex-col items-center gap-1.5 p-2 rounded-lg min-w-[64px]
-        transition-all duration-200
-        ${isHighlighted 
-          ? 'bg-primary/10 ring-1 ring-primary/50 shadow-sm' 
-          : 'bg-secondary/50 hover:bg-secondary'
+        transition-all duration-200 outline-none
+        ${isHighlighted
+          ? 'bg-primary/10 ring-1 ring-primary/50 shadow-sm'
+          : 'bg-secondary/50 hover:bg-secondary focus-visible:ring-2 focus-visible:ring-primary/50'
         }
       `}
-      role="article"
+      role="listitem"
       aria-label={`${model.modelName} ${voteStatusText}`}
     >
       {/* Model Icon */}
@@ -253,10 +265,12 @@ function calculateConsensus(models: ModelVote[]): {
 }
 
 // Main component
-export default function CouncilVotes({ 
-  consensusSnapshot, 
-  entrySignal 
+export default function CouncilVotes({
+  consensusSnapshot,
+  entrySignal
 }: CouncilVotesProps) {
+  const [focusedIndex, setFocusedIndex] = useState<number>(-1);
+
   // Merge model definitions with snapshot data
   const models: ModelVote[] = MODEL_DEFINITIONS.map(def => {
     const snapshotModel = consensusSnapshot.models.find(m => m.modelId === def.modelId);
@@ -270,6 +284,45 @@ export default function CouncilVotes({
 
   const consensus = calculateConsensus(models);
 
+  // Keyboard navigation handler
+  const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
+    switch (e.key) {
+      case 'ArrowRight':
+      case 'ArrowDown':
+        e.preventDefault();
+        if (index < models.length - 1) {
+          const nextIndex = index + 1;
+          setFocusedIndex(nextIndex);
+          // Focus the next card
+          const cards = document.querySelectorAll('[role="listitem"]');
+          cards[nextIndex]?.querySelector('div')?.parentElement?.focus();
+        }
+        break;
+      case 'ArrowLeft':
+      case 'ArrowUp':
+        e.preventDefault();
+        if (index > 0) {
+          const prevIndex = index - 1;
+          setFocusedIndex(prevIndex);
+          const cards = document.querySelectorAll('[role="listitem"]');
+          cards[prevIndex]?.querySelector('div')?.parentElement?.focus();
+        }
+        break;
+      case 'Home':
+        e.preventDefault();
+        setFocusedIndex(0);
+        const cards = document.querySelectorAll('[role="listitem"]');
+        cards[0]?.querySelector('div')?.parentElement?.focus();
+        break;
+      case 'End':
+        e.preventDefault();
+        setFocusedIndex(models.length - 1);
+        const allCards = document.querySelectorAll('[role="listitem"]');
+        allCards[models.length - 1]?.querySelector('div')?.parentElement?.focus();
+        break;
+    }
+  };
+
   return (
     <div className="w-full space-y-3" role="region" aria-label="AI Council Votes">
       {/* Header */}
@@ -281,14 +334,21 @@ export default function CouncilVotes({
       </div>
 
       {/* Models Row */}
-      <div className="flex items-start justify-between gap-1 sm:gap-2">
-        {models.map((model) => {
+      <div
+        className="flex items-start justify-between gap-1 sm:gap-2"
+        role="list"
+        aria-label="AI model votes"
+      >
+        {models.map((model, index) => {
           const isHighlighted = entrySignal !== null && model.vote === entrySignal;
           return (
             <ModelVoteCard
               key={model.modelId}
               model={model}
               isHighlighted={isHighlighted}
+              index={index}
+              onFocus={setFocusedIndex}
+              onKeyDown={handleKeyDown}
             />
           );
         })}

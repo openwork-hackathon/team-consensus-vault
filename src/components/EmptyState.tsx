@@ -26,9 +26,12 @@ export default function EmptyState({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className={`flex flex-col items-center justify-center py-12 px-4 ${className}`}
+      role="status"
+      aria-live="polite"
+      aria-label={title}
     >
       {/* Icon */}
-      <div className="mb-4">
+      <div className="mb-4" aria-hidden="true">
         {typeof icon === 'string' ? (
           <span className="text-6xl opacity-50">{icon}</span>
         ) : (
@@ -50,7 +53,8 @@ export default function EmptyState({
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={action.onClick}
-          className="px-6 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors"
+          className="px-6 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors touch-manipulation min-h-[44px]"
+          aria-label={action.label}
         >
           {action.label}
         </motion.button>

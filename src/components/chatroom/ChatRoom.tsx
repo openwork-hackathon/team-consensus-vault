@@ -57,6 +57,46 @@ export default function ChatRoom({
     }
   };
 
+  // Keyboard navigation for messages
+  const handleMessageKeyDown = useCallback((e: React.KeyboardEvent, index: number) => {
+    if (messages.length === 0) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        if (index < messages.length - 1) {
+          const nextIndex = index + 1;
+          setFocusedMessageIndex(nextIndex);
+          messageRefs.current[nextIndex]?.focus();
+        }
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        if (index > 0) {
+          const prevIndex = index - 1;
+          setFocusedMessageIndex(prevIndex);
+          messageRefs.current[prevIndex]?.focus();
+        }
+        break;
+      case 'Home':
+        e.preventDefault();
+        setFocusedMessageIndex(0);
+        messageRefs.current[0]?.focus();
+        break;
+      case 'End':
+        e.preventDefault();
+        setFocusedMessageIndex(messages.length - 1);
+        messageRefs.current[messages.length - 1]?.focus();
+        break;
+    }
+  }, [messages.length]);
+
+  // Reset focused index when messages change
+  useEffect(() => {
+    setFocusedMessageIndex(-1);
+    messageRefs.current = messageRefs.current.slice(0, messages.length);
+  }, [messages.length]);
+
   return (
     <div className="bg-card rounded-xl border border-border overflow-hidden flex flex-col" role="region" aria-label="AI Debate Chatroom">
       {/* Phase indicator bar */}
@@ -93,8 +133,18 @@ export default function ChatRoom({
           </div>
         )}
 
-        {messages.map(msg => (
-          <ChatMessage key={msg.id} message={msg} />
+        {messages.map((msg, index) => (
+          <div
+            key={msg.id}
+            ref={el => { messageRefs.current[index] = el; }}
+            tabIndex={0}
+            onKeyDown={(e) => handleMessageKeyDown(e, index)}
+            className="outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary rounded"
+            role="article"
+            aria-label={`Message from ${msg.handle}, ${msg.sentiment} sentiment`}
+          >
+            <ChatMessage message={msg} />
+          </div>
         ))}
 
         {/* Typing indicator */}

@@ -87,6 +87,10 @@ export enum ConsensusErrorType {
   AUTHENTICATION_ERROR = 'AUTHENTICATION_ERROR',
   QUOTA_EXCEEDED = 'QUOTA_EXCEEDED',
   QUOTA_WARNING = 'QUOTA_WARNING',
+  CONTENT_FILTERED = 'CONTENT_FILTERED',
+  CONTEXT_WINDOW_EXCEEDED = 'CONTEXT_WINDOW_EXCEEDED',
+  MALFORMED_REQUEST = 'MALFORMED_REQUEST',
+  MODEL_OVERLOADED = 'MODEL_OVERLOADED',
 }
 
 // Enhanced error with correlation ID for debugging
@@ -484,8 +488,11 @@ function createProgressUpdate(modelId: string, elapsedTime: number, message?: st
  * - Provides the most relevant recovery guidance
  * - Indicates if any retryable vs non-retryable failures
  * - Includes estimated wait time if applicable
+ * - Provides model-specific guidance for partially successful analyses
  *
  * @param errors - Array of UserFacingError objects from failed models
+ * @param totalModels - Total number of models attempted (for partial success context)
+ * @param successfulModels - Number of models that succeeded (optional, for context)
  * @returns A single aggregated UserFacingError with combined guidance
  *
  * @example
@@ -494,12 +501,12 @@ function createProgressUpdate(modelId: string, elapsedTime: number, message?: st
  *   { type: 'rate_limit', severity: 'warning', ... },
  *   { type: 'timeout', severity: 'warning', ... },
  * ];
- * const summary = aggregateErrors(errors);
+ * const summary = aggregateErrors(errors, 5, 3);
  * // summary.message: "Multiple models failed: 2 rate limited"
  * // summary.recoveryGuidance: "Wait 60 seconds, then retry..."
  * ```
  */
-export function aggregateErrors(errors: UserFacingError[]): UserFacingError {
+export function aggregateErrors(errors: UserFacingError[], totalModels: number = 5, successfulModels: number = 0): UserFacingError {
   if (errors.length === 0) {
     return {
       type: 'unknown_error',
@@ -511,7 +518,16 @@ export function aggregateErrors(errors: UserFacingError[]): UserFacingError {
   }
 
   if (errors.length === 1) {
-    return errors[0];
+    const singleError = errors[0];
+    // If we have partial success context, enhance the message
+    if (successfulModels > 0) {
+      return {
+        ...singleError,
+        message: `${singleError.message} (${successfulModels}/${totalModels} models successful)`,
+        recoveryGuidance: `${singleError.recoveryGuidance} Note: ${successfulModels} model${successfulModels !== 1 ? 's' : ''} provided analysis successfully.`,
+      };
+    }
+    return singleError;
   }
 
   // Categorize errors by type
@@ -575,11 +591,23 @@ export function aggregateErrors(errors: UserFacingError[]): UserFacingError {
     recoveryGuidance = `Multiple models failed due to various issues. Wait ${maxWaitTime > 0 ? Math.ceil(maxWaitTime / 1000) : 60} seconds, then click "Analyze Again". The system will automatically retry and use backup models where needed.`;
   }
 
+  // Enhance message with partial success context
+  let enhancedMessage = `Multiple models failed: ${summaryText}`;
+  if (successfulModels > 0) {
+    enhancedMessage += ` (${successfulModels}/${totalModels} models successful)`;
+  }
+
+  // Enhance recovery guidance with partial success context
+  let enhancedRecoveryGuidance = recoveryGuidance;
+  if (successfulModels > 0) {
+    enhancedRecoveryGuidance += ` Note: ${successfulModels} model${successfulModels !== 1 ? 's' : ''} provided analysis successfully, so you still have valuable insights.`;
+  }
+
   return {
     type: 'multiple_failures',
-    message: `Multiple models failed: ${summaryText}`,
+    message: enhancedMessage,
     severity: hasCritical ? 'critical' : 'warning',
-    recoveryGuidance,
+    recoveryGuidance: enhancedRecoveryGuidance,
     retryable: hasRetryable,
     estimatedWaitTime: maxWaitTime > 0 ? maxWaitTime : undefined,
   };
@@ -1812,9 +1840,9 @@ export async function runConsensusAnalysis(
       .filter(a => a.error && a.userFacingError)
       .map(a => a.userFacingError!);
 
-    // Aggregate errors if multiple failures
+    // Aggregate errors if multiple failures with partial success context
     const aggregatedError = userFacingErrors.length > 0
-      ? aggregateErrors(userFacingErrors)
+      ? aggregateErrors(userFacingErrors, analysts.length, successCount)
       : undefined;
 
     partialFailures = {

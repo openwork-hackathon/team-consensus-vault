@@ -27,18 +27,19 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { RoundPhase } from '@/lib/prediction-market/types';
-import { 
-  getCurrentRound, 
-  getCurrentPool, 
+import {
+  getCurrentRound,
+  getCurrentPool,
   placeBet as placeBetInPool,
   getCurrentOdds,
   validateBet
 } from '@/lib/prediction-market/state';
-import { 
-  getNoCacheHeaders, 
-  getCacheHeaders, 
+import {
+  getNoCacheHeaders,
+  getCacheHeaders,
   CACHE_TTL,
-  logCacheEvent 
+  logCacheEvent,
+  withEdgeCache
 } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
@@ -317,68 +318,90 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * GET handler to retrieve current pool state
- * Useful for clients to check betting status before placing a bet
- * CVAULT-139: Short cache TTL (5s) for pool state - changes frequently during betting
+ * Helper function to get pool state - wrapped with edge caching
+ * CVAULT-165: Edge caching with 5s TTL for frequently changing pool state
  */
-export async function GET() {
-  const startTime = Date.now();
-  
-  try {
+const getCachedPoolState = withEdgeCache(
+  async () => {
     const currentRound = getCurrentRound();
     const pool = getCurrentPool();
     const odds = getCurrentOdds();
+
+    return {
+      round: currentRound ? {
+        id: currentRound.id,
+        phase: currentRound.phase,
+        asset: currentRound.asset,
+        bettingWindowStart: currentRound.bettingWindowStart,
+        bettingWindowEnd: currentRound.bettingWindowEnd,
+      } : null,
+      pool: {
+        totalUp: pool.totalUp,
+        totalDown: pool.totalDown,
+        totalPool: pool.totalUp + pool.totalDown,
+        totalBets: pool.bets.length,
+      },
+      odds: {
+        up: odds.up,
+        down: odds.down,
+      },
+      canBet: currentRound?.phase === RoundPhase.BETTING_WINDOW,
+    };
+  },
+  'prediction-market-pool',
+  CACHE_TTL.TRADING_HISTORY, // 5s TTL
+  ['prediction-market']
+);
+
+/**
+ * GET handler to retrieve current pool state
+ * Useful for clients to check betting status before placing a bet
+ * CVAULT-165: Edge caching with 5s TTL for pool state - changes frequently during betting
+ */
+export async function GET() {
+  const startTime = Date.now();
+
+  try {
+    // Get data with edge caching
+    const data = await getCachedPoolState();
     const responseTime = Date.now() - startTime;
 
     const response = NextResponse.json(
       {
-        round: currentRound ? {
-          id: currentRound.id,
-          phase: currentRound.phase,
-          asset: currentRound.asset,
-          bettingWindowStart: currentRound.bettingWindowStart,
-          bettingWindowEnd: currentRound.bettingWindowEnd,
-        } : null,
-        pool: {
-          totalUp: pool.totalUp,
-          totalDown: pool.totalDown,
-          totalPool: pool.totalUp + pool.totalDown,
-          totalBets: pool.bets.length,
-        },
-        odds: {
-          up: odds.up,
-          down: odds.down,
-        },
-        canBet: currentRound?.phase === RoundPhase.BETTING_WINDOW,
+        ...data,
         responseTimeMs: responseTime,
       },
       { status: 200 }
     );
-    
-    // Add cache headers for pool state - short TTL since it changes frequently (CVAULT-139)
+
+    // Add cache headers for pool state - short TTL since it changes frequently
     const cacheHeaders = getCacheHeaders(CACHE_TTL.TRADING_HISTORY); // 5s TTL
     Object.entries(cacheHeaders).forEach(([key, value]) => {
       response.headers.set(key, value);
     });
-    response.headers.set('X-Cache-Status', 'MISS'); // Dynamic content, not truly cached
-    
-    logCacheEvent('prediction-market-bet', 'miss', { responseTimeMs: responseTime });
-    
+
+    // Add cache status header based on response time (quick = likely cached)
+    const cacheStatus = responseTime < 10 ? 'HIT' : 'MISS';
+    response.headers.set('X-Cache-Status', cacheStatus);
+
+    logCacheEvent('prediction-market-bet', cacheStatus.toLowerCase() as 'hit' | 'miss', { responseTimeMs: responseTime });
+
     return response;
   } catch (error) {
     console.error('[prediction-market-bet] Error getting pool state:', error);
-    
+
     const response = NextResponse.json(
-      { 
+      {
         success: false,
         error: 'Failed to retrieve pool state'
       },
       { status: 500 }
     );
-    
+
     // Ensure errors are not cached
     response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-    
+    response.headers.set('X-Cache-Status', 'ERROR');
+
     return response;
   }
 }

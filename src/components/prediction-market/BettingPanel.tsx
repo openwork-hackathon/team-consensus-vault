@@ -60,6 +60,23 @@ export default function BettingPanel({
     }
   };
 
+  // Handle keyboard shortcuts for input
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      setBetAmount('');
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      const amount = parseFloat(betAmount);
+      const validation = validateAmount(amount);
+      if (validation.isValid && isConnected) {
+        // Default to AGREE on Enter, or could focus the first bet button
+        const agreeButton = document.querySelector('[aria-label*="AGREE"]') as HTMLElement;
+        agreeButton?.focus();
+      }
+    }
+  };
+
   // Handle quick amount buttons
   const handleQuickAmount = (amount: number) => {
     setBetAmount(amount.toString());
@@ -239,12 +256,16 @@ export default function BettingPanel({
               inputMode="decimal"
               value={betAmount}
               onChange={handleAmountChange}
+              onKeyDown={handleInputKeyDown}
               placeholder="100"
               className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary text-lg"
               disabled={!isConnected || isPlacing}
-              aria-describedby="bet-amount-description bet-amount-constraints"
+              aria-describedby="bet-amount-description bet-amount-constraints bet-amount-instructions"
               aria-invalid={betAmount ? parseFloat(betAmount) < 100 : false}
             />
+            <span id="bet-amount-instructions" className="sr-only">
+              Press Escape to clear the input, Enter to focus bet buttons
+            </span>
             <span id="bet-amount-description" className="sr-only">
               Enter the amount in USD you want to bet on the AI council signal.
             </span>
