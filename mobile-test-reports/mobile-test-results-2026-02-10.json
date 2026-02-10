@@ -1,0 +1,361 @@
+{
+  "timestamp": "2026-02-10T02:17:18.003Z",
+  "baseUrl": "http://localhost:3000",
+  "pages": {
+    "/": {
+      "url": "/",
+      "breakpoints": {
+        "mobile-320": {
+          "viewport": {
+            "name": "mobile-320",
+            "width": 320,
+            "height": 568
+          },
+          "issues": [
+            {
+              "type": "missing_mobile_nav",
+              "severity": "major",
+              "description": "No hamburger menu detected for mobile navigation",
+              "component": "Navigation",
+              "breakpoint": "mobile-320"
+            }
+          ],
+          "screenshot": "/home/shazbot/team-consensus-vault/mobile-test-screenshots/home-mobile-320-320x568.png",
+          "issueCount": 1
+        },
+        "mobile-375": {
+          "viewport": {
+            "name": "mobile-375",
+            "width": 375,
+            "height": 667
+          },
+          "issues": [
+            {
+              "type": "missing_mobile_nav",
+              "severity": "major",
+              "description": "No hamburger menu detected for mobile navigation",
+              "component": "Navigation",
+              "breakpoint": "mobile-375"
+            }
+          ],
+          "screenshot": "/home/shazbot/team-consensus-vault/mobile-test-screenshots/home-mobile-375-375x667.png",
+          "issueCount": 1
+        },
+        "tablet-768": {
+          "viewport": {
+            "name": "tablet-768",
+            "width": 768,
+            "height": 1024
+          },
+          "issues": [
+            {
+              "type": "missing_mobile_nav",
+              "severity": "major",
+              "description": "No hamburger menu detected for mobile navigation",
+              "component": "Navigation",
+              "breakpoint": "tablet-768"
+            }
+          ],
+          "screenshot": "/home/shazbot/team-consensus-vault/mobile-test-screenshots/home-tablet-768-768x1024.png",
+          "issueCount": 1
+        },
+        "desktop-1024": {
+          "viewport": {
+            "name": "desktop-1024",
+            "width": 1024,
+            "height": 768
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/mobile-test-screenshots/home-desktop-1024-1024x768.png",
+          "issueCount": 0
+        },
+        "desktop-1440": {
+          "viewport": {
+            "name": "desktop-1440",
+            "width": 1440,
+            "height": 900
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/mobile-test-screenshots/home-desktop-1440-1440x900.png",
+          "issueCount": 0
+        }
+      },
+      "totalIssues": 3
+    },
+    "/arena": {
+      "url": "/arena",
+      "breakpoints": {
+        "mobile-320": {
+          "viewport": {
+            "name": "mobile-320",
+            "width": 320,
+            "height": 568
+          },
+          "issues": [
+            {
+              "type": "missing_mobile_nav",
+              "severity": "major",
+              "description": "No hamburger menu detected for mobile navigation",
+              "component": "Navigation",
+              "breakpoint": "mobile-320"
+            }
+          ],
+          "screenshot": "/home/shazbot/team-consensus-vault/mobile-test-screenshots/arena-mobile-320-320x568.png",
+          "issueCount": 1
+        },
+        "mobile-375": {
+          "viewport": {
+            "name": "mobile-375",
+            "width": 375,
+            "height": 667
+          },
+          "issues": [
+            {
+              "type": "missing_mobile_nav",
+              "severity": "major",
+              "description": "No hamburger menu detected for mobile navigation",
+              "component": "Navigation",
+              "breakpoint": "mobile-375"
+            }
+          ],
+          "screenshot": "/home/shazbot/team-consensus-vault/mobile-test-screenshots/arena-mobile-375-375x667.png",
+          "issueCount": 1
+        },
+        "tablet-768": {
+          "viewport": {
+            "name": "tablet-768",
+            "width": 768,
+            "height": 1024
+          },
+          "issues": [
+            {
+              "type": "missing_mobile_nav",
+              "severity": "major",
+              "description": "No hamburger menu detected for mobile navigation",
+              "component": "Navigation",
+              "breakpoint": "tablet-768"
+            }
+          ],
+          "screenshot": "/home/shazbot/team-consensus-vault/mobile-test-screenshots/arena-tablet-768-768x1024.png",
+          "issueCount": 1
+        },
+        "desktop-1024": {
+          "viewport": {
+            "name": "desktop-1024",
+            "width": 1024,
+            "height": 768
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/mobile-test-screenshots/arena-desktop-1024-1024x768.png",
+          "issueCount": 0
+        },
+        "desktop-1440": {
+          "viewport": {
+            "name": "desktop-1440",
+            "width": 1440,
+            "height": 900
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/mobile-test-screenshots/arena-desktop-1440-1440x900.png",
+          "issueCount": 0
+        }
+      },
+      "totalIssues": 3
+    },
+    "/predict": {
+      "url": "/predict",
+      "breakpoints": {
+        "mobile-320": {
+          "viewport": {
+            "name": "mobile-320",
+            "width": 320,
+            "height": 568
+          },
+          "issues": [
+            {
+              "type": "missing_mobile_nav",
+              "severity": "major",
+              "description": "No hamburger menu detected for mobile navigation",
+              "component": "Navigation",
+              "breakpoint": "mobile-320"
+            },
+            {
+              "type": "missing_viewport_meta",
+              "severity": "critical",
+              "description": "Missing viewport meta tag",
+              "component": "HTML Head",
+              "breakpoint": "mobile-320"
+            }
+          ],
+          "screenshot": "/home/shazbot/team-consensus-vault/mobile-test-screenshots/predict-mobile-320-320x568.png",
+          "issueCount": 2
+        },
+        "mobile-375": {
+          "viewport": {
+            "name": "mobile-375",
+            "width": 375,
+            "height": 667
+          },
+          "issues": [
+            {
+              "type": "missing_mobile_nav",
+              "severity": "major",
+              "description": "No hamburger menu detected for mobile navigation",
+              "component": "Navigation",
+              "breakpoint": "mobile-375"
+            },
+            {
+              "type": "missing_viewport_meta",
+              "severity": "critical",
+              "description": "Missing viewport meta tag",
+              "component": "HTML Head",
+              "breakpoint": "mobile-375"
+            }
+          ],
+          "screenshot": "/home/shazbot/team-consensus-vault/mobile-test-screenshots/predict-mobile-375-375x667.png",
+          "issueCount": 2
+        },
+        "tablet-768": {
+          "viewport": {
+            "name": "tablet-768",
+            "width": 768,
+            "height": 1024
+          },
+          "issues": [
+            {
+              "type": "missing_mobile_nav",
+              "severity": "major",
+              "description": "No hamburger menu detected for mobile navigation",
+              "component": "Navigation",
+              "breakpoint": "tablet-768"
+            },
+            {
+              "type": "missing_viewport_meta",
+              "severity": "critical",
+              "description": "Missing viewport meta tag",
+              "component": "HTML Head",
+              "breakpoint": "tablet-768"
+            }
+          ],
+          "screenshot": "/home/shazbot/team-consensus-vault/mobile-test-screenshots/predict-tablet-768-768x1024.png",
+          "issueCount": 2
+        },
+        "desktop-1024": {
+          "viewport": {
+            "name": "desktop-1024",
+            "width": 1024,
+            "height": 768
+          },
+          "issues": [
+            {
+              "type": "missing_viewport_meta",
+              "severity": "critical",
+              "description": "Missing viewport meta tag",
+              "component": "HTML Head",
+              "breakpoint": "desktop-1024"
+            }
+          ],
+          "screenshot": "/home/shazbot/team-consensus-vault/mobile-test-screenshots/predict-desktop-1024-1024x768.png",
+          "issueCount": 1
+        },
+        "desktop-1440": {
+          "viewport": {
+            "name": "desktop-1440",
+            "width": 1440,
+            "height": 900
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/mobile-test-screenshots/predict-desktop-1440-1440x900.png",
+          "issueCount": 0
+        }
+      },
+      "totalIssues": 7
+    },
+    "/rounds": {
+      "url": "/rounds",
+      "breakpoints": {
+        "mobile-320": {
+          "viewport": {
+            "name": "mobile-320",
+            "width": 320,
+            "height": 568
+          },
+          "issues": [
+            {
+              "type": "missing_mobile_nav",
+              "severity": "major",
+              "description": "No hamburger menu detected for mobile navigation",
+              "component": "Navigation",
+              "breakpoint": "mobile-320"
+            }
+          ],
+          "screenshot": "/home/shazbot/team-consensus-vault/mobile-test-screenshots/rounds-mobile-320-320x568.png",
+          "issueCount": 1
+        },
+        "mobile-375": {
+          "viewport": {
+            "name": "mobile-375",
+            "width": 375,
+            "height": 667
+          },
+          "issues": [
+            {
+              "type": "missing_mobile_nav",
+              "severity": "major",
+              "description": "No hamburger menu detected for mobile navigation",
+              "component": "Navigation",
+              "breakpoint": "mobile-375"
+            }
+          ],
+          "screenshot": "/home/shazbot/team-consensus-vault/mobile-test-screenshots/rounds-mobile-375-375x667.png",
+          "issueCount": 1
+        },
+        "tablet-768": {
+          "viewport": {
+            "name": "tablet-768",
+            "width": 768,
+            "height": 1024
+          },
+          "issues": [
+            {
+              "type": "missing_mobile_nav",
+              "severity": "major",
+              "description": "No hamburger menu detected for mobile navigation",
+              "component": "Navigation",
+              "breakpoint": "tablet-768"
+            }
+          ],
+          "screenshot": "/home/shazbot/team-consensus-vault/mobile-test-screenshots/rounds-tablet-768-768x1024.png",
+          "issueCount": 1
+        },
+        "desktop-1024": {
+          "viewport": {
+            "name": "desktop-1024",
+            "width": 1024,
+            "height": 768
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/mobile-test-screenshots/rounds-desktop-1024-1024x768.png",
+          "issueCount": 0
+        },
+        "desktop-1440": {
+          "viewport": {
+            "name": "desktop-1440",
+            "width": 1440,
+            "height": 900
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/mobile-test-screenshots/rounds-desktop-1440-1440x900.png",
+          "issueCount": 0
+        }
+      },
+      "totalIssues": 3
+    }
+  },
+  "summary": {
+    "totalIssues": 16,
+    "criticalIssues": 4,
+    "majorIssues": 12,
+    "minorIssues": 0
+  }
+}

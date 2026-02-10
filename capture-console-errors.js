@@ -7,6 +7,17 @@ async function captureConsoleErrors() {
   });
   
   const page = await browser.newPage();
+  
+  // Disable caching to ensure fresh content
+  await page.setCacheEnabled(false);
+  
+  // Clear service workers and storage
+  const client = await page.target().createCDPSession();
+  await client.send('Storage.clearDataForOrigin', {
+    origin: 'http://localhost:3001',
+    storageTypes: 'all',
+  });
+  
   const errors = [];
   const warnings = [];
   

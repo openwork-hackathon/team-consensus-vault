@@ -3,20 +3,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { useChatroomStream } from '@/hooks/useChatroomStream';
 import ChatRoom from '@/components/chatroom/ChatRoom';
-import { PERSONAS, getModelDistribution } from '@/lib/chatroom/personas';
+
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount } from 'wagmi';
 import { useVault } from '@/contexts/VaultContext';
 import ToastContainer, { ToastData } from '@/components/ToastContainer';
 
-// Model display names mapping
-const MODEL_DISPLAY_NAMES: Record<string, string> = {
-  deepseek: 'DeepSeek',
-  kimi: 'Kimi',
-  minimax: 'MiniMax',
-  glm: 'GLM',
-  gemini: 'Gemini',
-};
+
 
 interface HumanMessage {
   id: string;
@@ -39,9 +32,7 @@ export default function ArenaPage() {
   const [username, setUsername] = useState('');
   const humanChatEndRef = useRef<HTMLDivElement>(null);
 
-  // Get dynamic persona counts
-  const personaCount = PERSONAS.length;
-  const modelDistribution = getModelDistribution();
+
 
   // Mark as client-side rendered
   useEffect(() => {
@@ -326,11 +317,7 @@ export default function ArenaPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <h4 className="font-semibold mb-2 text-sm">🤖 AI Models</h4>
-              <ul className="text-xs text-muted-foreground space-y-1">
-                {Object.entries(modelDistribution).map(([modelId, count]) => (
-                  <li key={modelId}>• {MODEL_DISPLAY_NAMES[modelId] || modelId}: {count} personas</li>
-                ))}
-              </ul>
+              <p className="text-xs text-muted-foreground">Multiple AI models</p>
             </div>
             <div>
               <h4 className="font-semibold mb-2 text-sm">📋 Debate Phases</h4>
