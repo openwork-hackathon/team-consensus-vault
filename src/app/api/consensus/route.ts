@@ -1,10 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { runConsensusAnalysis } from '@/lib/consensus-engine';
 import { AnalystResult, ANALYST_MODELS, ModelConfig, ModelResponse } from '@/lib/models';
 import {
   checkRateLimit,
   createRateLimitResponse,
-  addRateLimitHeaders,
   CONSENSUS_RATE_LIMIT
 } from '@/lib/rate-limit';
 import { createApiLogger } from '@/lib/api-logger';
@@ -221,7 +220,6 @@ async function streamRealAnalysis(
   signal: AbortSignal
 ) {
   const results: AnalystResult[] = [];
-  let slowModelWarningSent = false;
 
   // Progress handler for slow models
   const handleProgress = (progress: ProgressUpdate) => {
@@ -240,7 +238,7 @@ async function streamRealAnalysis(
   };
 
   // Use the consensus engine with progress callback
-  const { analysts, consensus, responseTimes, partialFailures } = await runConsensusAnalysis(
+  const { consensus, partialFailures } = await runConsensusAnalysis(
     asset,
     context,
     (result) => {
@@ -800,7 +798,7 @@ function parseModelResponse(text: string): ModelResponse {
       confidence: Math.min(100, Math.max(0, Number(parsed.confidence) || 50)),
       reasoning: String(parsed.reasoning || text.substring(0, 200)),
     };
-  } catch (e) {
+  } catch {
     return {
       signal: 'hold',
       confidence: 50,
@@ -812,7 +810,7 @@ function parseModelResponse(text: string): ModelResponse {
 /**
  * Generate a simple consensus summary from multiple responses
  */
-function generateConsensus(responses: string[], query: string): string {
+function generateConsensus(responses: string[], _query: string): string {
   if (responses.length === 0) {
     return 'No responses available to generate consensus.';
   }

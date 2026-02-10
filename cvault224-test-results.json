@@ -1,0 +1,250 @@
+{
+  "test_date": "2026-02-10T15:02:36Z",
+  "base_url": "http://localhost:3001",
+  "endpoints": [
+    {
+      "path": "/api/price",
+      "method": "GET",
+      "description": "Get current BTC price",
+      "http_code": "200",
+      "status": "WORKING",
+      "response_preview": "{\"success\":true,\"asset\":\"BTC/USD\",\"price\":45234,\"timestamp\":\"2026-02-10T15:02:37.316Z\",\"cached\":false,\"responseTimeMs\":123} "
+    }
+,
+    {
+      "path": "/api/market-data",
+      "method": "GET",
+      "description": "Get market data",
+      "http_code": "200",
+      "status": "WORKING",
+      "response_preview": "{\"asset\":\"BTC\",\"timestamp\":\"2026-02-10T15:02:37.532Z\",\"cached\":false,\"price\":{\"current\":45000,\"change24h\":500,\"changePercentage24h\":1.12,\"range24h\":{\"high\":46000,\"low\":44000}},\"volume\":{\"value24h\":250"
+    }
+,
+    {
+      "path": "/api/health",
+      "method": "GET",
+      "description": "Health check",
+      "http_code": "200",
+      "status": "WORKING",
+      "response_preview": "{\"status\":\"healthy\",\"timestamp\":\"2026-02-10T15:02:37.951Z\",\"system\":{\"healthy_models\":5,\"total_models\":5,\"healthy_percentage\":100,\"open_circuits\":0,\"half_open_circuits\":0},\"models\":[{\"id\":\"deepseek\",\""
+    }
+,
+    {
+      "path": "/api/health",
+      "method": "HEAD",
+      "description": "Health check HEAD",
+      "http_code": "",
+      "status": "ERROR",
+      "response_preview": "HTTP/1.1 200 OK vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch Date: Tue, 10 Feb 2026 15:02:37 GMT Connection: keep-alive Keep-Alive: timeout=5 "
+    }
+,
+    {
+      "path": "/api/consensus",
+      "method": "POST",
+      "description": "Consensus POST",
+      "http_code": "400",
+      "status": "CLIENT_ERROR",
+      "response_preview": "{\"error\":\"Missing or invalid query parameter\"} "
+    }
+,
+    {
+      "path": "/api/consensus",
+      "method": "GET",
+      "description": "Consensus GET (SSE)",
+      "http_code": "200",
+      "status": "WORKING",
+      "response_preview": "data: {\"type\":\"connected\",\"asset\":\"BTC\",\"requestId\":\"req_1770735758034_6kev9vx5e\"}  data: {\"id\":\"kimi\",\"sentiment\":\"bullish\",\"confidence\":78,\"reasoning\":\"Significant exchange outflows observed with 22"
+    }
+,
+    {
+      "path": "/api/consensus-detailed",
+      "method": "POST",
+      "description": "Detailed consensus POST",
+      "http_code": "400",
+      "status": "CLIENT_ERROR",
+      "response_preview": "{\"error\":\"Missing or invalid asset parameter\"} "
+    }
+,
+    {
+      "path": "/api/consensus-detailed",
+      "method": "GET",
+      "description": "Detailed consensus GET",
+      "http_code": "400",
+      "status": "CLIENT_ERROR",
+      "response_preview": "{\"error\":\"Missing asset parameter\"} "
+    }
+,
+    {
+      "path": "/api/consensus-enhanced",
+      "method": "GET",
+      "description": "Enhanced consensus GET",
+      "http_code": "000",
+      "status": "ERROR",
+      "response_preview": " "
+    }
+,
+    {
+      "path": "/api/council/evaluate",
+      "method": "POST",
+      "description": "Council evaluate",
+      "http_code": "000",
+      "status": "ERROR",
+      "response_preview": " "
+    }
+,
+    {
+      "path": "/api/trading/history",
+      "method": "GET",
+      "description": "Trading history",
+      "http_code": "200",
+      "status": "WORKING",
+      "response_preview": "{\"success\":true,\"trades\":[],\"metrics\":{\"totalTrades\":0,\"openTrades\":0,\"closedTrades\":0,\"winningTrades\":0,\"losingTrades\":0,\"totalPnL\":0,\"winRate\":0,\"avgWin\":0,\"avgLoss\":0,\"largestWin\":0,\"largestLoss\":0"
+    }
+,
+    {
+      "path": "/api/trading/execute",
+      "method": "POST",
+      "description": "Execute trade",
+      "http_code": "000",
+      "status": "ERROR",
+      "response_preview": " "
+    }
+,
+    {
+      "path": "/api/trading/close",
+      "method": "POST",
+      "description": "Close trade",
+      "http_code": "500",
+      "status": "SERVER_ERROR",
+      "response_preview": "{\"success\":false,\"error\":\"Trade test-123 not found\",\"responseTimeMs\":133} "
+    }
+,
+    {
+      "path": "/api/prediction-market/bet",
+      "method": "GET",
+      "description": "Get prediction bets",
+      "http_code": "200",
+      "status": "WORKING",
+      "response_preview": "{\"round\":null,\"pool\":{\"totalUp\":0,\"totalDown\":0,\"totalPool\":0,\"totalBets\":0},\"odds\":{\"up\":0,\"down\":0},\"canBet\":false,\"responseTimeMs\":6} "
+    }
+,
+    {
+      "path": "/api/prediction-market/bet",
+      "method": "POST",
+      "description": "Place bet",
+      "http_code": "400",
+      "status": "CLIENT_ERROR",
+      "response_preview": "{\"success\":false,\"error\":\"Missing required fields: address, amount, side\",\"responseTimeMs\":0} "
+    }
+,
+    {
+      "path": "/api/prediction-market/stream",
+      "method": "GET",
+      "description": "Prediction stream (SSE)",
+      "http_code": "200",
+      "status": "WORKING",
+      "response_preview": "event: connected data: {\"timestamp\":1770735798941,\"demoMode\":true,\"config\":{\"SCANNING_INTERVAL\":15000,\"FORCE_BUY_AFTER_POLLS\":3,\"FORCE_EXIT_AFTER_MS\":120000,\"PRICE_UPDATE_INTERVAL\":15000,\"MAX_ROUND_DU"
+    }
+,
+    {
+      "path": "/api/chatroom/post",
+      "method": "POST",
+      "description": "Post to chatroom",
+      "http_code": "400",
+      "status": "CLIENT_ERROR",
+      "response_preview": "{\"error\":\"Missing required fields: userId, handle, content\"} "
+    }
+,
+    {
+      "path": "/api/chatroom/stream",
+      "method": "GET",
+      "description": "Chatroom stream (SSE)",
+      "http_code": "200",
+      "status": "WORKING",
+      "response_preview": "event: connected data: {\"timestamp\":1770735809048,\"connectionTimeMs\":0}  event: history data: {\"messages\":[],\"phase\":\"DEBATE\",\"cooldownEndsAt\":null,\"consensusSnapshots\":[]}  event: message data: {\"id\""
+    }
+,
+    {
+      "path": "/api/chatroom/admin",
+      "method": "POST",
+      "description": "Chatroom admin",
+      "http_code": "400",
+      "status": "CLIENT_ERROR",
+      "response_preview": "{\"error\":\"Missing required fields: action, targetUserId, targetHandle, reason, moderatorId\"} "
+    }
+,
+    {
+      "path": "/api/chatroom/moderate",
+      "method": "POST",
+      "description": "Moderate message",
+      "http_code": "400",
+      "status": "CLIENT_ERROR",
+      "response_preview": "{\"error\":\"Missing required fields: action, targetUserId, targetHandle, reason, moderatorId\"} "
+    }
+,
+    {
+      "path": "/api/chatroom/summarize",
+      "method": "GET",
+      "description": "Get chatroom summary",
+      "http_code": "200",
+      "status": "WORKING",
+      "response_preview": "{\"status\":\"ok\"} "
+    }
+,
+    {
+      "path": "/api/chatroom/consensus-snapshots",
+      "method": "GET",
+      "description": "Get consensus snapshots",
+      "http_code": "200",
+      "status": "WORKING",
+      "response_preview": "{\"snapshots\":[],\"total\":0} "
+    }
+,
+    {
+      "path": "/api/chatroom/history",
+      "method": "GET",
+      "description": "Get chatroom history",
+      "http_code": "200",
+      "status": "WORKING",
+      "response_preview": "{\"currentState\":{\"phase\":\"DEBATE\",\"phaseStartedAt\":1770735809048,\"cooldownEndsAt\":null,\"lastMessageAt\":1770735812732,\"lastSpeakerId\":\"cycle_theorist\",\"messageCount\":1,\"nextSpeakerId\":\"quantitative_qui"
+    }
+,
+    {
+      "path": "/api/human-chat/post",
+      "method": "POST",
+      "description": "Human chat post",
+      "http_code": "400",
+      "status": "CLIENT_ERROR",
+      "response_preview": "{\"error\":\"Missing required fields: userId, handle, content\"} "
+    }
+,
+    {
+      "path": "/api/human-chat/stream",
+      "method": "GET",
+      "description": "Human chat stream (SSE)",
+      "http_code": "200",
+      "status": "WORKING",
+      "response_preview": "event: connected data: {\"timestamp\":1770735819831,\"connectionId\":\"conn_1770735819831_0ckiod\"}  event: history data: {\"messages\":[],\"state\":{\"messageCount\":0,\"activeUsers\":0,\"lastMessageAt\":null},\"acti"
+    }
+,
+    {
+      "path": "/api/cron/stale-trades",
+      "method": "GET",
+      "description": "Stale trades cleanup",
+      "http_code": "200",
+      "status": "WORKING",
+      "response_preview": "{\"success\":true,\"timestamp\":\"2026-02-10T15:03:49.841Z\",\"executed\":true,\"paperTradesClosed\":[],\"predictionRoundsHandled\":[],\"summary\":{\"paperTradesChecked\":0,\"paperTradesClosed\":0,\"predictionRoundCheck"
+    }
+,
+    {
+      "path": "/api/cron/cleanup-rolling-history",
+      "method": "GET",
+      "description": "Cleanup rolling history",
+      "http_code": "200",
+      "status": "WORKING",
+      "response_preview": "{\"success\":true,\"timestamp\":1770735829928,\"status\":{\"totalMessages\":1,\"rollingMessages\":1,\"oldestMessageAge\":17196,\"newestMessageAge\":17196,\"snapshotCount\":0},\"message\":\"Rolling history status: 1 mess"
+    }
+
+  ],
+  "total_tested": 27
+}

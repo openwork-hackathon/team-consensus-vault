@@ -22,13 +22,10 @@ import { extractDebateSummary } from '@/lib/chatroom/argument-extractor';
 import {
   generateNextMessageEnhanced,
   initializeEnhancedState,
-  serializeEnhancedState,
-  deserializeEnhancedState,
 } from '@/lib/chatroom/chatroom-engine-enhanced';
 import { PERSONAS_BY_ID } from '@/lib/chatroom/personas';
 import { ChatRoomState, ConsensusSnapshot, MessageSentiment } from '@/lib/chatroom/types';
 import { precomputeTypingDuration } from '@/lib/chatroom/typing-duration';
-import { fetchMarketData } from '@/lib/chatroom/market-data';
 
 // Message interval ranges (ms)
 const DEBATE_INTERVAL_MIN = 60_000;  // 60s
@@ -311,8 +308,17 @@ export async function GET(request: NextRequest) {
                   await appendMessage(result.message);
 
                   // Convert enhanced state to basic state for storage
-                  const { persuasionStore, lastMarketData, marketDataTimestamp, ...basicState } = result.state;
-                  await setState(basicState as ChatRoomState);
+                  const basicState: ChatRoomState = {
+                    ...result.state,
+                    phase: result.state.phase,
+                    cooldownEndsAt: result.state.cooldownEndsAt,
+                    consensusDirection: result.state.consensusDirection,
+                    consensusStrength: result.state.consensusStrength,
+                    lastMessageAt: result.state.lastMessageAt,
+                    messageCount: result.state.messageCount,
+                    nextSpeakerId: result.state.nextSpeakerId,
+                  };
+                  await setState(basicState);
 
                   // Broadcast message
                   send('message', result.message);

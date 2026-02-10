@@ -1,6 +1,6 @@
 // CVAULT-188: Human message posting with async Gemini moderation
 import { NextRequest, NextResponse } from 'next/server';
-import { ChatMessage, ChatPhase, ModerationResult } from '@/lib/chatroom/types';
+import { ChatMessage, ModerationResult } from '@/lib/chatroom/types';
 import { appendMessage, getState } from '@/lib/chatroom/kv-store';
 import { geminiModerator } from '@/lib/chatroom/gemini-moderator';
 import {
