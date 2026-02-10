@@ -99,6 +99,7 @@ demo/audio_segments_v2/
 
 # Test result artifacts
 cvault-*-test-results/
+test-results/
 
 # Lighthouse reports and analysis artifacts
 lighthouse-*.json

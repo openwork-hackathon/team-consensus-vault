@@ -2,7 +2,7 @@
  * Unit tests for enhanced error handling in consensus engine
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   ConsensusError,
   ConsensusErrorType,
@@ -14,16 +14,33 @@ import {
 } from '../consensus-engine';
 
 // Mock logger to prevent console output during tests
-vi.mock('../consensus-engine', async () => {
-  const actual = await vi.importActual('../consensus-engine');
+vi.mock('../consensus-engine', async (importOriginal) => {
+  const actual = await importOriginal();
+
+  // Create a logger implementation that actually tracks logs
+  const logs: any[] = [];
+
   return {
     ...actual,
     logger: {
-      info: vi.fn(),
-      warn: vi.fn(),
-      error: vi.fn(),
-      getLogs: vi.fn(() => []),
-      clear: vi.fn(),
+      info: vi.fn((message: string, correlationId?: string, metadata?: any) => {
+        logs.push({ level: 'info', message, correlationId, metadata, timestamp: Date.now() });
+      }),
+      warn: vi.fn((message: string, correlationId?: string, metadata?: any) => {
+        logs.push({ level: 'warn', message, correlationId, metadata, timestamp: Date.now() });
+      }),
+      error: vi.fn((message: string, correlationId?: string, metadata?: any) => {
+        logs.push({ level: 'error', message, correlationId, metadata, timestamp: Date.now() });
+      }),
+      getLogs: vi.fn((correlationId?: string) => {
+        if (correlationId) {
+          return logs.filter(log => log.correlationId === correlationId);
+        }
+        return logs;
+      }),
+      clear: vi.fn(() => {
+        logs.length = 0;
+      }),
     },
   };
 });
@@ -67,7 +84,7 @@ describe('Enhanced Error Handling', () => {
       expect(userError.severity).toBe('warning');
       expect(userError.retryable).toBe(true);
       expect(userError.estimatedWaitTime).toBe(60000);
-      expect(userError.recoveryGuidance).toContain('too many requests');
+      expect(userError.recoveryGuidance).toContain('Too many requests');
     });
 
     it('should create specific guidance for gateway errors', () => {
@@ -82,7 +99,7 @@ describe('Enhanced Error Handling', () => {
 
       expect(userError502.type).toBe('gateway_error');
       expect(userError502.estimatedWaitTime).toBe(240000);
-      expect(userError502.recoveryGuidance).toContain('server issues');
+      expect(userError502.recoveryGuidance).toContain('experiencing issues');
 
       const error503 = new ConsensusError(
         'Service Unavailable',
@@ -94,7 +111,7 @@ describe('Enhanced Error Handling', () => {
       const userError503 = createUserFacingError(error503);
 
       expect(userError503.estimatedWaitTime).toBe(300000);
-      expect(userError503.recoveryGuidance).toContain('high load');
+      expect(userError503.recoveryGuidance).toContain('high demand');
     });
 
     it('should provide timeout guidance with wait times', () => {
@@ -107,7 +124,7 @@ describe('Enhanced Error Handling', () => {
 
       expect(userError.type).toBe('timeout');
       expect(userError.estimatedWaitTime).toBe(60000);
-      expect(userError.recoveryGuidance).toContain('high demand');
+      expect(userError.recoveryGuidance).toContain('high load');
     });
 
     it('should provide network error guidance with recovery estimates', () => {
@@ -134,7 +151,7 @@ describe('Enhanced Error Handling', () => {
       expect(userError.type).toBe('configuration');
       expect(userError.severity).toBe('critical');
       expect(userError.retryable).toBe(false);
-      expect(userError.recoveryGuidance).toContain('server configuration');
+      expect(userError.recoveryGuidance).toContain('not properly configured');
     });
   });
 
@@ -203,13 +220,13 @@ describe('Enhanced Error Handling', () => {
       expect(summary).toHaveProperty('overall');
       expect(summary).toHaveProperty('models');
       expect(summary.overall).toHaveProperty('status');
-      expect(summary.overall).toHaveProperty('healthy_models');
-      expect(summary.overall).toHaveProperty('total_models');
-      expect(summary.overall).toHaveProperty('healthy_percentage');
+      expect(summary.overall).toHaveProperty('healthyModels');
+      expect(summary.overall).toHaveProperty('totalModels');
+      expect(summary.overall).toHaveProperty('healthyPercentage');
 
       expect(['healthy', 'degraded', 'unhealthy']).toContain(summary.overall.status);
-      expect(summary.overall.healthy_percentage).toBeGreaterThanOrEqual(0);
-      expect(summary.overall.healthy_percentage).toBeLessThanOrEqual(100);
+      expect(summary.overall.healthyPercentage).toBeGreaterThanOrEqual(0);
+      expect(summary.overall.healthyPercentage).toBeLessThanOrEqual(100);
     });
   });
 

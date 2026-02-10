@@ -233,7 +233,7 @@ describe('4/5 Consensus Logic', () => {
       expect(response.vote_counts.BUY).toBe(2);
       expect(response.vote_counts.SELL).toBe(1);
       expect(response.vote_counts.HOLD).toBe(1);
-      expect(response.consensus_status).toBe('INSUFFICIENT_RESPONSES'); // Only 4 valid, but no 4/5 consensus
+      expect(response.consensus_status).toBe('NO_CONSENSUS'); // 4 valid votes (>= 3 threshold), but no 4/5 consensus
     });
   });
 });

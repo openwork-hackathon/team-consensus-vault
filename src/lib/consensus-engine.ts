@@ -114,7 +114,7 @@ export class ConsensusError extends Error {
 }
 
 // Generate unique correlation ID for request tracing
-function generateCorrelationId(): string {
+export function generateCorrelationId(): string {
   return `cv-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
 }
 
