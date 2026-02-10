@@ -230,12 +230,25 @@ export async function generateNextMessageEnhanced(
   }
 
   // 8. Call model
+  // CVAULT-209: Using model-appropriate maxTokens for ~280 character responses
   // CVAULT-184: Handle silent failures - return null if model call fails
+  
+  // Set model-specific token limits for optimal ~280 character responses
+  const modelTokenLimits: Record<string, number> = {
+    'deepseek': 100,    // ~280 chars
+    'kimi': 120,        // ~280 chars  
+    'minimax': 110,     // ~280 chars
+    'glm': 105,         // ~280 chars
+    'gemini': 115,      // ~280 chars
+  };
+  
+  const maxTokens = modelTokenLimits[persona.modelId] || 100;
+  
   const rawResponse = await callModelRaw(
     persona.modelId,
     promptData.systemPrompt,
     promptData.userPrompt,
-    80
+    maxTokens
   );
 
   // If model call failed, silently skip this persona and return special result
@@ -299,28 +312,56 @@ export async function generateNextMessageEnhanced(
     }
   }
 
-  // CVAULT-209: Apply backup truncation to ensure tweet-length messages
+  // CVAULT-209: Apply intelligent truncation to ensure tweet-length messages
   const MAX_CHARS = 280;
   if (content.length > MAX_CHARS) {
     console.log(`[CVAULT-209] Truncating message from ${content.length} to ${MAX_CHARS} chars for ${persona.handle}`);
     
-    // Try to truncate at a sentence boundary if possible
-    const truncated = content.slice(0, MAX_CHARS);
+    // Remove sentiment tag first if present, then truncate, then add back
+    const sentimentTag = content.match(/\[SENTIMENT:\s*(bullish|bearish|neutral)\s*,\s*CONFIDENCE:\s*(\d+)\s*\]/i);
+    let cleanContent = content;
+    if (sentimentTag) {
+      cleanContent = content.replace(sentimentTag[0], '').trim();
+    }
+    
+    // Try to truncate at sentence boundaries, word boundaries, or natural breaks
+    let truncated = cleanContent.slice(0, MAX_CHARS);
+    
+    // Priority: sentence end > word break > character limit
     const lastPeriod = truncated.lastIndexOf('.');
     const lastExclamation = truncated.lastIndexOf('!');
     const lastQuestion = truncated.lastIndexOf('?');
-    const lastBoundary = Math.max(lastPeriod, lastExclamation, lastQuestion);
+    const lastSentenceBoundary = Math.max(lastPeriod, lastExclamation, lastQuestion);
     
-    if (lastBoundary > MAX_CHARS * 0.7) { // Only if we have a reasonable boundary
-      content = truncated.slice(0, lastBoundary + 1);
+    if (lastSentenceBoundary > MAX_CHARS * 0.6) {
+      // Good sentence boundary found
+      truncated = truncated.slice(0, lastSentenceBoundary + 1);
+    } else {
+      // Try word boundary
+      const lastSpace = truncated.lastIndexOf(' ');
+      if (lastSpace > MAX_CHARS * 0.7) {
+        truncated = truncated.slice(0, lastSpace);
+      }
+      
+      // Add ellipsis if we truncated mid-sentence
+      if (!truncated.endsWith('.') && !truncated.endsWith('!') && !truncated.endsWith('?') && !truncated.endsWith('...')) {
+        truncated = truncated.trim() + '...';
+      }
+    }
+    
+    // Reconstruct with sentiment tag if it existed
+    if (sentimentTag) {
+      content = `${truncated} ${sentimentTag[0]}`;
     } else {
       content = truncated;
     }
     
-    // Add ellipsis if we truncated mid-sentence
-    if (!content.endsWith('.') && !content.endsWith('!') && !content.endsWith('?')) {
-      content = content.trim() + '...';
+    // Final safety check - if still too long, hard truncate
+    if (content.length > MAX_CHARS) {
+      content = content.slice(0, MAX_CHARS - 3) + '...';
     }
+    
+    console.log(`[CVAULT-209] Final truncated length: ${content.length} chars`);
   }
 
   // 10. Extract market data references

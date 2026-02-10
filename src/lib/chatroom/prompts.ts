@@ -107,6 +107,8 @@ ${marketContext}
 
 You are in a live crypto chat room debating the current market. Stay in character at all times. Respond naturally as if chatting — no greetings, no "I think", just jump into your take.
 
+🚨 ABSOLUTE CHARACTER LIMIT: Your response MUST be 280 characters or less. This is non-negotiable and enforced automatically. Plan your message length accordingly.
+
 CRITICAL: You MUST reference actual market data in your arguments. Use specific numbers, percentages, and metrics from the market data provided above. Instead of saying "I think it will go up", say something like "The 24h volume spike of 340% combined with holding above $45k support suggests..."
 
 ${persuasionContext}
@@ -132,7 +134,11 @@ BTC holding 44k support cleanly, volume profile showing accumulation with $28B i
   const userPrompt = `Recent chat:
 ${formatRecentMessages(recentMessages)}
 
-Your turn to speak. React to what others have said, add your perspective using the market data provided, or bring up something new. CRITICAL: Keep your response under 280 characters — tweet-length only. Be punchy and direct. No filler words. One clear point per message. Remember to end with [SENTIMENT: ..., CONFIDENCE: ...].
+Your turn to speak. React to what others have said, add your perspective using the market data provided, or bring up something new.
+
+🚨 ABSOLUTE CHARACTER LIMIT: Your response MUST be 280 characters or less. This is non-negotiable. If your response is longer, it will be automatically truncated. Plan your message accordingly.
+
+Be punchy and direct. No filler words. One clear point per message. Remember to end with [SENTIMENT: ..., CONFIDENCE: ...].
 
 🚫 ANTI-REPETITION MANDATORY REQUIREMENTS:
 - Check the forbidden arguments list above - DO NOT say anything similar to those
@@ -163,7 +169,11 @@ You are in a crypto chat room during a chill period. A trade signal just fired a
   const userPrompt = `Recent chat:
 ${formatRecentMessages(recentMessages)}
 
-Your turn. Keep it casual and fun. CRITICAL: Keep your response under 280 characters — tweet-length only. Be punchy and direct. No market analysis or sentiment tags.`;
+Your turn. Keep it casual and fun.
+
+🚨 ABSOLUTE CHARACTER LIMIT: Your response MUST be 280 characters or less. This is non-negotiable. If your response is longer, it will be automatically truncated. Plan your message accordingly.
+
+Be punchy and direct. No market analysis or sentiment tags.`;
 
   return JSON.stringify({ systemPrompt, userPrompt });
 }
@@ -204,7 +214,11 @@ End with [SENTIMENT: ${consensusDirection}, CONFIDENCE: ${consensusStrength}]`;
   const userPrompt = `Recent chat:
 ${formatRecentMessages(recentMessages)}
 
-The room has reached consensus: ${consensusDirection.toUpperCase()} (${consensusStrength}% strength). Give your final thoughts on whether this consensus is justified by the data and debate arguments. CRITICAL: Keep your response under 280 characters — tweet-length only. Be punchy and direct.`;
+The room has reached consensus: ${consensusDirection.toUpperCase()} (${consensusStrength}% strength). Give your final thoughts on whether this consensus is justified by the data and debate arguments.
+
+🚨 ABSOLUTE CHARACTER LIMIT: Your response MUST be 280 characters or less. This is non-negotiable. If your response is longer, it will be automatically truncated. Plan your message accordingly.
+
+Be punchy and direct.`;
 
   return JSON.stringify({ systemPrompt, userPrompt });
 }
@@ -306,7 +320,11 @@ ${formatRecentMessages(recentMessages)}
 
 You've been ${oldStance}, but you're now shifting to ${newStance} because: ${reason}
 
-Express this shift naturally in your character's voice. CRITICAL: Keep your response under 280 characters — tweet-length only. Be punchy and direct. Reference the specific data that changed your mind.`;
+Express this shift naturally in your character's voice.
+
+🚨 ABSOLUTE CHARACTER LIMIT: Your response MUST be 280 characters or less. This is non-negotiable. If your response is longer, it will be automatically truncated. Plan your message accordingly.
+
+Be punchy and direct. Reference the specific data that changed your mind.`;
 
   return JSON.stringify({ systemPrompt, userPrompt });
 }

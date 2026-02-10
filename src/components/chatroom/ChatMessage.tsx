@@ -14,6 +14,22 @@ function formatTime(timestamp: number): string {
   const now = new Date();
   const messageDate = new Date(timestamp);
   
+  // Calculate time difference in minutes
+  const diffMinutes = Math.floor((now.getTime() - messageDate.getTime()) / (1000 * 60));
+  
+  // Show relative time for very recent messages (within 1 hour)
+  if (diffMinutes < 1) {
+    return 'just now';
+  } else if (diffMinutes < 60) {
+    return `${diffMinutes}m ago`;
+  }
+  
+  // Calculate difference in hours
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 24) {
+    return `${diffHours}h ago`;
+  }
+  
   // Reset time portions to compare dates
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const messageDay = new Date(messageDate.getFullYear(), messageDate.getMonth(), messageDate.getDate());
@@ -22,28 +38,40 @@ function formatTime(timestamp: number): string {
   const diffTime = today.getTime() - messageDay.getTime();
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
   
-  // Format time portion
+  // Format time portion using Intl.DateTimeFormat for better timezone support
   const timeStr = messageDate.toLocaleTimeString([], {
-    hour: '2-digit',
+    hour: 'numeric',
     minute: '2-digit',
+    hour12: true,
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   });
   
   // Format based on when the message was sent
   if (diffDays === 0) {
-    // Today - just show time
+    // Today - just show time (e.g., "2:34 PM")
     return timeStr;
-  } else if (diffDays === 1) {
-    // Yesterday - show "Yesterday time"
-    return `Yesterday ${timeStr}`;
   } else if (diffDays < 7) {
-    // Within last week - show day of week
-    const dayOfWeek = messageDate.toLocaleDateString([], { weekday: 'long' });
-    return `${dayOfWeek} ${timeStr}`;
-  } else {
-    // Older - show date and time
+    // Within last week - show abbreviated day and time (e.g., "Mon, 2:34 PM")
+    const dayOfWeek = messageDate.toLocaleDateString([], { 
+      weekday: 'short',
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    });
+    return `${dayOfWeek}, ${timeStr}`;
+  } else if (diffDays < 365) {
+    // Within last year - show month, day and time (e.g., "Feb 9, 2:34 PM")
     const dateStr = messageDate.toLocaleDateString([], {
       month: 'short',
       day: 'numeric',
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    });
+    return `${dateStr}, ${timeStr}`;
+  } else {
+    // Older than a year - show full date and time
+    const dateStr = messageDate.toLocaleDateString([], {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     });
     return `${dateStr}, ${timeStr}`;
   }
@@ -100,7 +128,7 @@ export default function ChatMessage({ message, onQuote }: ChatMessageProps) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className={`flex gap-2.5 sm:gap-3 px-3 sm:px-4 py-2 sm:py-2 hover:bg-white/[0.02] active:bg-white/[0.05] group ${onQuote ? 'cursor-pointer hover:bg-accent/10' : ''}`}
+      className={`flex gap-2.5 sm:gap-3 px-3 sm:px-4 py-4 sm:py-4 hover:bg-white/[0.02] active:bg-white/[0.05] group ${onQuote ? 'cursor-pointer hover:bg-accent/10' : ''}`}
       role="article"
       aria-label={messageAriaLabel}
       onClick={handleClick}
@@ -136,7 +164,7 @@ export default function ChatMessage({ message, onQuote }: ChatMessageProps) {
               isAI={false}
             />
           )}
-          <span className="text-[11px] text-muted-foreground/70">
+          <span className="text-[10px] text-muted-foreground/50 font-normal" title={new Date(message.timestamp).toLocaleString()}>
             {formatTime(message.timestamp)}
           </span>
           {message.sentiment && (

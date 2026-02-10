@@ -226,7 +226,7 @@ export default function ChatRoom({
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="h-[350px] sm:h-[400px] md:h-[480px] overflow-y-auto overflow-x-hidden py-2 space-y-3 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent scrollable"
+        className="h-[350px] sm:h-[400px] md:h-[480px] overflow-y-auto overflow-x-hidden py-2 space-y-6 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent scrollable"
         role="log"
         aria-live="polite"
         aria-atomic="false"
@@ -276,7 +276,7 @@ export default function ChatRoom({
         </AnimatePresence>
 
         {messageGroups.map((group, groupIndex) => (
-          <div key={`group-${groupIndex}`} className="space-y-4">
+          <div key={`group-${groupIndex}`} className="space-y-6">
             {/* Time gap separator */}
             {group.hasTimeGap && group.gapMinutes && (
               <div className="relative my-4 mx-4">
@@ -357,14 +357,7 @@ export default function ChatRoom({
       {/* Footer with controls */}
       <div className="px-3 py-2 sm:py-2 border-t border-border flex items-center justify-between" role="status" aria-live="polite">
         <div className="flex items-center gap-3">
-          <span className="text-muted-foreground text-xs sm:text-[11px]" aria-label={`${messages.length} messages in chat`}>
-            {messages.length} messages
-            {hasMoreMessages && (
-              <span className="text-muted-foreground/60 ml-1">
-                ({displayedMessageCount} showing)
-              </span>
-            )}
-          </span>
+
           
           {/* Streaming status indicator */}
           <div className="flex items-center gap-1.5" aria-label={`Streaming ${isConnected ? 'active' : 'inactive'}`}>

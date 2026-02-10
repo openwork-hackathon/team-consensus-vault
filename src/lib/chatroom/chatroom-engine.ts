@@ -140,8 +140,7 @@ export async function generateNextMessage(
     rawResponse = await callModelRaw(
       persona.modelId,
       promptData.systemPrompt,
-      promptData.userPrompt,
-      80
+      promptData.userPrompt
     );
   } catch (error) {
     // Log detailed error information for debugging (INTERNAL ONLY - not exposed to frontend)

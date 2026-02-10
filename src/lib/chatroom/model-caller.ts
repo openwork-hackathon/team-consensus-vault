@@ -19,11 +19,18 @@ const DEFAULT_TIMEOUT = 30000;
  * 
  * CVAULT-184: Returns null on failure instead of throwing to enable silent failure handling
  */
+/**
+ * CVAULT-209: Calculate appropriate max_tokens for ~280 character responses
+ * Average: 1 token ≈ 3-4 characters, so 280 chars ≈ 70-93 tokens
+ * Using 100 to allow for some variance while keeping messages concise
+ */
+const DEFAULT_MAX_TOKENS = 100;
+
 export async function callModelRaw(
   modelId: string,
   systemPrompt: string,
   userPrompt: string,
-  maxTokens: number = 80,
+  maxTokens: number = DEFAULT_MAX_TOKENS,
   onProgress?: (progress: ProgressUpdate) => void
 ): Promise<string | null> {
   const config = ANALYST_MODELS.find(m => m.id === modelId);
