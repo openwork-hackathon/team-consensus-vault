@@ -33,6 +33,9 @@ const TradingPerformance = lazy(() =>
   import('@/components/TradingPerformance').then(m => ({ default: m.default }))
 );
 
+// Import skeletons for Suspense fallbacks
+import { TradingPerformanceSkeleton, CardSkeleton } from '@/components/LoadingSkeleton';
+
 export default function Dashboard() {
   const consensusData = useConsensusStream();
   const chatroomData = useChatroomStream();
@@ -548,7 +551,7 @@ export default function Dashboard() {
         </section>
 
         {/* Consensus vs Contrarian Dashboard */}
-        <Suspense fallback={<LoadingSkeleton />}>
+        <Suspense fallback={<CardSkeleton className="mb-6" />}>
           <section
             className="mb-6"
             aria-labelledby="consensus-dashboard-heading"
@@ -589,7 +592,7 @@ export default function Dashboard() {
         </section>
 
         {/* Trading Performance Section */}
-        <Suspense fallback={<LoadingSkeleton />}>
+        <Suspense fallback={<TradingPerformanceSkeleton className="mb-6" />}>
           <TradingPerformance className="mb-6" />
         </Suspense>
 

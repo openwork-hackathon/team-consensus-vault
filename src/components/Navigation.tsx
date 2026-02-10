@@ -190,10 +190,10 @@ export default function Navigation({
         </div>
 
         {/* Mobile/Tablet Navigation */}
-        {/* Backdrop overlay - z-50 to appear above header */}
+        {/* Backdrop overlay - z-[51] to appear above header */}
         <div
           id="mobile-menu-backdrop"
-          className={`md:hidden fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ease-in-out z-50 ${
+          className={`md:hidden fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ease-in-out z-[51] ${
             isMobileMenuOpen
               ? 'opacity-100 pointer-events-auto'
               : 'opacity-0 pointer-events-none'
@@ -202,9 +202,9 @@ export default function Navigation({
           aria-hidden="true"
         />
 
-        {/* Mobile menu - z-[51] to appear above backdrop */}
+        {/* Mobile menu - z-[52] to appear above backdrop */}
         <div
-          className={`md:hidden fixed top-[72px] left-0 right-0 z-[51] transition-all duration-300 ease-in-out ${
+          className={`md:hidden fixed top-[72px] left-0 right-0 z-[52] transition-all duration-300 ease-in-out ${
             isMobileMenuOpen
               ? 'translate-y-0 opacity-100 pointer-events-auto'
               : '-translate-y-4 opacity-0 pointer-events-none'
