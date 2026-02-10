@@ -7,6 +7,9 @@ import { TimeGapInfo, formatTimeGap } from '@/lib/chatroom/local-storage';
 import { PERSONAS } from '@/lib/chatroom/personas';
 import ChatMessage from './ChatMessage';
 import TypingIndicator from './TypingIndicator';
+import StreamingIndicator from './StreamingIndicator';
+import MobileStreamingIndicator from './MobileStreamingIndicator';
+import ConnectionStatusIndicator from './ConnectionStatusIndicator';
 import PhaseIndicator from './PhaseIndicator';
 import TimeGapIndicator from './TimeGapIndicator';
 import ChatroomControls from './ChatroomControls';
@@ -209,16 +212,10 @@ export default function ChatRoom({
       {/* Phase indicator bar */}
       <PhaseIndicator phase={phase} cooldownEndsAt={cooldownEndsAt} />
 
-      {/* Connection status */}
-      {!isConnected && (
-        <div
-          className="px-3 py-2 sm:py-1 bg-yellow-500/10 border-b border-yellow-500/20 text-xs sm:text-xs text-yellow-400"
-          role="status"
-          aria-live="polite"
-        >
-          Reconnecting...
-        </div>
-      )}
+      {/* Enhanced Connection status indicator */}
+      <div className="px-3 py-2">
+        <ConnectionStatusIndicator isConnected={isConnected} />
+      </div>
 
       {/* Message area - Responsive height */}
       <div
@@ -309,14 +306,30 @@ export default function ChatRoom({
           </div>
         ))}
 
-        {/* Typing indicator */}
+        {/* Responsive Streaming indicator */}
         <AnimatePresence>
           {typingPersona && (
-            <TypingIndicator
-              personaId={typingPersona.id}
-              handle={typingPersona.handle}
-              avatar={typingPersona.avatar}
-            />
+            <>
+              {/* Desktop/Tablet */}
+              <div className="hidden sm:block">
+                <StreamingIndicator
+                  personaId={typingPersona.id}
+                  handle={typingPersona.handle}
+                  avatar={typingPersona.avatar}
+                  isActive={true}
+                  className="mx-4"
+                />
+              </div>
+              {/* Mobile */}
+              <div className="block sm:hidden">
+                <MobileStreamingIndicator
+                  personaId={typingPersona.id}
+                  handle={typingPersona.handle}
+                  avatar={typingPersona.avatar}
+                  isActive={true}
+                />
+              </div>
+            </>
           )}
         </AnimatePresence>
       </div>

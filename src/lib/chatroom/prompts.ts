@@ -92,14 +92,14 @@ BTC holding 44k support cleanly, volume profile showing accumulation with $28B i
   const userPrompt = `Recent chat:
 ${formatRecentMessages(recentMessages)}
 
-Your turn to speak. React to what others have said, add your perspective using the market data provided, or bring up something new. Stay concise (2-4 sentences max). Remember to end with [SENTIMENT: ..., CONFIDENCE: ...].
+Your turn to speak. React to what others have said, add your perspective using the market data provided, or bring up something new. CRITICAL: Keep your response under 280 characters — tweet-length only. Be punchy and direct. No filler words. One clear point per message. Remember to end with [SENTIMENT: ..., CONFIDENCE: ...].
 
 Guidelines:
 - Cite specific numbers from the market data (prices, percentages, volumes)
 - If you disagree with someone, explain why using data
 - If the data supports your view, highlight the key metrics
 - Be willing to acknowledge strong arguments from others if your conviction is low
-- If there's a previous debate summary, build on those arguments or counter them with new data`;
+- If there's a previous debate summary, build on those arguments or counter them with new data`
 
   return JSON.stringify({ systemPrompt, userPrompt });
 }
@@ -115,7 +115,7 @@ You are in a crypto chat room during a chill period. A trade signal just fired a
   const userPrompt = `Recent chat:
 ${formatRecentMessages(recentMessages)}
 
-Your turn. Keep it casual and fun. 1-3 sentences. No market analysis or sentiment tags.`;
+Your turn. Keep it casual and fun. CRITICAL: Keep your response under 280 characters — tweet-length only. Be punchy and direct. No market analysis or sentiment tags.`;
 
   return JSON.stringify({ systemPrompt, userPrompt });
 }
@@ -149,14 +149,14 @@ export function buildConsensusPrompt(
 
 ${marketContext}${debateContextSection}
 
-The chat room has reached a ${consensusDirection.toUpperCase()} consensus with ${consensusStrength}% agreement. The debate phase is concluding. React to the consensus — do you agree with the group's assessment? Did the market data support this conclusion? Reference specific arguments from the debate context if provided. Stay in character. Be brief (1-2 sentences).
+The chat room has reached a ${consensusDirection.toUpperCase()} consensus with ${consensusStrength}% agreement. The debate phase is concluding. React to the consensus — do you agree with the group's assessment? Did the market data support this conclusion? Reference specific arguments from the debate context if provided. Stay in character. CRITICAL: Keep your response under 280 characters — tweet-length only. Be punchy and direct.
 
 End with [SENTIMENT: ${consensusDirection}, CONFIDENCE: ${consensusStrength}]`;
 
   const userPrompt = `Recent chat:
 ${formatRecentMessages(recentMessages)}
 
-The room has reached consensus: ${consensusDirection.toUpperCase()} (${consensusStrength}% strength). Give your final thoughts on whether this consensus is justified by the data and debate arguments. 1-2 sentences max.`;
+The room has reached consensus: ${consensusDirection.toUpperCase()} (${consensusStrength}% strength). Give your final thoughts on whether this consensus is justified by the data and debate arguments. CRITICAL: Keep your response under 280 characters — tweet-length only. Be punchy and direct.`;
 
   return JSON.stringify({ systemPrompt, userPrompt });
 }
@@ -258,7 +258,7 @@ ${formatRecentMessages(recentMessages)}
 
 You've been ${oldStance}, but you're now shifting to ${newStance} because: ${reason}
 
-Express this shift naturally in your character's voice. 2-3 sentences max. Reference the specific data that changed your mind.`;
+Express this shift naturally in your character's voice. CRITICAL: Keep your response under 280 characters — tweet-length only. Be punchy and direct. Reference the specific data that changed your mind.`;
 
   return JSON.stringify({ systemPrompt, userPrompt });
 }
