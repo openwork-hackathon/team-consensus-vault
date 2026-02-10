@@ -1,0 +1,684 @@
+{
+  "timestamp": "2026-02-10T02:21:23.982Z",
+  "baseUrl": "http://localhost:3000",
+  "pages": {
+    "/": {
+      "url": "/",
+      "name": "Landing",
+      "breakpoints": {
+        "mobile-320": {
+          "viewport": {
+            "name": "mobile-320",
+            "width": 320,
+            "height": 568,
+            "category": "mobile"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/landing-mobile-320.png",
+          "issueCount": 0
+        },
+        "mobile-375": {
+          "viewport": {
+            "name": "mobile-375",
+            "width": 375,
+            "height": 667,
+            "category": "mobile"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/landing-mobile-375.png",
+          "issueCount": 0
+        },
+        "mobile-414": {
+          "viewport": {
+            "name": "mobile-414",
+            "width": 414,
+            "height": 896,
+            "category": "mobile"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/landing-mobile-414.png",
+          "issueCount": 0
+        },
+        "tablet-768": {
+          "viewport": {
+            "name": "tablet-768",
+            "width": 768,
+            "height": 1024,
+            "category": "tablet"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/landing-tablet-768.png",
+          "issueCount": 0
+        },
+        "tablet-1024": {
+          "viewport": {
+            "name": "tablet-1024",
+            "width": 1024,
+            "height": 768,
+            "category": "tablet"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/landing-tablet-1024.png",
+          "issueCount": 0
+        },
+        "desktop-1280": {
+          "viewport": {
+            "name": "desktop-1280",
+            "width": 1280,
+            "height": 800,
+            "category": "desktop"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/landing-desktop-1280.png",
+          "issueCount": 0
+        },
+        "desktop-1920": {
+          "viewport": {
+            "name": "desktop-1920",
+            "width": 1920,
+            "height": 1080,
+            "category": "desktop"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/landing-desktop-1920.png",
+          "issueCount": 0
+        }
+      },
+      "totalIssues": 0
+    },
+    "/arena": {
+      "url": "/arena",
+      "name": "Arena",
+      "breakpoints": {
+        "mobile-320": {
+          "viewport": {
+            "name": "mobile-320",
+            "width": 320,
+            "height": 568,
+            "category": "mobile"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/arena-mobile-320.png",
+          "issueCount": 0
+        },
+        "mobile-375": {
+          "viewport": {
+            "name": "mobile-375",
+            "width": 375,
+            "height": 667,
+            "category": "mobile"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/arena-mobile-375.png",
+          "issueCount": 0
+        },
+        "mobile-414": {
+          "viewport": {
+            "name": "mobile-414",
+            "width": 414,
+            "height": 896,
+            "category": "mobile"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/arena-mobile-414.png",
+          "issueCount": 0
+        },
+        "tablet-768": {
+          "viewport": {
+            "name": "tablet-768",
+            "width": 768,
+            "height": 1024,
+            "category": "tablet"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/arena-tablet-768.png",
+          "issueCount": 0
+        },
+        "tablet-1024": {
+          "viewport": {
+            "name": "tablet-1024",
+            "width": 1024,
+            "height": 768,
+            "category": "tablet"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/arena-tablet-1024.png",
+          "issueCount": 0
+        },
+        "desktop-1280": {
+          "viewport": {
+            "name": "desktop-1280",
+            "width": 1280,
+            "height": 800,
+            "category": "desktop"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/arena-desktop-1280.png",
+          "issueCount": 0
+        },
+        "desktop-1920": {
+          "viewport": {
+            "name": "desktop-1920",
+            "width": 1920,
+            "height": 1080,
+            "category": "desktop"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/arena-desktop-1920.png",
+          "issueCount": 0
+        }
+      },
+      "totalIssues": 0
+    },
+    "/chatroom": {
+      "url": "/chatroom",
+      "name": "Chatroom",
+      "breakpoints": {
+        "mobile-320": {
+          "viewport": {
+            "name": "mobile-320",
+            "width": 320,
+            "height": 568,
+            "category": "mobile"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/chatroom-mobile-320.png",
+          "issueCount": 0
+        },
+        "mobile-375": {
+          "viewport": {
+            "name": "mobile-375",
+            "width": 375,
+            "height": 667,
+            "category": "mobile"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/chatroom-mobile-375.png",
+          "issueCount": 0
+        },
+        "mobile-414": {
+          "viewport": {
+            "name": "mobile-414",
+            "width": 414,
+            "height": 896,
+            "category": "mobile"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/chatroom-mobile-414.png",
+          "issueCount": 0
+        },
+        "tablet-768": {
+          "viewport": {
+            "name": "tablet-768",
+            "width": 768,
+            "height": 1024,
+            "category": "tablet"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/chatroom-tablet-768.png",
+          "issueCount": 0
+        },
+        "tablet-1024": {
+          "viewport": {
+            "name": "tablet-1024",
+            "width": 1024,
+            "height": 768,
+            "category": "tablet"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/chatroom-tablet-1024.png",
+          "issueCount": 0
+        },
+        "desktop-1280": {
+          "viewport": {
+            "name": "desktop-1280",
+            "width": 1280,
+            "height": 800,
+            "category": "desktop"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/chatroom-desktop-1280.png",
+          "issueCount": 0
+        },
+        "desktop-1920": {
+          "viewport": {
+            "name": "desktop-1920",
+            "width": 1920,
+            "height": 1080,
+            "category": "desktop"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/chatroom-desktop-1920.png",
+          "issueCount": 0
+        }
+      },
+      "totalIssues": 0
+    },
+    "/predict": {
+      "url": "/predict",
+      "name": "Predict",
+      "breakpoints": {
+        "mobile-320": {
+          "viewport": {
+            "name": "mobile-320",
+            "width": 320,
+            "height": 568,
+            "category": "mobile"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/predict-mobile-320.png",
+          "issueCount": 0
+        },
+        "mobile-375": {
+          "viewport": {
+            "name": "mobile-375",
+            "width": 375,
+            "height": 667,
+            "category": "mobile"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/predict-mobile-375.png",
+          "issueCount": 0
+        },
+        "mobile-414": {
+          "viewport": {
+            "name": "mobile-414",
+            "width": 414,
+            "height": 896,
+            "category": "mobile"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/predict-mobile-414.png",
+          "issueCount": 0
+        },
+        "tablet-768": {
+          "viewport": {
+            "name": "tablet-768",
+            "width": 768,
+            "height": 1024,
+            "category": "tablet"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/predict-tablet-768.png",
+          "issueCount": 0
+        },
+        "tablet-1024": {
+          "viewport": {
+            "name": "tablet-1024",
+            "width": 1024,
+            "height": 768,
+            "category": "tablet"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/predict-tablet-1024.png",
+          "issueCount": 0
+        },
+        "desktop-1280": {
+          "viewport": {
+            "name": "desktop-1280",
+            "width": 1280,
+            "height": 800,
+            "category": "desktop"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/predict-desktop-1280.png",
+          "issueCount": 0
+        },
+        "desktop-1920": {
+          "viewport": {
+            "name": "desktop-1920",
+            "width": 1920,
+            "height": 1080,
+            "category": "desktop"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/predict-desktop-1920.png",
+          "issueCount": 0
+        }
+      },
+      "totalIssues": 0
+    },
+    "/rounds": {
+      "url": "/rounds",
+      "name": "Rounds",
+      "breakpoints": {
+        "mobile-320": {
+          "viewport": {
+            "name": "mobile-320",
+            "width": 320,
+            "height": 568,
+            "category": "mobile"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/rounds-mobile-320.png",
+          "issueCount": 0
+        },
+        "mobile-375": {
+          "viewport": {
+            "name": "mobile-375",
+            "width": 375,
+            "height": 667,
+            "category": "mobile"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/rounds-mobile-375.png",
+          "issueCount": 0
+        },
+        "mobile-414": {
+          "viewport": {
+            "name": "mobile-414",
+            "width": 414,
+            "height": 896,
+            "category": "mobile"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/rounds-mobile-414.png",
+          "issueCount": 0
+        },
+        "tablet-768": {
+          "viewport": {
+            "name": "tablet-768",
+            "width": 768,
+            "height": 1024,
+            "category": "tablet"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/rounds-tablet-768.png",
+          "issueCount": 0
+        },
+        "tablet-1024": {
+          "viewport": {
+            "name": "tablet-1024",
+            "width": 1024,
+            "height": 768,
+            "category": "tablet"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/rounds-tablet-1024.png",
+          "issueCount": 0
+        },
+        "desktop-1280": {
+          "viewport": {
+            "name": "desktop-1280",
+            "width": 1280,
+            "height": 800,
+            "category": "desktop"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/rounds-desktop-1280.png",
+          "issueCount": 0
+        },
+        "desktop-1920": {
+          "viewport": {
+            "name": "desktop-1920",
+            "width": 1920,
+            "height": 1080,
+            "category": "desktop"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/rounds-desktop-1920.png",
+          "issueCount": 0
+        }
+      },
+      "totalIssues": 0
+    },
+    "/enhanced-consensus": {
+      "url": "/enhanced-consensus",
+      "name": "Enhanced Consensus",
+      "breakpoints": {
+        "mobile-320": {
+          "viewport": {
+            "name": "mobile-320",
+            "width": 320,
+            "height": 568,
+            "category": "mobile"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/enhanced-consensus-mobile-320.png",
+          "issueCount": 0
+        },
+        "mobile-375": {
+          "viewport": {
+            "name": "mobile-375",
+            "width": 375,
+            "height": 667,
+            "category": "mobile"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/enhanced-consensus-mobile-375.png",
+          "issueCount": 0
+        },
+        "mobile-414": {
+          "viewport": {
+            "name": "mobile-414",
+            "width": 414,
+            "height": 896,
+            "category": "mobile"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/enhanced-consensus-mobile-414.png",
+          "issueCount": 0
+        },
+        "tablet-768": {
+          "viewport": {
+            "name": "tablet-768",
+            "width": 768,
+            "height": 1024,
+            "category": "tablet"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/enhanced-consensus-tablet-768.png",
+          "issueCount": 0
+        },
+        "tablet-1024": {
+          "viewport": {
+            "name": "tablet-1024",
+            "width": 1024,
+            "height": 768,
+            "category": "tablet"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/enhanced-consensus-tablet-1024.png",
+          "issueCount": 0
+        },
+        "desktop-1280": {
+          "viewport": {
+            "name": "desktop-1280",
+            "width": 1280,
+            "height": 800,
+            "category": "desktop"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/enhanced-consensus-desktop-1280.png",
+          "issueCount": 0
+        },
+        "desktop-1920": {
+          "viewport": {
+            "name": "desktop-1920",
+            "width": 1920,
+            "height": 1080,
+            "category": "desktop"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/enhanced-consensus-desktop-1920.png",
+          "issueCount": 0
+        }
+      },
+      "totalIssues": 0
+    },
+    "/human-chat": {
+      "url": "/human-chat",
+      "name": "Human Chat",
+      "breakpoints": {
+        "mobile-320": {
+          "viewport": {
+            "name": "mobile-320",
+            "width": 320,
+            "height": 568,
+            "category": "mobile"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/human-chat-mobile-320.png",
+          "issueCount": 0
+        },
+        "mobile-375": {
+          "viewport": {
+            "name": "mobile-375",
+            "width": 375,
+            "height": 667,
+            "category": "mobile"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/human-chat-mobile-375.png",
+          "issueCount": 0
+        },
+        "mobile-414": {
+          "viewport": {
+            "name": "mobile-414",
+            "width": 414,
+            "height": 896,
+            "category": "mobile"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/human-chat-mobile-414.png",
+          "issueCount": 0
+        },
+        "tablet-768": {
+          "viewport": {
+            "name": "tablet-768",
+            "width": 768,
+            "height": 1024,
+            "category": "tablet"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/human-chat-tablet-768.png",
+          "issueCount": 0
+        },
+        "tablet-1024": {
+          "viewport": {
+            "name": "tablet-1024",
+            "width": 1024,
+            "height": 768,
+            "category": "tablet"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/human-chat-tablet-1024.png",
+          "issueCount": 0
+        },
+        "desktop-1280": {
+          "viewport": {
+            "name": "desktop-1280",
+            "width": 1280,
+            "height": 800,
+            "category": "desktop"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/human-chat-desktop-1280.png",
+          "issueCount": 0
+        },
+        "desktop-1920": {
+          "viewport": {
+            "name": "desktop-1920",
+            "width": 1920,
+            "height": 1080,
+            "category": "desktop"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/human-chat-desktop-1920.png",
+          "issueCount": 0
+        }
+      },
+      "totalIssues": 0
+    },
+    "/admin/moderation": {
+      "url": "/admin/moderation",
+      "name": "Admin Moderation",
+      "breakpoints": {
+        "mobile-320": {
+          "viewport": {
+            "name": "mobile-320",
+            "width": 320,
+            "height": 568,
+            "category": "mobile"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/admin-moderation-mobile-320.png",
+          "issueCount": 0
+        },
+        "mobile-375": {
+          "viewport": {
+            "name": "mobile-375",
+            "width": 375,
+            "height": 667,
+            "category": "mobile"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/admin-moderation-mobile-375.png",
+          "issueCount": 0
+        },
+        "mobile-414": {
+          "viewport": {
+            "name": "mobile-414",
+            "width": 414,
+            "height": 896,
+            "category": "mobile"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/admin-moderation-mobile-414.png",
+          "issueCount": 0
+        },
+        "tablet-768": {
+          "viewport": {
+            "name": "tablet-768",
+            "width": 768,
+            "height": 1024,
+            "category": "tablet"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/admin-moderation-tablet-768.png",
+          "issueCount": 0
+        },
+        "tablet-1024": {
+          "viewport": {
+            "name": "tablet-1024",
+            "width": 1024,
+            "height": 768,
+            "category": "tablet"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/admin-moderation-tablet-1024.png",
+          "issueCount": 0
+        },
+        "desktop-1280": {
+          "viewport": {
+            "name": "desktop-1280",
+            "width": 1280,
+            "height": 800,
+            "category": "desktop"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/admin-moderation-desktop-1280.png",
+          "issueCount": 0
+        },
+        "desktop-1920": {
+          "viewport": {
+            "name": "desktop-1920",
+            "width": 1920,
+            "height": 1080,
+            "category": "desktop"
+          },
+          "issues": [],
+          "screenshot": "/home/shazbot/team-consensus-vault/docs/mobile-test-screenshots/admin-moderation-desktop-1920.png",
+          "issueCount": 0
+        }
+      },
+      "totalIssues": 0
+    }
+  },
+  "summary": {
+    "totalIssues": 0,
+    "criticalIssues": 0,
+    "mediumIssues": 0,
+    "lowIssues": 0
+  }
+}
