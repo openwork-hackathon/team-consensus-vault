@@ -242,7 +242,7 @@ export default function ArenaPage() {
             )}
 
             {/* Human Chat Messages */}
-            <div className="flex-1 bg-card rounded-lg border border-border overflow-hidden flex flex-col min-h-[400px]">
+            <div className="flex-1 bg-card rounded-lg border border-border overflow-hidden flex flex-col max-h-[520px]">
               {/* Messages Area */}
               <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
                 {humanMessages.length === 0 && (
