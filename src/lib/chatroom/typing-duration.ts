@@ -135,7 +135,7 @@ export function getPersonaMessageLengthRange(persona: Persona): { min: number; m
     'just_a_plumber': { min: 120, max: 300 }, // Folksy stories
     'liquidation_larry': { min: 80, max: 200 }, // Direct
     'sats_stacker': { min: 80, max: 180 },  // Simple, consistent
-    'ico_veteran': { min: 120, max: 280 },  // Skeptical commentary
+    'ico_veteran': { min: 120, max: 280 },  // Skeptical commentary, capped at 280
     'wyckoff_wizard': { min: 100, max: 220 }, // Technical terms
     'uncle_bags': { min: 120, max: 280 },   // War stories
     '0xviv': { min: 120, max: 260 },        // Data-heavy
@@ -151,7 +151,7 @@ export function getPersonaMessageLengthRange(persona: Persona): { min: number; m
     'meme_lord_marcus': { min: 100, max: 200 }, // Meme references
     'doomer_dave': { min: 100, max: 220 },  // Pessimistic
     'shill_detector': { min: 100, max: 240 }, // Exposés
-    'ozymandias': { min: 140, max: 320 },   // Philosophical
+    'ozymandias': { min: 140, max: 280 },   // Philosophical, capped at 280
     'gas_goblin': { min: 80, max: 180 },    // Quick observations
     'hodljenny': { min: 80, max: 180 },     // Zen simplicity
     'arb_sam': { min: 100, max: 220 },      // Arbitrage details
