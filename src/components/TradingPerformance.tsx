@@ -16,15 +16,21 @@ export default function TradingPerformance({ className = '' }: TradingPerformanc
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchTradingHistory();
+    const abortController = new AbortController();
+
+    fetchTradingHistory(abortController.signal);
     // Refresh every 30 seconds
-    const interval = setInterval(fetchTradingHistory, 30000);
-    return () => clearInterval(interval);
+    const interval = setInterval(() => fetchTradingHistory(), 30000);
+
+    return () => {
+      abortController.abort();
+      clearInterval(interval);
+    };
   }, []);
 
-  const fetchTradingHistory = async () => {
+  const fetchTradingHistory = async (signal?: AbortSignal) => {
     try {
-      const response = await fetch('/api/trading/history');
+      const response = await fetch('/api/trading/history', { signal });
       const data = await response.json();
 
       if (data.success) {
@@ -35,6 +41,8 @@ export default function TradingPerformance({ className = '' }: TradingPerformanc
         setError(data.error || 'Failed to fetch trading history');
       }
     } catch (err) {
+      // Ignore abort errors (component unmounted or request cancelled)
+      if (err instanceof Error && err.name === 'AbortError') return;
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoading(false);
@@ -295,7 +303,7 @@ export default function TradingPerformance({ className = '' }: TradingPerformanc
       {/* Refresh Button */}
       <div className="mt-4 text-center">
         <button
-          onClick={fetchTradingHistory}
+          onClick={() => fetchTradingHistory()}
           className="text-sm text-muted-foreground hover:text-foreground transition-colors touch-manipulation px-4 py-2"
         >
           Refresh

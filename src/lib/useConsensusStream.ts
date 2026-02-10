@@ -317,16 +317,25 @@ export function useConsensusStream(apiEndpoint: string = '/api/consensus') {
 
   // Try to detect if SSE endpoint is available on mount
   useEffect(() => {
-    fetch(apiEndpoint, { method: 'HEAD' })
+    const abortController = new AbortController();
+
+    fetch(apiEndpoint, {
+      method: 'HEAD',
+      signal: abortController.signal
+    })
       .then(response => {
         if (response.ok) {
           setUseSSE(true);
         }
       })
-      .catch(() => {
+      .catch((error) => {
+        // Ignore abort errors (component unmounted)
+        if (error.name === 'AbortError') return;
         // SSE endpoint not available, use mock data
         console.log('SSE endpoint not available, using mock data');
       });
+
+    return () => abortController.abort();
   }, [apiEndpoint]);
 
   return { ...consensusData, sseError, progressUpdates };

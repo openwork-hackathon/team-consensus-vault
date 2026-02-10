@@ -220,7 +220,8 @@ export function useChatroomStream(): ChatroomStreamState & ChatroomStreamActions
       console.log(`[chatroom] Fetching summary for ${missedMessages.length} missed messages`);
       setIsFetchingSummary(true);
 
-      // Call the summarize API
+      // Call the summarize API with AbortController
+      const abortController = new AbortController();
       const response = await fetch('/api/chatroom/summarize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -235,6 +236,7 @@ export function useChatroomStream(): ChatroomStreamState & ChatroomStreamActions
               }
             : null,
         }),
+        signal: abortController.signal,
       });
 
       if (!response.ok) {

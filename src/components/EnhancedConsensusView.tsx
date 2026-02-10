@@ -62,7 +62,10 @@ export default function EnhancedConsensusView() {
       const params = new URLSearchParams({ asset });
       if (context) params.append('context', context);
 
-      const response = await fetch(`/api/consensus-enhanced?${params}`);
+      const abortController = new AbortController();
+      const response = await fetch(`/api/consensus-enhanced?${params}`, {
+        signal: abortController.signal,
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -72,6 +75,8 @@ export default function EnhancedConsensusView() {
       const data = await response.json();
       setResult(data);
     } catch (err) {
+      // Ignore abort errors (component unmounted or request cancelled)
+      if (err instanceof Error && err.name === 'AbortError') return;
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoading(false);

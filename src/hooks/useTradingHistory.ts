@@ -26,9 +26,9 @@ export function useTradingHistory(refreshInterval: number = 30000) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchHistory = useCallback(async () => {
+  const fetchHistory = useCallback(async (signal?: AbortSignal) => {
     try {
-      const response = await fetch('/api/trading/history');
+      const response = await fetch('/api/trading/history', { signal });
       const result = await response.json();
 
       if (result.success) {
@@ -42,6 +42,8 @@ export function useTradingHistory(refreshInterval: number = 30000) {
         setError(result.error || 'Failed to fetch trading history');
       }
     } catch (err) {
+      // Ignore abort errors (component unmounted or request cancelled)
+      if (err instanceof Error && err.name === 'AbortError') return;
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoading(false);
@@ -49,9 +51,18 @@ export function useTradingHistory(refreshInterval: number = 30000) {
   }, []);
 
   useEffect(() => {
-    fetchHistory();
-    const interval = setInterval(fetchHistory, refreshInterval);
-    return () => clearInterval(interval);
+    const abortController = new AbortController();
+
+    fetchHistory(abortController.signal);
+    const interval = setInterval(() => {
+      // Create a new AbortController for each interval fetch
+      fetchHistory();
+    }, refreshInterval);
+
+    return () => {
+      abortController.abort();
+      clearInterval(interval);
+    };
   }, [fetchHistory, refreshInterval]);
 
   return { data, loading, error, refetch: fetchHistory };

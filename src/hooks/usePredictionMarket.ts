@@ -91,7 +91,8 @@ export function usePredictionMarket(): PredictionMarketState {
 
     try {
       setError(null);
-      
+
+      const abortController = new AbortController();
       const response = await fetch('/api/prediction-market/bet', {
         method: 'POST',
         headers: {
@@ -102,6 +103,7 @@ export function usePredictionMarket(): PredictionMarketState {
           direction,
           amount,
         }),
+        signal: abortController.signal,
       });
 
       if (!response.ok) {
@@ -110,13 +112,15 @@ export function usePredictionMarket(): PredictionMarketState {
       }
 
       const betData = await response.json();
-      
+
       // Track the bet to prevent multiple bets
       setUserBets(prev => new Set(prev).add(round.id));
-      
+
       console.log('[prediction-market] Bet placed successfully:', betData);
-      
+
     } catch (e) {
+      // Ignore abort errors (component unmounted or request cancelled)
+      if (e instanceof Error && e.name === 'AbortError') return;
       const errorMessage = e instanceof Error ? e.message : 'Unknown error occurred';
       setError(errorMessage);
       throw e;

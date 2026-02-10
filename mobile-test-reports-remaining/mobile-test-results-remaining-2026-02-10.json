@@ -1,0 +1,506 @@
+{
+  "timestamp": "2026-02-10T02:31:39.538Z",
+  "baseUrl": "http://localhost:3000",
+  "pages": {
+    "/chatroom": {
+      "url": "/chatroom",
+      "breakpoints": {
+        "mobile-320": {
+          "viewport": {
+            "name": "mobile-320",
+            "width": 320,
+            "height": 568
+          },
+          "issues": [
+            {
+              "type": "missing_mobile_nav",
+              "severity": "major",
+              "description": "No hamburger menu detected for mobile navigation",
+              "component": "Navigation",
+              "breakpoint": "mobile-320"
+            },
+            {
+              "type": "missing_streaming_indicators",
+              "severity": "minor",
+              "description": "No SSE streaming indicators detected in chatroom",
+              "component": "Chatroom",
+              "breakpoint": "mobile-320"
+            }
+          ],
+          "screenshot": "/home/shazbot/team-consensus-vault/mobile-test-screenshots-remaining/chatroom-mobile-320-320x568.png",
+          "issueCount": 2,
+          "redirected": false,
+          "finalUrl": "http://localhost:3000/chatroom"
+        },
+        "mobile-375": {
+          "viewport": {
+            "name": "mobile-375",
+            "width": 375,
+            "height": 667
+          },
+          "issues": [
+            {
+              "type": "missing_mobile_nav",
+              "severity": "major",
+              "description": "No hamburger menu detected for mobile navigation",
+              "component": "Navigation",
+              "breakpoint": "mobile-375"
+            },
+            {
+              "type": "missing_streaming_indicators",
+              "severity": "minor",
+              "description": "No SSE streaming indicators detected in chatroom",
+              "component": "Chatroom",
+              "breakpoint": "mobile-375"
+            }
+          ],
+          "screenshot": "/home/shazbot/team-consensus-vault/mobile-test-screenshots-remaining/chatroom-mobile-375-375x667.png",
+          "issueCount": 2,
+          "redirected": false,
+          "finalUrl": "http://localhost:3000/chatroom"
+        },
+        "mobile-390": {
+          "viewport": {
+            "name": "mobile-390",
+            "width": 390,
+            "height": 844
+          },
+          "issues": [
+            {
+              "type": "missing_mobile_nav",
+              "severity": "major",
+              "description": "No hamburger menu detected for mobile navigation",
+              "component": "Navigation",
+              "breakpoint": "mobile-390"
+            },
+            {
+              "type": "missing_streaming_indicators",
+              "severity": "minor",
+              "description": "No SSE streaming indicators detected in chatroom",
+              "component": "Chatroom",
+              "breakpoint": "mobile-390"
+            }
+          ],
+          "screenshot": "/home/shazbot/team-consensus-vault/mobile-test-screenshots-remaining/chatroom-mobile-390-390x844.png",
+          "issueCount": 2,
+          "redirected": false,
+          "finalUrl": "http://localhost:3000/chatroom"
+        },
+        "mobile-414": {
+          "viewport": {
+            "name": "mobile-414",
+            "width": 414,
+            "height": 896
+          },
+          "issues": [
+            {
+              "type": "missing_mobile_nav",
+              "severity": "major",
+              "description": "No hamburger menu detected for mobile navigation",
+              "component": "Navigation",
+              "breakpoint": "mobile-414"
+            },
+            {
+              "type": "missing_streaming_indicators",
+              "severity": "minor",
+              "description": "No SSE streaming indicators detected in chatroom",
+              "component": "Chatroom",
+              "breakpoint": "mobile-414"
+            }
+          ],
+          "screenshot": "/home/shazbot/team-consensus-vault/mobile-test-screenshots-remaining/chatroom-mobile-414-414x896.png",
+          "issueCount": 2,
+          "redirected": false,
+          "finalUrl": "http://localhost:3000/chatroom"
+        },
+        "tablet-768": {
+          "viewport": {
+            "name": "tablet-768",
+            "width": 768,
+            "height": 1024
+          },
+          "issues": [
+            {
+              "type": "missing_mobile_nav",
+              "severity": "major",
+              "description": "No hamburger menu detected for mobile navigation",
+              "component": "Navigation",
+              "breakpoint": "tablet-768"
+            },
+            {
+              "type": "missing_streaming_indicators",
+              "severity": "minor",
+              "description": "No SSE streaming indicators detected in chatroom",
+              "component": "Chatroom",
+              "breakpoint": "tablet-768"
+            }
+          ],
+          "screenshot": "/home/shazbot/team-consensus-vault/mobile-test-screenshots-remaining/chatroom-tablet-768-768x1024.png",
+          "issueCount": 2,
+          "redirected": false,
+          "finalUrl": "http://localhost:3000/chatroom"
+        }
+      },
+      "totalIssues": 10
+    },
+    "/human-chat": {
+      "url": "/human-chat",
+      "breakpoints": {
+        "mobile-320": {
+          "viewport": {
+            "name": "mobile-320",
+            "width": 320,
+            "height": 568
+          },
+          "issues": [
+            {
+              "type": "missing_mobile_nav",
+              "severity": "major",
+              "description": "No hamburger menu detected for mobile navigation",
+              "component": "Navigation",
+              "breakpoint": "mobile-320"
+            }
+          ],
+          "screenshot": "/home/shazbot/team-consensus-vault/mobile-test-screenshots-remaining/human-chat-mobile-320-320x568.png",
+          "issueCount": 1,
+          "redirected": false,
+          "finalUrl": "http://localhost:3000/human-chat"
+        },
+        "mobile-375": {
+          "viewport": {
+            "name": "mobile-375",
+            "width": 375,
+            "height": 667
+          },
+          "issues": [
+            {
+              "type": "missing_mobile_nav",
+              "severity": "major",
+              "description": "No hamburger menu detected for mobile navigation",
+              "component": "Navigation",
+              "breakpoint": "mobile-375"
+            }
+          ],
+          "screenshot": "/home/shazbot/team-consensus-vault/mobile-test-screenshots-remaining/human-chat-mobile-375-375x667.png",
+          "issueCount": 1,
+          "redirected": false,
+          "finalUrl": "http://localhost:3000/human-chat"
+        },
+        "mobile-390": {
+          "viewport": {
+            "name": "mobile-390",
+            "width": 390,
+            "height": 844
+          },
+          "issues": [
+            {
+              "type": "missing_mobile_nav",
+              "severity": "major",
+              "description": "No hamburger menu detected for mobile navigation",
+              "component": "Navigation",
+              "breakpoint": "mobile-390"
+            }
+          ],
+          "screenshot": "/home/shazbot/team-consensus-vault/mobile-test-screenshots-remaining/human-chat-mobile-390-390x844.png",
+          "issueCount": 1,
+          "redirected": false,
+          "finalUrl": "http://localhost:3000/human-chat"
+        },
+        "mobile-414": {
+          "viewport": {
+            "name": "mobile-414",
+            "width": 414,
+            "height": 896
+          },
+          "issues": [
+            {
+              "type": "missing_mobile_nav",
+              "severity": "major",
+              "description": "No hamburger menu detected for mobile navigation",
+              "component": "Navigation",
+              "breakpoint": "mobile-414"
+            }
+          ],
+          "screenshot": "/home/shazbot/team-consensus-vault/mobile-test-screenshots-remaining/human-chat-mobile-414-414x896.png",
+          "issueCount": 1,
+          "redirected": false,
+          "finalUrl": "http://localhost:3000/human-chat"
+        },
+        "tablet-768": {
+          "viewport": {
+            "name": "tablet-768",
+            "width": 768,
+            "height": 1024
+          },
+          "issues": [
+            {
+              "type": "missing_mobile_nav",
+              "severity": "major",
+              "description": "No hamburger menu detected for mobile navigation",
+              "component": "Navigation",
+              "breakpoint": "tablet-768"
+            }
+          ],
+          "screenshot": "/home/shazbot/team-consensus-vault/mobile-test-screenshots-remaining/human-chat-tablet-768-768x1024.png",
+          "issueCount": 1,
+          "redirected": false,
+          "finalUrl": "http://localhost:3000/human-chat"
+        }
+      },
+      "totalIssues": 5
+    },
+    "/enhanced-consensus": {
+      "url": "/enhanced-consensus",
+      "breakpoints": {
+        "mobile-320": {
+          "viewport": {
+            "name": "mobile-320",
+            "width": 320,
+            "height": 568
+          },
+          "issues": [
+            {
+              "type": "missing_mobile_nav",
+              "severity": "major",
+              "description": "No hamburger menu detected for mobile navigation",
+              "component": "Navigation",
+              "breakpoint": "mobile-320"
+            }
+          ],
+          "screenshot": "/home/shazbot/team-consensus-vault/mobile-test-screenshots-remaining/enhanced-consensus-mobile-320-320x568.png",
+          "issueCount": 1,
+          "redirected": false,
+          "finalUrl": "http://localhost:3000/enhanced-consensus"
+        },
+        "mobile-375": {
+          "viewport": {
+            "name": "mobile-375",
+            "width": 375,
+            "height": 667
+          },
+          "issues": [
+            {
+              "type": "missing_mobile_nav",
+              "severity": "major",
+              "description": "No hamburger menu detected for mobile navigation",
+              "component": "Navigation",
+              "breakpoint": "mobile-375"
+            }
+          ],
+          "screenshot": "/home/shazbot/team-consensus-vault/mobile-test-screenshots-remaining/enhanced-consensus-mobile-375-375x667.png",
+          "issueCount": 1,
+          "redirected": false,
+          "finalUrl": "http://localhost:3000/enhanced-consensus"
+        },
+        "mobile-390": {
+          "viewport": {
+            "name": "mobile-390",
+            "width": 390,
+            "height": 844
+          },
+          "issues": [
+            {
+              "type": "missing_mobile_nav",
+              "severity": "major",
+              "description": "No hamburger menu detected for mobile navigation",
+              "component": "Navigation",
+              "breakpoint": "mobile-390"
+            }
+          ],
+          "screenshot": "/home/shazbot/team-consensus-vault/mobile-test-screenshots-remaining/enhanced-consensus-mobile-390-390x844.png",
+          "issueCount": 1,
+          "redirected": false,
+          "finalUrl": "http://localhost:3000/enhanced-consensus"
+        },
+        "mobile-414": {
+          "viewport": {
+            "name": "mobile-414",
+            "width": 414,
+            "height": 896
+          },
+          "issues": [
+            {
+              "type": "missing_mobile_nav",
+              "severity": "major",
+              "description": "No hamburger menu detected for mobile navigation",
+              "component": "Navigation",
+              "breakpoint": "mobile-414"
+            }
+          ],
+          "screenshot": "/home/shazbot/team-consensus-vault/mobile-test-screenshots-remaining/enhanced-consensus-mobile-414-414x896.png",
+          "issueCount": 1,
+          "redirected": false,
+          "finalUrl": "http://localhost:3000/enhanced-consensus"
+        },
+        "tablet-768": {
+          "viewport": {
+            "name": "tablet-768",
+            "width": 768,
+            "height": 1024
+          },
+          "issues": [
+            {
+              "type": "missing_mobile_nav",
+              "severity": "major",
+              "description": "No hamburger menu detected for mobile navigation",
+              "component": "Navigation",
+              "breakpoint": "tablet-768"
+            }
+          ],
+          "screenshot": "/home/shazbot/team-consensus-vault/mobile-test-screenshots-remaining/enhanced-consensus-tablet-768-768x1024.png",
+          "issueCount": 1,
+          "redirected": false,
+          "finalUrl": "http://localhost:3000/enhanced-consensus"
+        }
+      },
+      "totalIssues": 5
+    },
+    "/admin/moderation": {
+      "url": "/admin/moderation",
+      "breakpoints": {
+        "mobile-320": {
+          "viewport": {
+            "name": "mobile-320",
+            "width": 320,
+            "height": 568
+          },
+          "issues": [
+            {
+              "type": "missing_mobile_nav",
+              "severity": "major",
+              "description": "No hamburger menu detected for mobile navigation",
+              "component": "Navigation",
+              "breakpoint": "mobile-320"
+            },
+            {
+              "type": "non_responsive_tables",
+              "severity": "major",
+              "description": "Admin tables may not be responsive on mobile",
+              "component": "Admin Panel",
+              "breakpoint": "mobile-320"
+            }
+          ],
+          "screenshot": "/home/shazbot/team-consensus-vault/mobile-test-screenshots-remaining/admin-moderation-mobile-320-320x568.png",
+          "issueCount": 2,
+          "redirected": false,
+          "finalUrl": "http://localhost:3000/admin/moderation"
+        },
+        "mobile-375": {
+          "viewport": {
+            "name": "mobile-375",
+            "width": 375,
+            "height": 667
+          },
+          "issues": [
+            {
+              "type": "missing_mobile_nav",
+              "severity": "major",
+              "description": "No hamburger menu detected for mobile navigation",
+              "component": "Navigation",
+              "breakpoint": "mobile-375"
+            },
+            {
+              "type": "non_responsive_tables",
+              "severity": "major",
+              "description": "Admin tables may not be responsive on mobile",
+              "component": "Admin Panel",
+              "breakpoint": "mobile-375"
+            }
+          ],
+          "screenshot": "/home/shazbot/team-consensus-vault/mobile-test-screenshots-remaining/admin-moderation-mobile-375-375x667.png",
+          "issueCount": 2,
+          "redirected": false,
+          "finalUrl": "http://localhost:3000/admin/moderation"
+        },
+        "mobile-390": {
+          "viewport": {
+            "name": "mobile-390",
+            "width": 390,
+            "height": 844
+          },
+          "issues": [
+            {
+              "type": "missing_mobile_nav",
+              "severity": "major",
+              "description": "No hamburger menu detected for mobile navigation",
+              "component": "Navigation",
+              "breakpoint": "mobile-390"
+            },
+            {
+              "type": "non_responsive_tables",
+              "severity": "major",
+              "description": "Admin tables may not be responsive on mobile",
+              "component": "Admin Panel",
+              "breakpoint": "mobile-390"
+            }
+          ],
+          "screenshot": "/home/shazbot/team-consensus-vault/mobile-test-screenshots-remaining/admin-moderation-mobile-390-390x844.png",
+          "issueCount": 2,
+          "redirected": false,
+          "finalUrl": "http://localhost:3000/admin/moderation"
+        },
+        "mobile-414": {
+          "viewport": {
+            "name": "mobile-414",
+            "width": 414,
+            "height": 896
+          },
+          "issues": [
+            {
+              "type": "missing_mobile_nav",
+              "severity": "major",
+              "description": "No hamburger menu detected for mobile navigation",
+              "component": "Navigation",
+              "breakpoint": "mobile-414"
+            },
+            {
+              "type": "non_responsive_tables",
+              "severity": "major",
+              "description": "Admin tables may not be responsive on mobile",
+              "component": "Admin Panel",
+              "breakpoint": "mobile-414"
+            }
+          ],
+          "screenshot": "/home/shazbot/team-consensus-vault/mobile-test-screenshots-remaining/admin-moderation-mobile-414-414x896.png",
+          "issueCount": 2,
+          "redirected": false,
+          "finalUrl": "http://localhost:3000/admin/moderation"
+        },
+        "tablet-768": {
+          "viewport": {
+            "name": "tablet-768",
+            "width": 768,
+            "height": 1024
+          },
+          "issues": [
+            {
+              "type": "missing_mobile_nav",
+              "severity": "major",
+              "description": "No hamburger menu detected for mobile navigation",
+              "component": "Navigation",
+              "breakpoint": "tablet-768"
+            },
+            {
+              "type": "non_responsive_tables",
+              "severity": "major",
+              "description": "Admin tables may not be responsive on mobile",
+              "component": "Admin Panel",
+              "breakpoint": "tablet-768"
+            }
+          ],
+          "screenshot": "/home/shazbot/team-consensus-vault/mobile-test-screenshots-remaining/admin-moderation-tablet-768-768x1024.png",
+          "issueCount": 2,
+          "redirected": false,
+          "finalUrl": "http://localhost:3000/admin/moderation"
+        }
+      },
+      "totalIssues": 10
+    }
+  },
+  "summary": {
+    "totalIssues": 30,
+    "criticalIssues": 0,
+    "majorIssues": 25,
+    "minorIssues": 5
+  }
+}
