@@ -11,6 +11,7 @@ import StreamingIndicator from './StreamingIndicator';
 import MobileStreamingIndicator from './MobileStreamingIndicator';
 import ConnectionStatusIndicator from './ConnectionStatusIndicator';
 import EnhancedStreamingIndicator from './EnhancedStreamingIndicator';
+import SSEStreamingIndicator from './SSEStreamingIndicator';
 import PhaseIndicator from './PhaseIndicator';
 import TimeGapIndicator from './TimeGapIndicator';
 import ChatroomControls from './ChatroomControls';
@@ -213,9 +214,9 @@ export default function ChatRoom({
       {/* Phase indicator bar */}
       <PhaseIndicator phase={phase} cooldownEndsAt={cooldownEndsAt} />
 
-      {/* Enhanced Streaming Indicator - Combines connection status and agent typing */}
-      <div className="px-3 py-2">
-        <EnhancedStreamingIndicator 
+      {/* CVAULT-215: SSE Streaming Indicator - Shows connection status and active agent */}
+      <div className="px-2 sm:px-3 py-2">
+        <SSEStreamingIndicator 
           isConnected={isConnected} 
           typingPersona={typingPersona}
         />
