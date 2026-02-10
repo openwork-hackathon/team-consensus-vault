@@ -184,7 +184,7 @@ export default function RoundsPage() {
 
         {/* Footer */}
         <footer className="mt-8 text-center text-sm text-muted-foreground">
-          <p>Real-time prediction market powered by AI consensus engine</p>
+          <p>Real-time prediction market powered by DeepSeek, Kimi, MiniMax, GLM, and Gemini</p>
         </footer>
       </div>
     </main>

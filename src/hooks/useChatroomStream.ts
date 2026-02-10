@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { ChatMessage as ChatMessageType, ChatPhase, MessageSentiment, ChatRoomState } from '@/lib/chatroom/types';
+import { ChatMessage as ChatMessageType, ChatPhase, MessageSentiment, ChatRoomState, ConsensusSnapshot } from '@/lib/chatroom/types';
 import {
   saveChatHistory,
   loadChatHistory,
@@ -40,6 +40,8 @@ interface ChatroomStreamState {
     messageCount: number;
     estimatedSize: number;
   };
+  // CVAULT-217: Consensus snapshots
+  consensusSnapshots: ConsensusSnapshot[];
 }
 
 interface ChatroomStreamActions {
@@ -72,6 +74,8 @@ export function useChatroomStream(): ChatroomStreamState & ChatroomStreamActions
     messageCount: 0,
     estimatedSize: 0,
   });
+  // CVAULT-217: Consensus snapshots state
+  const [consensusSnapshots, setConsensusSnapshots] = useState<ConsensusSnapshot[]>([]);
 
   const retryCountRef = useRef(0);
   const maxRetries = 5;
@@ -333,6 +337,12 @@ export function useChatroomStream(): ChatroomStreamState & ChatroomStreamActions
           if (data.phase) setPhase(data.phase);
           if (data.cooldownEndsAt) setCooldownEndsAt(data.cooldownEndsAt);
           
+          // CVAULT-217: Load consensus snapshots from history event
+          if (data.consensusSnapshots && Array.isArray(data.consensusSnapshots)) {
+            setConsensusSnapshots(data.consensusSnapshots);
+            console.log(`[chatroom] Loaded ${data.consensusSnapshots.length} consensus snapshots from history`);
+          }
+          
           // Save merged state
           if (data.phase && data.cooldownEndsAt) {
             const currentState: ChatRoomState = {
@@ -519,6 +529,7 @@ export function useChatroomStream(): ChatroomStreamState & ChatroomStreamActions
     missedSummary,
     isFetchingSummary,
     storageInfo,
+    consensusSnapshots,
     clearHistory,
     dismissTimeGap,
     refreshStorageInfo,

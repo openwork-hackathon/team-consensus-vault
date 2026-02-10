@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useChatroomStream } from '@/hooks/useChatroomStream';
 import ChatRoom from './ChatRoom';
 import PhaseIndicator from './PhaseIndicator';
@@ -90,6 +90,71 @@ export default function DualChatroom() {
     }
   });
 
+  // CVAULT-218: Prevent scroll-into-view behavior for chat input
+  useEffect(() => {
+    // Prevent default scroll-into-view behavior
+    const preventScrollIntoView = (e: Event) => {
+      const target = e.target as HTMLElement;
+      if (target && (target.id === 'human-message-input' || target.id === 'arena-chat-input')) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+
+        // Ensure scroll position doesn't change
+        requestAnimationFrame(() => {
+          window.scrollTo(window.scrollX, window.scrollY);
+        });
+      }
+    };
+
+    // Add event listeners to prevent scroll behavior
+    document.addEventListener('focusin', preventScrollIntoView, true);
+    document.addEventListener('focus', preventScrollIntoView, true);
+
+    return () => {
+      document.removeEventListener('focusin', preventScrollIntoView, true);
+      document.removeEventListener('focus', preventScrollIntoView, true);
+    };
+  }, []);
+
+  // CVAULT-218: Additional scroll prevention when input is focused
+  const handleInputFocus = useCallback((e: React.FocusEvent) => {
+    // Store current scroll position
+    const scrollX = window.scrollX || window.pageXOffset;
+    const scrollY = window.scrollY || window.pageYOffset;
+
+    // Prevent any scroll-into-view behavior
+    e.target.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+
+    // Force the input to stay in place
+    setTimeout(() => {
+      const input = document.getElementById('human-message-input') || document.getElementById('arena-chat-input');
+      if (input) {
+        input.style.scrollBehavior = 'auto';
+        input.style.scrollMargin = '0px';
+        input.style.scrollMarginTop = '0px';
+        input.style.scrollMarginBottom = '0px';
+      }
+
+      // Restore scroll position
+      window.scrollTo(scrollX, scrollY);
+    }, 0);
+  }, []);
+
+  // CVAULT-218: Prevent scroll on input change
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setNewMessage(e.target.value);
+
+    // Store scroll position before textarea resize
+    const scrollX = window.scrollX || window.pageXOffset;
+    const scrollY = window.scrollY || window.pageYOffset;
+
+    // Restore scroll position after React state update
+    requestAnimationFrame(() => {
+      window.scrollTo(scrollX, scrollY);
+    });
+  }, []);
+
   // Handle sending a human message
   const handleSendMessage = useCallback(() => {
     if (!newMessage.trim()) return;
@@ -119,10 +184,12 @@ export default function DualChatroom() {
     if (isMobileView) {
       setActiveTab('discussion');
     }
-    // Focus on message input
+    // Focus on message input without scrolling to keep it at bottom
     setTimeout(() => {
       const input = document.getElementById('human-message-input');
-      input?.focus();
+      if (input) {
+        input.focus({ preventScroll: true });
+      }
     }, 100);
   }, [isMobileView]);
 
@@ -282,7 +349,7 @@ export default function DualChatroom() {
               </div>
 
               {/* Message input */}
-              <div className="p-3 border-t border-border">
+              <div className="p-3 border-t border-border chat-input-container chat-input-mobile">
                 {selectedMessageToQuote && (
                   <div className="mb-2 p-2 bg-muted rounded text-sm flex justify-between items-center">
                     <div className="truncate">
@@ -303,11 +370,18 @@ export default function DualChatroom() {
                   <textarea
                     id="human-message-input"
                     value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
+                    onChange={handleInputChange}
                     onKeyDown={handleKeyPress}
+                    onFocus={handleInputFocus}
                     placeholder="Type your message here..."
                     className="flex-1 p-2 border border-border rounded-lg bg-background resize-none focus:outline-none focus:ring-2 focus:ring-primary"
                     rows={2}
+                    style={{
+                      scrollMargin: 0,
+                      scrollMarginTop: 0,
+                      scrollMarginBottom: 0,
+                      scrollBehavior: 'auto',
+                    }}
                   />
                   <button
                     onClick={handleSendMessage}
@@ -443,7 +517,7 @@ export default function DualChatroom() {
         </div>
 
         {/* Message input */}
-        <div className="p-4 border-t border-border bg-card/50">
+        <div className="p-4 border-t border-border bg-card/50 chat-input-container">
           {selectedMessageToQuote && (
             <div className="mb-3 p-3 bg-muted rounded text-sm flex justify-between items-center">
               <div className="flex-1">
@@ -465,11 +539,18 @@ export default function DualChatroom() {
             <textarea
               id="human-message-input"
               value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
+              onChange={handleInputChange}
               onKeyDown={handleKeyPress}
+              onFocus={handleInputFocus}
               placeholder="Type your message here... (Shift+Enter for new line, Enter to send)"
               className="flex-1 p-3 border border-border rounded-lg bg-background resize-none focus:outline-none focus:ring-2 focus:ring-primary"
               rows={3}
+              style={{
+                scrollMargin: 0,
+                scrollMarginTop: 0,
+                scrollMarginBottom: 0,
+                scrollBehavior: 'auto',
+              }}
             />
             <div className="flex flex-col gap-2">
               <button

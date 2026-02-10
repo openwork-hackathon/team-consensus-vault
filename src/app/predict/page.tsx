@@ -375,7 +375,7 @@ export default function PredictPage() {
                     <div>
                       <h3 className="font-semibold mb-1">Analysis</h3>
                       <p className="text-sm text-muted-foreground">
-                        Multiple AI models reach consensus on market direction. High agreement levels trigger a trading signal.
+                        DeepSeek, Kimi, MiniMax, GLM, and Gemini reach consensus on market direction. High agreement levels trigger a trading signal.
                       </p>
                     </div>
                   </div>

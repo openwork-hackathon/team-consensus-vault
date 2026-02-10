@@ -1,4 +1,4 @@
-import { ChatMessage, ChatRoomState, ChatPhase, MessageSentiment, DebateSummary } from './types';
+import { ChatMessage, ChatRoomState, ChatPhase, MessageSentiment, DebateSummary, ConsensusSnapshot } from './types';
 import { PERSONAS, PERSONAS_BY_ID } from './personas';
 import { callModelRaw } from './model-caller';
 import { ChatroomError, ChatroomErrorType, createUserFacingError } from './error-types';
@@ -7,7 +7,7 @@ import { calculateRollingConsensus } from './consensus-calc';
 import { fetchMarketData, MarketData } from './market-data';
 import { PersuasionStore, initializePersuasionState, PersuasionState } from './persuasion';
 import { extractDebateSummary, updateStanceChangeHandles } from './argument-extractor';
-import { getDebateSummary } from './kv-store';
+import { getDebateSummary, saveConsensusSnapshot, createConsensusSnapshot } from './kv-store';
 import { buildDebateContextForConsensus, DebateContextForConsensus } from './debate-consensus-bridge';
 import { ArgumentTracker } from './argument-tracker';
 
@@ -358,6 +358,21 @@ export async function generateNextMessage(
       const cooldownMinutes = COOLDOWN_MIN_MINUTES +
         Math.random() * (COOLDOWN_MAX_MINUTES - COOLDOWN_MIN_MINUTES);
       currentState.cooldownEndsAt = Date.now() + cooldownMinutes * 60 * 1000;
+
+      // CVAULT-217: Create and save consensus snapshot when consensus is reached
+      try {
+        // Create snapshot from all messages in this debate round
+        const snapshot = await createConsensusSnapshot(
+          [...history, message],
+          currentState,
+          'consensus_reached'
+        );
+        await saveConsensusSnapshot(snapshot);
+        console.log(`[CVAULT-217] Consensus snapshot saved: ${snapshot.consensusDirection} @ ${snapshot.consensusStrength}%`);
+      } catch (snapshotError) {
+        // Non-blocking error - log but don't break consensus flow
+        console.error('[CVAULT-217] Failed to save consensus snapshot:', snapshotError);
+      }
     }
 
     // Auto-transition from CONSENSUS to COOLDOWN after 2 messages in consensus phase

@@ -78,6 +78,32 @@ export interface DebateSummary {
   messageCount: number;
 }
 
+// CVAULT-217: Consensus snapshot for messages that age out of 1-hour window
+export interface ConsensusSnapshot {
+  id: string;
+  timestamp: number;
+  timestampRange: {
+    start: number;
+    end: number;
+  };
+  consensusDirection: MessageSentiment;
+  consensusStrength: number;
+  keyArgumentsSummary: {
+    bullish: string[];
+    bearish: string[];
+    neutral?: string[];
+  };
+  topPersonaContributions: Array<{
+    personaId: string;
+    handle: string;
+    messageCount: number;
+    primaryStance: MessageSentiment;
+    keyPoints: string[];
+  }>;
+  messageCount: number;
+  snapshotReason: 'time_window_rollover' | 'manual' | 'consensus_reached';
+}
+
 // CVAULT-190: Summary of a stance change during debate
 export interface StanceChangeSummary {
   personaId: string;
@@ -184,3 +210,15 @@ export interface ModerationStore {
   bannedUsers: Record<string, BannedUser>;
   moderationLog: ModerationAction[];
 }
+
+// CVAULT-217: Rolling history configuration
+export const ROLLING_HISTORY_CONFIG = {
+  // Messages older than this are pruned from rolling history
+  MAX_MESSAGE_AGE_MS: 60 * 60 * 1000, // 1 hour
+  // Maximum number of messages to keep (safety limit)
+  MAX_MESSAGES: 200,
+  // How often to run cleanup (ms)
+  CLEANUP_INTERVAL_MS: 5 * 60 * 1000, // 5 minutes
+  // Maximum number of consensus snapshots to keep
+  MAX_SNAPSHOTS: 24, // ~24 hours worth at 1 snapshot per hour
+} as const;

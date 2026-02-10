@@ -25,15 +25,26 @@ export default function HumanChatInput({
   const isOverLimit = charCount > MAX_CHARS;
 
   useEffect(() => {
-    // Auto-focus input on mount
+    // CVAULT-218: Auto-focus input on mount, but prevent scrolling to keep input at bottom
     if (inputRef.current && !disabled) {
-      inputRef.current.focus();
+      // Store current scroll position
+      const scrollX = window.scrollX || window.pageXOffset;
+      const scrollY = window.scrollY || window.pageYOffset;
+
+      inputRef.current.focus({
+        preventScroll: true
+      });
+
+      // Ensure scroll position hasn't changed
+      requestAnimationFrame(() => {
+        window.scrollTo(scrollX, scrollY);
+      });
     }
   }, [disabled]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!message.trim() || isRateLimited || isOverLimit || disabled) {
       return;
     }
@@ -41,10 +52,21 @@ export default function HumanChatInput({
     onSendMessage(message.trim());
     setMessage('');
     setCharCount(0);
-    
-    // Refocus input after sending
+
+    // CVAULT-218: Refocus input after sending, but prevent scrolling
     if (inputRef.current) {
-      inputRef.current.focus();
+      // Store current scroll position
+      const scrollX = window.scrollX || window.pageXOffset;
+      const scrollY = window.scrollY || window.pageYOffset;
+
+      inputRef.current.focus({
+        preventScroll: true
+      });
+
+      // Ensure scroll position hasn't changed
+      requestAnimationFrame(() => {
+        window.scrollTo(scrollX, scrollY);
+      });
     }
   };
 
@@ -59,6 +81,30 @@ export default function HumanChatInput({
     const value = e.target.value;
     setMessage(value);
     setCharCount(value.length);
+
+    // CVAULT-218: Auto-resize textarea without causing scroll
+    const target = e.target;
+    // Store current scroll position
+    const currentScroll = document.documentElement.scrollTop || document.body.scrollTop;
+    const currentScrollLeft = document.documentElement.scrollLeft || document.body.scrollLeft;
+
+    // Reset height to auto to get the correct scrollHeight
+    target.style.height = 'auto';
+    // Set new height based on content
+    target.style.height = `${Math.min(target.scrollHeight, 120)}px`;
+
+    // Restore scroll position to prevent viewport from moving
+    if (document.documentElement.scrollTop !== currentScroll) {
+      document.documentElement.scrollTop = currentScroll;
+      document.documentElement.scrollLeft = currentScrollLeft;
+    }
+    if (document.body.scrollTop !== currentScroll) {
+      document.body.scrollTop = currentScroll;
+      document.body.scrollLeft = currentScrollLeft;
+    }
+
+    // Prevent any scroll-into-view behavior
+    window.scrollTo(window.scrollX, window.scrollY);
   };
 
   // Format rate limit remaining time
@@ -115,8 +161,15 @@ export default function HumanChatInput({
               }}
               onInput={(e) => {
                 const target = e.target as HTMLTextAreaElement;
+                // CVAULT-218: Store scroll position before resize
+                const scrollX = window.scrollX || window.pageXOffset;
+                const scrollY = window.scrollY || window.pageYOffset;
+                // Reset height to auto to get the correct scrollHeight
                 target.style.height = 'auto';
+                // Set new height based on content
                 target.style.height = `${Math.min(target.scrollHeight, 120)}px`;
+                // Restore scroll position to prevent viewport from moving
+                window.scrollTo(scrollX, scrollY);
               }}
               aria-label="Message input"
               aria-describedby="char-count rate-limit-status"

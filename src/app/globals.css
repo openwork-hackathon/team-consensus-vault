@@ -80,6 +80,53 @@
     outline-offset: 2px;
   }
 
+  /* CVAULT-218: Prevent automatic scrolling when input elements are focused */
+  input:focus,
+  textarea:focus {
+    scroll-margin-top: 0 !important;
+    scroll-margin-bottom: 0 !important;
+    scroll-margin: 0 !important;
+  }
+
+  /* Prevent scroll anchoring for chat inputs */
+  textarea[aria-label="Message input"],
+  #human-message-input,
+  #arena-chat-input,
+  .chat-input-container textarea,
+  .chat-input-container input {
+    overflow-anchor: none;
+  }
+
+  /* Ensure chat input containers don't cause viewport scroll */
+  .chat-input-container {
+    position: relative;
+    z-index: 10;
+    overflow-anchor: none;
+    /* Prevent container from being scroll anchor */
+    overflow-anchor: none !important;
+  }
+
+  /* Prevent any scroll-into-view behavior for bottom-anchored inputs */
+  textarea[aria-label="Message input"],
+  #human-message-input,
+  #arena-chat-input,
+  .chat-input-container textarea {
+    scroll-behavior: auto !important;
+    scroll-margin: 0 !important;
+    scroll-margin-top: 0 !important;
+    scroll-margin-bottom: 0 !important;
+    transform: translateZ(0);
+    /* Prevent browser from scrolling input into view */
+    overflow-anchor: none !important;
+  }
+
+  /* CVAULT-218: Fix for input field scrolling to center - prevent scroll-into-view */
+  #human-message-input:focus,
+  #arena-chat-input:focus,
+  textarea[aria-label="Message input"]:focus {
+    scroll-into-view: none !important;
+  }
+
   /* High contrast focus for better visibility */
   @media (prefers-contrast: high) {
     a:focus-visible,
@@ -218,6 +265,55 @@
 
     .safe-top {
       padding-top: env(safe-area-inset-top);
+    }
+
+    /* CVAULT-218: Mobile chat input improvements */
+    .chat-input-mobile {
+      position: sticky;
+      bottom: 0;
+      z-index: 50;
+      background: inherit;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    /* Prevent mobile keyboard from causing viewport scroll */
+    #human-message-input,
+    #arena-chat-input,
+    .chat-input-container textarea {
+      -webkit-appearance: none;
+      border-radius: 0;
+      transform: translateZ(0);
+      -webkit-transform: translateZ(0);
+      /* Prevent iOS Safari from scrolling to input */
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Ensure input stays visible when virtual keyboard appears */
+    @media (max-height: 500px) {
+      .chat-input-container {
+        position: relative;
+        max-height: 200px;
+        overflow: visible;
+      }
+
+      /* Prevent scroll when keyboard is open */
+      #human-message-input,
+      #arena-chat-input {
+        position: relative;
+        z-index: 100;
+      }
+    }
+
+    /* CVAULT-218: Prevent viewport scroll on input focus (mobile) */
+    #human-message-input:focus,
+    #arena-chat-input:focus,
+    textarea[aria-label="Message input"]:focus {
+      position: relative;
+      z-index: 100;
+      /* Prevent mobile browsers from scrolling input into view */
+      overflow-anchor: none !important;
+      -webkit-overflow-scrolling: touch;
     }
   }
 

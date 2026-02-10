@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useChatroomStream } from '@/hooks/useChatroomStream';
 import ChatRoom from '@/components/chatroom/ChatRoom';
 
@@ -30,7 +30,71 @@ export default function ArenaPage() {
   const [humanMessages, setHumanMessages] = useState<HumanMessage[]>([]);
   const [messageInput, setMessageInput] = useState('');
   const [username, setUsername] = useState('');
-  const humanChatEndRef = useRef<HTMLDivElement>(null);
+
+  // CVAULT-218: Prevent scroll-into-view behavior for chat input
+  useEffect(() => {
+    // Prevent default scroll-into-view behavior
+    const preventScrollIntoView = (e: Event) => {
+      const target = e.target as HTMLElement;
+      if (target && (target.id === 'arena-chat-input' || target.id === 'human-message-input')) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+
+        // Ensure scroll position doesn't change
+        requestAnimationFrame(() => {
+          window.scrollTo(window.scrollX, window.scrollY);
+        });
+      }
+    };
+
+    // Add event listeners to prevent scroll behavior
+    document.addEventListener('focusin', preventScrollIntoView, true);
+    document.addEventListener('focus', preventScrollIntoView, true);
+
+    return () => {
+      document.removeEventListener('focusin', preventScrollIntoView, true);
+      document.removeEventListener('focus', preventScrollIntoView, true);
+    };
+  }, []);
+
+  // CVAULT-218: Prevent scroll on input change
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setMessageInput(e.target.value);
+
+    // Store scroll position before input update
+    const scrollX = window.scrollX || window.pageXOffset;
+    const scrollY = window.scrollY || window.pageYOffset;
+
+    // Restore scroll position after React state update
+    requestAnimationFrame(() => {
+      window.scrollTo(scrollX, scrollY);
+    });
+  }, []);
+
+  // CVAULT-218: Prevent scroll on input focus
+  const handleInputFocus = useCallback((e: React.FocusEvent<HTMLInputElement>) => {
+    // Store current scroll position
+    const scrollX = window.scrollX || window.pageXOffset;
+    const scrollY = window.scrollY || window.pageYOffset;
+
+    // Prevent any scroll-into-view behavior
+    e.target.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+
+    // Force the input to stay in place
+    setTimeout(() => {
+      const input = document.getElementById('arena-chat-input');
+      if (input) {
+        (input as HTMLInputElement).style.scrollBehavior = 'auto';
+        (input as HTMLInputElement).style.scrollMargin = '0px';
+        (input as HTMLInputElement).style.scrollMarginTop = '0px';
+        (input as HTMLInputElement).style.scrollMarginBottom = '0px';
+      }
+
+      // Restore scroll position
+      window.scrollTo(scrollX, scrollY);
+    }, 0);
+  }, []);
 
 
 
@@ -44,10 +108,12 @@ export default function ArenaPage() {
     }
   }, []);
 
-  // Auto-scroll human chat to bottom
+  // Auto-scroll human chat to bottom (scroll container only, not entire page)
+  const humanChatContainerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (humanChatEndRef.current) {
-      humanChatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (humanChatContainerRef.current) {
+      const container = humanChatContainerRef.current;
+      container.scrollTop = container.scrollHeight;
     }
   }, [humanMessages]);
 
@@ -235,7 +301,7 @@ export default function ArenaPage() {
             {/* Human Chat Messages */}
             <div className="flex-1 bg-card rounded-lg border border-border overflow-hidden flex flex-col max-h-[520px]">
               {/* Messages Area */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
+              <div ref={humanChatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
                 {humanMessages.length === 0 && (
                   <div className="flex items-center justify-center h-full text-muted-foreground text-sm text-center">
                     <div>
@@ -274,21 +340,28 @@ export default function ArenaPage() {
                     </div>
                   </div>
                 ))}
-                <div ref={humanChatEndRef} />
               </div>
 
               {/* Message Input */}
-              <div className="p-3 border-t border-border bg-muted/30">
+              <div className="p-3 border-t border-border bg-muted/30 chat-input-container">
                 <div className="flex gap-2">
                   <input
                     type="text"
+                    id="arena-chat-input"
                     value={messageInput}
-                    onChange={(e) => setMessageInput(e.target.value)}
+                    onChange={handleInputChange}
                     onKeyPress={handleKeyPress}
+                    onFocus={handleInputFocus}
                     placeholder={username ? "Share your thoughts..." : "Set username above to chat..."}
                     disabled={!username}
                     className="flex-1 px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     maxLength={500}
+                    style={{
+                      scrollMargin: 0,
+                      scrollMarginTop: 0,
+                      scrollMarginBottom: 0,
+                      scrollBehavior: 'auto',
+                    }}
                   />
                   <button
                     onClick={handleSendMessage}
@@ -317,7 +390,7 @@ export default function ArenaPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <h4 className="font-semibold mb-2 text-sm">🤖 AI Models</h4>
-              <p className="text-xs text-muted-foreground">Multiple AI models</p>
+              <p className="text-xs text-muted-foreground">DeepSeek, Kimi, MiniMax, GLM, Gemini</p>
             </div>
             <div>
               <h4 className="font-semibold mb-2 text-sm">📋 Debate Phases</h4>
@@ -340,7 +413,7 @@ export default function ArenaPage() {
               <ul className="text-xs text-muted-foreground space-y-1">
                 <li>• {chatroomData.messages.length} agent messages</li>
                 <li>• {humanMessages.length} human messages</li>
-                <li>• Multiple AI participants</li>
+                <li>• DeepSeek, Kimi, MiniMax, GLM, Gemini</li>
               </ul>
             </div>
           </div>

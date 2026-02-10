@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import {
   getMessages,
+  getRollingHistory,
   appendMessage,
   getState,
   setState,
@@ -13,6 +14,9 @@ import {
   saveDebateSummary,
   clearDebateSummary,
   getDebateHistory,
+  saveConsensusSnapshot,
+  getConsensusSnapshots,
+  cleanupRollingHistory,
 } from '@/lib/chatroom/kv-store';
 import { extractDebateSummary } from '@/lib/chatroom/argument-extractor';
 import {
@@ -22,8 +26,9 @@ import {
   deserializeEnhancedState,
 } from '@/lib/chatroom/chatroom-engine-enhanced';
 import { PERSONAS_BY_ID } from '@/lib/chatroom/personas';
-import { ChatRoomState } from '@/lib/chatroom/types';
+import { ChatRoomState, ConsensusSnapshot, MessageSentiment } from '@/lib/chatroom/types';
 import { precomputeTypingDuration } from '@/lib/chatroom/typing-duration';
+import { fetchMarketData } from '@/lib/chatroom/market-data';
 
 // Message interval ranges (ms)
 const DEBATE_INTERVAL_MIN = 60_000;  // 60s
@@ -35,6 +40,20 @@ const KEEPALIVE_INTERVAL = 15_000; // 15s
 
 function randomInterval(min: number, max: number): number {
   return min + Math.random() * (max - min);
+}
+
+/**
+ * Helper to determine primary stance from array of sentiments for consensus snapshot
+ */
+function getPrimaryStanceForSnapshot(sentiments: MessageSentiment[]): MessageSentiment {
+  if (sentiments.length === 0) return 'neutral';
+  const counts = { bullish: 0, bearish: 0, neutral: 0 };
+  for (const s of sentiments) {
+    counts[s]++;
+  }
+  if (counts.bullish > counts.bearish && counts.bullish > counts.neutral) return 'bullish';
+  if (counts.bearish > counts.bullish && counts.bearish > counts.neutral) return 'bearish';
+  return 'neutral';
 }
 
 export const dynamic = 'force-dynamic';
@@ -77,10 +96,20 @@ export async function GET(request: NextRequest) {
         connectionTimeMs: connectionEstablishmentTime
       });
 
-      // Load and send history
-      const history = await getMessages();
+      // CVAULT-217: Use rolling history (1-hour window) for initial load
+      // This ensures clients only see messages from the last hour
+      const history = await getRollingHistory();
       const state = await getState();
-      send('history', { messages: history, phase: state.phase, cooldownEndsAt: state.cooldownEndsAt });
+      
+      // CVAULT-217: Also fetch consensus snapshots for historical context
+      const consensusSnapshots = await getConsensusSnapshots();
+      
+      send('history', { 
+        messages: history, 
+        phase: state.phase, 
+        cooldownEndsAt: state.cooldownEndsAt,
+        consensusSnapshots: consensusSnapshots.slice(-5), // Send last 5 snapshots
+      });
 
       // Send current consensus if any
       if (state.consensusDirection !== null) {
@@ -112,11 +141,27 @@ export async function GET(request: NextRequest) {
       // Track last known message index for change detection
       let lastKnownIndex = await getMessageIndex();
 
+      // CVAULT-217: Track last cleanup time for periodic rolling history cleanup
+      let lastCleanupTime = Date.now();
+      
       // Main loop
       const runLoop = async () => {
         while (!request.signal.aborted) {
           const currentState = await getState();
           const now = Date.now();
+          
+          // CVAULT-217: Periodic cleanup of rolling history (every 5 minutes)
+          if (now - lastCleanupTime >= 5 * 60 * 1000) {
+            try {
+              const cleanupResult = await cleanupRollingHistory();
+              if (cleanupResult.removed > 0) {
+                console.log(`[CVAULT-217] Periodic cleanup: removed ${cleanupResult.removed} old messages`);
+              }
+              lastCleanupTime = now;
+            } catch (cleanupError) {
+              console.error('[CVAULT-217] Error during periodic cleanup:', cleanupError);
+            }
+          }
 
           // Determine interval based on phase
           const isDebate = currentState.phase === 'DEBATE' || currentState.phase === 'CONSENSUS';
@@ -161,9 +206,9 @@ export async function GET(request: NextRequest) {
                     }
                   }
 
-                  // Generate message with enhanced engine (market data + persuasion)
-                  // CVAULT-185: Using enhanced engine with real market data and persuadable personas
-                  const currentHistory = await getMessages();
+                  // CVAULT-217: Use rolling history for context (messages within 1-hour window)
+                  // This ensures the engine only considers recent, relevant context
+                  const currentHistory = await getRollingHistory();
 
                   // Load persuasion states
                   const savedPersuasionStates = await getPersuasionStates();
@@ -284,6 +329,7 @@ export async function GET(request: NextRequest) {
                   }
 
                   // CVAULT-190: Capture debate summary when consensus is reached
+                  // CVAULT-217: Also create a persistent consensus snapshot
                   if (result.phaseChange?.to === 'CONSENSUS' && result.consensusUpdate) {
                     try {
                       const debateHistory = await getMessages();
@@ -301,9 +347,76 @@ export async function GET(request: NextRequest) {
                       
                       await saveDebateSummary(summary);
                       console.log(`[CVAULT-190] Debate summary captured for round ${roundNumber}: ${summary.consensusDirection} @ ${summary.consensusStrength}%`);
+                      
+                      // CVAULT-217: Create persistent consensus snapshot
+                      // This snapshot will persist even after messages are pruned
+                      const personaContributions: Record<string, {
+                        personaId: string;
+                        handle: string;
+                        messageCount: number;
+                        sentiments: MessageSentiment[];
+                        keyPoints: string[];
+                      }> = {};
+                      
+                      for (const msg of debateHistory) {
+                        if (!personaContributions[msg.personaId]) {
+                          personaContributions[msg.personaId] = {
+                            personaId: msg.personaId,
+                            handle: msg.handle,
+                            messageCount: 0,
+                            sentiments: [],
+                            keyPoints: [],
+                          };
+                        }
+                        personaContributions[msg.personaId].messageCount++;
+                        if (msg.sentiment) {
+                          personaContributions[msg.personaId].sentiments.push(msg.sentiment);
+                        }
+                        const firstSentence = msg.content.split(/[.!?]/)[0]?.trim();
+                        if (firstSentence && firstSentence.length > 10) {
+                          personaContributions[msg.personaId].keyPoints.push(firstSentence);
+                        }
+                      }
+                      
+                      const topPersonaContributions = Object.values(personaContributions)
+                        .map(pc => ({
+                          personaId: pc.personaId,
+                          handle: pc.handle,
+                          messageCount: pc.messageCount,
+                          primaryStance: getPrimaryStanceForSnapshot(pc.sentiments),
+                          keyPoints: pc.keyPoints.slice(0, 3),
+                        }))
+                        .sort((a, b) => b.messageCount - a.messageCount)
+                        .slice(0, 5);
+                      
+                      const consensusSnapshot: ConsensusSnapshot = {
+                        id: `consensus_${Date.now()}_${roundNumber}`,
+                        timestamp: Date.now(),
+                        timestampRange: {
+                          start: debateHistory.length > 0 ? debateHistory[0].timestamp : Date.now(),
+                          end: debateHistory.length > 0 ? debateHistory[debateHistory.length - 1].timestamp : Date.now(),
+                        },
+                        consensusDirection: result.consensusUpdate.direction || 'neutral',
+                        consensusStrength: result.consensusUpdate.strength,
+                        keyArgumentsSummary: {
+                          bullish: summary.keyBullishArguments.slice(0, 5),
+                          bearish: summary.keyBearishArguments.slice(0, 5),
+                          neutral: [],
+                        },
+                        topPersonaContributions,
+                        messageCount: debateHistory.length,
+                        snapshotReason: 'consensus_reached',
+                      };
+                      
+                      await saveConsensusSnapshot(consensusSnapshot);
+                      
+                      // Broadcast the new snapshot to all connected clients
+                      send('consensus_snapshot', consensusSnapshot);
+                      
+                      console.log(`[CVAULT-217] Consensus snapshot created: ${consensusSnapshot.consensusDirection} @ ${consensusSnapshot.consensusStrength}%`);
                     } catch (summaryError) {
                       // Non-blocking: log error but don't break consensus flow
-                      console.error('[CVAULT-190] Failed to capture debate summary:', summaryError);
+                      console.error('[CVAULT-190/217] Failed to capture debate summary or consensus snapshot:', summaryError);
                     }
                   }
                   
@@ -411,6 +524,7 @@ export async function GET(request: NextRequest) {
 
 /**
  * Poll KV for messages that were added since lastKnownIndex
+ * CVAULT-217: Uses rolling history to only send recent messages
  */
 async function pollForNewMessages(
   send: (eventType: string, data: unknown) => void,
@@ -420,7 +534,8 @@ async function pollForNewMessages(
   if (signal.aborted) return;
 
   try {
-    const messages = await getMessages();
+    // CVAULT-217: Use rolling history to get only recent messages
+    const messages = await getRollingHistory();
     const state = await getState();
 
     // Send the latest messages that the client might not have
