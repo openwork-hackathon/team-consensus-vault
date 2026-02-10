@@ -226,7 +226,7 @@ export default function ChatRoom({
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="h-[350px] sm:h-[400px] md:h-[480px] overflow-y-auto overflow-x-hidden py-2 space-y-6 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent scrollable"
+        className="h-[350px] sm:h-[400px] md:h-[480px] overflow-y-auto overflow-x-hidden py-2 space-y-8 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent scrollable"
         role="log"
         aria-live="polite"
         aria-atomic="false"
@@ -276,7 +276,7 @@ export default function ChatRoom({
         </AnimatePresence>
 
         {messageGroups.map((group, groupIndex) => (
-          <div key={`group-${groupIndex}`} className="space-y-6">
+          <div key={`group-${groupIndex}`} className="space-y-8">
             {/* Time gap separator */}
             {group.hasTimeGap && group.gapMinutes && (
               <div className="relative my-4 mx-4">
