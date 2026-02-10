@@ -9,6 +9,7 @@ import { PersuasionStore, initializePersuasionState, PersuasionState } from './p
 import { extractDebateSummary, updateStanceChangeHandles } from './argument-extractor';
 import { getDebateSummary } from './kv-store';
 import { buildDebateContextForConsensus, DebateContextForConsensus } from './debate-consensus-bridge';
+import { ArgumentTracker } from './argument-tracker';
 
 const CONSENSUS_THRESHOLD = 80;
 const COOLDOWN_MIN_MINUTES = 15;

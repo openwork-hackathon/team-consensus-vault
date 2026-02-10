@@ -39,6 +39,11 @@ export default function Navigation({
     }
   };
 
+  // Close menu when route changes
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
+
   // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -185,10 +190,10 @@ export default function Navigation({
         </div>
 
         {/* Mobile/Tablet Navigation */}
-        {/* Backdrop overlay */}
+        {/* Backdrop overlay - z-50 to appear above header */}
         <div
           id="mobile-menu-backdrop"
-          className={`md:hidden fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ease-in-out z-30 ${
+          className={`md:hidden fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ease-in-out z-50 ${
             isMobileMenuOpen
               ? 'opacity-100 pointer-events-auto'
               : 'opacity-0 pointer-events-none'
@@ -196,11 +201,12 @@ export default function Navigation({
           onClick={() => setIsMobileMenuOpen(false)}
           aria-hidden="true"
         />
-        
-        <div 
-          className={`md:hidden fixed top-16 left-0 right-0 z-40 transition-all duration-300 ease-in-out ${
-            isMobileMenuOpen 
-              ? 'translate-y-0 opacity-100 pointer-events-auto' 
+
+        {/* Mobile menu - z-[51] to appear above backdrop */}
+        <div
+          className={`md:hidden fixed top-[72px] left-0 right-0 z-[51] transition-all duration-300 ease-in-out ${
+            isMobileMenuOpen
+              ? 'translate-y-0 opacity-100 pointer-events-auto'
               : '-translate-y-4 opacity-0 pointer-events-none'
           }`}
         >

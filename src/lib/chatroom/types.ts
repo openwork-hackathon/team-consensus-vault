@@ -61,6 +61,8 @@ export interface ChatRoomState {
   persuasionStates?: Record<string, any>;
   // CVAULT-190: Previous debate summary for context in next round
   previousDebateSummary?: DebateSummary;
+  // CVAULT-208: Argument tracker for anti-repetition
+  argumentTracker?: any;
 }
 
 // CVAULT-190: Summary of a completed debate round for context in next round

@@ -3,6 +3,7 @@ import { MarketData, formatMarketDataForPrompt, getMarketTalkingPoints } from '.
 import { PersuasionState, getPersuasionSummary, shouldAcknowledgeOpposingView, generateAcknowledgmentPrompt } from './persuasion';
 import { formatDebateSummaryForPrompt } from './argument-extractor';
 import { DebateContextForConsensus, formatDebateContextForPrompt } from './debate-consensus-bridge';
+import { ArgumentTracker, buildAntiRepetitionSection } from './argument-tracker';
 
 function formatRecentMessages(messages: ChatMessage[], limit: number = 10): string {
   const recent = messages.slice(-limit);
@@ -21,6 +22,7 @@ function formatRecentMessages(messages: ChatMessage[], limit: number = 10): stri
  * Build debate prompt with market data, persuasion context, and previous debate summary
  * CVAULT-185: Enhanced with real market data and persuadability
  * CVAULT-190: Enhanced with previous debate context
+ * CVAULT-208: Enhanced with anti-repetition logic
  */
 export function buildDebatePrompt(
   persona: Persona, 
@@ -28,7 +30,8 @@ export function buildDebatePrompt(
   marketData?: MarketData,
   persuasionState?: PersuasionState,
   asset: string = 'BTC',
-  previousDebateSummary?: DebateSummary
+  previousDebateSummary?: DebateSummary,
+  argumentTracker?: ArgumentTracker
 ): string {
   // Build market data context
   let marketContext = '';
@@ -69,7 +72,36 @@ export function buildDebatePrompt(
     previousDebateContext += '\n\nUse this context to build on strong arguments, counter weak ones, or bring new data that shifts the debate. You can reference specific points made previously or introduce fresh analysis.';
   }
 
-  const systemPrompt = `${persona.personalityPrompt}
+  // Build anti-repetition context (CVAULT-208)
+  let antiRepetitionContext = '';
+  if (argumentTracker) {
+    // Determine persona's likely sentiment from persuasion state or recent messages
+    let personaSentiment: 'bullish' | 'bearish' | 'neutral' | undefined;
+    if (persuasionState?.currentStance) {
+      personaSentiment = persuasionState.currentStance;
+    } else {
+      // Fallback: get sentiment from recent messages by this persona
+      const recentPersonaMessages = recentMessages
+        .filter(m => m.personaId === persona.id && m.sentiment)
+        .slice(-3);
+      if (recentPersonaMessages.length > 0) {
+        const sentimentCounts = recentPersonaMessages.reduce((acc, m) => {
+          if (m.sentiment) acc[m.sentiment] = (acc[m.sentiment] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>);
+        
+        personaSentiment = Object.entries(sentimentCounts)
+          .sort(([,a], [,b]) => b - a)[0][0] as 'bullish' | 'bearish' | 'neutral';
+      }
+    }
+    
+    antiRepetitionContext = buildAntiRepetitionSection(argumentTracker, personaSentiment);
+  }
+
+  // CVAULT-208: Place anti-repetition context FIRST for highest priority
+  const systemPrompt = `${antiRepetitionContext}
+
+${persona.personalityPrompt}
 
 ${marketContext}
 
@@ -79,6 +111,14 @@ CRITICAL: You MUST reference actual market data in your arguments. Use specific 
 
 ${persuasionContext}
 ${previousDebateContext}
+
+ANTI-REPETITION RULES (MANDATORY):
+- Do NOT repeat arguments already made by others in this conversation
+- If you reference what someone said, add a NEW angle or perspective
+- Bring fresh analysis, different data points, or unique insights
+- Challenge existing points with new evidence rather than restating them
+- Make each message add distinct value to the discussion
+- If an argument was already made (see above), saying it differently doesn't count as new
 
 IMPORTANT: End your message with a sentiment tag in this exact format:
 [SENTIMENT: bullish|bearish|neutral, CONFIDENCE: 0-100]
@@ -94,7 +134,15 @@ ${formatRecentMessages(recentMessages)}
 
 Your turn to speak. React to what others have said, add your perspective using the market data provided, or bring up something new. CRITICAL: Keep your response under 280 characters — tweet-length only. Be punchy and direct. No filler words. One clear point per message. Remember to end with [SENTIMENT: ..., CONFIDENCE: ...].
 
-Guidelines:
+🚫 ANTI-REPETITION MANDATORY REQUIREMENTS:
+- Check the forbidden arguments list above - DO NOT say anything similar to those
+- BRING SOMETHING COMPLETELY NEW: Different data point, different technical level, different reasoning
+- If you agree with someone, cite DIFFERENT supporting evidence, not the same data
+- If you disagree, use DIFFERENT analysis or metrics, not the same counterargument
+- Rewording an existing argument is NOT allowed - it must be genuinely distinct
+- Each response must add information that wasn't already stated
+
+Core Guidelines:
 - Cite specific numbers from the market data (prices, percentages, volumes)
 - If you disagree with someone, explain why using data
 - If the data supports your view, highlight the key metrics

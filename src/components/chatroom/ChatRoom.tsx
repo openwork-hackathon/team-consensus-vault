@@ -10,6 +10,7 @@ import TypingIndicator from './TypingIndicator';
 import StreamingIndicator from './StreamingIndicator';
 import MobileStreamingIndicator from './MobileStreamingIndicator';
 import ConnectionStatusIndicator from './ConnectionStatusIndicator';
+import EnhancedStreamingIndicator from './EnhancedStreamingIndicator';
 import PhaseIndicator from './PhaseIndicator';
 import TimeGapIndicator from './TimeGapIndicator';
 import ChatroomControls from './ChatroomControls';
@@ -212,9 +213,12 @@ export default function ChatRoom({
       {/* Phase indicator bar */}
       <PhaseIndicator phase={phase} cooldownEndsAt={cooldownEndsAt} />
 
-      {/* Enhanced Connection status indicator */}
+      {/* Enhanced Streaming Indicator - Combines connection status and agent typing */}
       <div className="px-3 py-2">
-        <ConnectionStatusIndicator isConnected={isConnected} />
+        <EnhancedStreamingIndicator 
+          isConnected={isConnected} 
+          typingPersona={typingPersona}
+        />
       </div>
 
       {/* Message area - Responsive height */}
@@ -351,14 +355,24 @@ export default function ChatRoom({
 
       {/* Footer with controls */}
       <div className="px-3 py-2 sm:py-2 border-t border-border flex items-center justify-between" role="status" aria-live="polite">
-        <span className="text-muted-foreground text-xs sm:text-[11px]" aria-label={`${messages.length} messages in chat`}>
-          {messages.length} messages
-          {hasMoreMessages && (
-            <span className="text-muted-foreground/60 ml-1">
-              ({displayedMessageCount} showing)
+        <div className="flex items-center gap-3">
+          <span className="text-muted-foreground text-xs sm:text-[11px]" aria-label={`${messages.length} messages in chat`}>
+            {messages.length} messages
+            {hasMoreMessages && (
+              <span className="text-muted-foreground/60 ml-1">
+                ({displayedMessageCount} showing)
+              </span>
+            )}
+          </span>
+          
+          {/* Streaming status indicator */}
+          <div className="flex items-center gap-1.5" aria-label={`Streaming ${isConnected ? 'active' : 'inactive'}`}>
+            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-yellow-500'}`} />
+            <span className="text-xs text-muted-foreground hidden sm:inline">
+              {isConnected ? 'Streaming' : 'Connecting'}
             </span>
-          )}
-        </span>
+          </div>
+        </div>
         
         {/* Chatroom Controls */}
         <ChatroomControls

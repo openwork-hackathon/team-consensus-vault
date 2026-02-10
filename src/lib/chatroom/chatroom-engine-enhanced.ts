@@ -25,6 +25,7 @@ import {
   generateAcknowledgmentPrompt
 } from './persuasion';
 import { getDebateSummary } from './kv-store';
+import { ArgumentTracker } from './argument-tracker';
 
 const CONSENSUS_THRESHOLD = 80;
 const COOLDOWN_MIN_MINUTES = 15;
@@ -45,6 +46,7 @@ export interface EnhancedChatRoomState extends ChatRoomState {
   persuasionStore: PersuasionStore;
   lastMarketData?: MarketData;
   marketDataTimestamp?: number;
+  argumentTracker: ArgumentTracker; // CVAULT-208: Track arguments to prevent repetition
 }
 
 /**
@@ -52,7 +54,7 @@ export interface EnhancedChatRoomState extends ChatRoomState {
  */
 export function initializeEnhancedState(): EnhancedChatRoomState {
   const store = new PersuasionStore(`debate_${Date.now()}`);
-  
+
   // Initialize all personas with neutral stance
   PERSONAS.forEach(persona => {
     store.initializePersona(persona.id, 'neutral');
@@ -70,6 +72,7 @@ export function initializeEnhancedState(): EnhancedChatRoomState {
     consensusStrength: 0,
     recentSpeakers: [],
     persuasionStore: store,
+    argumentTracker: new ArgumentTracker(), // CVAULT-208: Initialize argument tracker
   };
 }
 
@@ -99,6 +102,9 @@ export async function generateNextMessageEnhanced(
       // Reset persuasion store for new debate
       currentState.persuasionStore.reset();
       PERSONAS.forEach(p => currentState.persuasionStore.initializePersona(p.id, 'neutral'));
+
+      // CVAULT-208: Reset argument tracker for fresh debate
+      currentState.argumentTracker = new ArgumentTracker();
     }
   }
 
@@ -211,7 +217,16 @@ export async function generateNextMessageEnhanced(
       debateContext
     ));
   } else {
-    promptData = JSON.parse(buildDebatePrompt(persona, history, marketData, persuasionState, asset));
+    // CVAULT-208: Pass argument tracker to debate prompt for anti-repetition
+    promptData = JSON.parse(buildDebatePrompt(
+      persona,
+      history,
+      marketData,
+      persuasionState,
+      asset,
+      undefined, // previousDebateSummary - handled separately via getDebateSummary in buildDebatePrompt
+      currentState.argumentTracker
+    ));
   }
 
   // 8. Call model
@@ -321,6 +336,9 @@ export async function generateNextMessageEnhanced(
 
   // 12. Update persuasion store with this message
   currentState.persuasionStore.processMessage(message, [...history, message]);
+
+  // CVAULT-208: Track this message's arguments for anti-repetition
+  currentState.argumentTracker.addMessage(message);
 
   // 13. Update state
   currentState.lastMessageAt = message.timestamp;
@@ -487,10 +505,11 @@ export function getDebateStats(state: EnhancedChatRoomState) {
  * Serialize enhanced state for storage
  */
 export function serializeEnhancedState(state: EnhancedChatRoomState): string {
-  const { persuasionStore, ...serializableState } = state;
+  const { persuasionStore, argumentTracker, ...serializableState } = state;
   return JSON.stringify({
     ...serializableState,
     persuasionStates: persuasionStore.getAllStates(),
+    // CVAULT-208: Don't serialize argumentTracker - it's ephemeral per debate round
   });
 }
 
@@ -500,16 +519,17 @@ export function serializeEnhancedState(state: EnhancedChatRoomState): string {
 export function deserializeEnhancedState(serialized: string): EnhancedChatRoomState {
   const parsed = JSON.parse(serialized);
   const store = new PersuasionStore(parsed.debateId || 'restored');
-  
+
   // Restore persuasion states
   if (parsed.persuasionStates) {
     for (const [id, state] of Object.entries(parsed.persuasionStates)) {
       store.updateState(id, state as PersuasionState);
     }
   }
-  
+
   return {
     ...parsed,
     persuasionStore: store,
+    argumentTracker: new ArgumentTracker(), // CVAULT-208: Fresh tracker on restore
   };
 }
