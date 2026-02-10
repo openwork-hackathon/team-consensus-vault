@@ -271,6 +271,30 @@ export async function generateNextMessage(
     }
   }
 
+  // CVAULT-209: Apply backup truncation to ensure tweet-length messages
+  const MAX_CHARS = 280;
+  if (content.length > MAX_CHARS) {
+    console.log(`[CVAULT-209] Truncating message from ${content.length} to ${MAX_CHARS} chars for ${persona.handle}`);
+    
+    // Try to truncate at a sentence boundary if possible
+    const truncated = content.slice(0, MAX_CHARS);
+    const lastPeriod = truncated.lastIndexOf('.');
+    const lastExclamation = truncated.lastIndexOf('!');
+    const lastQuestion = truncated.lastIndexOf('?');
+    const lastBoundary = Math.max(lastPeriod, lastExclamation, lastQuestion);
+    
+    if (lastBoundary > MAX_CHARS * 0.7) { // Only if we have a reasonable boundary
+      content = truncated.slice(0, lastBoundary + 1);
+    } else {
+      content = truncated;
+    }
+    
+    // Add ellipsis if we truncated mid-sentence
+    if (!content.endsWith('.') && !content.endsWith('!') && !content.endsWith('?')) {
+      content = content.trim() + '...';
+    }
+  }
+
   // 7. Create message
   const message: ChatMessage = {
     id: `msg_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,

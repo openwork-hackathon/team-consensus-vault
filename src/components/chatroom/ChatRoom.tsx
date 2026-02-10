@@ -276,7 +276,7 @@ export default function ChatRoom({
         </AnimatePresence>
 
         {messageGroups.map((group, groupIndex) => (
-          <div key={`group-${groupIndex}`} className="space-y-1">
+          <div key={`group-${groupIndex}`} className="space-y-4">
             {/* Time gap separator */}
             {group.hasTimeGap && group.gapMinutes && (
               <div className="relative my-4 mx-4">

@@ -123,25 +123,25 @@ export function estimateTypingDuration(
 
 /**
  * Get the expected message length range for a persona based on their style
+ * CVAULT-209: Updated to reflect tweet-length (280 char) constraints
  */
 export function getPersonaMessageLengthRange(persona: Persona): { min: number; max: number } {
-  // Most personas are configured for 2-4 sentences
-  // Average sentence is ~15-25 words, average word is ~5 characters
-  // So 2-4 sentences = 150-400 characters typically
+  // All personas are now constrained to 280 characters maximum (tweet length)
+  // Most personas should aim for 100-250 characters for optimal readability
   
   const ranges: Record<string, { min: number; max: number }> = {
-    'nxbl': { min: 30, max: 80 },           // Very terse
+    'nxbl': { min: 30, max: 80 },           // Very terse, fragments
     'chartsurgeon': { min: 100, max: 250 }, // Technical with numbers
-    'just_a_plumber': { min: 120, max: 300 }, // Folksy stories
-    'liquidation_larry': { min: 80, max: 200 }, // Direct
-    'sats_stacker': { min: 80, max: 180 },  // Simple, consistent
+    'just_a_plumber': { min: 120, max: 280 }, // Folksy stories, capped at 280
+    'liquidation_larry': { min: 80, max: 200 }, // Direct, explosive
+    'sats_stacker': { min: 80, max: 180 },  // Simple, consistent mantras
     'ico_veteran': { min: 120, max: 280 },  // Skeptical commentary, capped at 280
     'wyckoff_wizard': { min: 100, max: 220 }, // Technical terms
-    'uncle_bags': { min: 120, max: 280 },   // War stories
-    '0xviv': { min: 120, max: 260 },        // Data-heavy
+    'uncle_bags': { min: 120, max: 280 },   // War stories, capped at 280
+    '0xviv': { min: 120, max: 260 },        // Data-heavy analysis
     'exchangeflow': { min: 80, max: 200 },  // Data points
     'nft_flipping_fiona': { min: 100, max: 220 }, // Sentiment analysis
-    'regulatory_rick': { min: 120, max: 280 }, // Legal context
+    'regulatory_rick': { min: 120, max: 280 }, // Legal context, capped at 280
     'miner_mike': { min: 100, max: 220 },   // Technical mining
     'airdrop_hunter': { min: 100, max: 220 }, // Protocol info
     'moonvember': { min: 100, max: 240 },   // Enthusiastic
@@ -158,13 +158,28 @@ export function getPersonaMessageLengthRange(persona: Persona): { min: number; m
     'l2_maximalist': { min: 100, max: 220 }, // Technical
     'stablecoin_sophie': { min: 100, max: 220 }, // Stable analysis
     'bridge_brian': { min: 100, max: 240 }, // Cross-chain
-    'macromaven': { min: 120, max: 280 },   // Macro context
-    'panicsellpaul': { min: 120, max: 280 }, // Worried analysis
+    'macromaven': { min: 120, max: 280 },   // Macro context, capped at 280
+    'panicsellpaul': { min: 120, max: 280 }, // Worried analysis, capped at 280
     'vol_surface': { min: 100, max: 200 },  // Options data
-    'bag_lady_42': { min: 120, max: 280 },  // Contrarian views
+    'bag_lady_42': { min: 120, max: 280 },  // Contrarian views, capped at 280
     'etf_ernie': { min: 100, max: 220 },    // ETF data
     'asia_alice': { min: 100, max: 240 },   // Market context
     'cycle_theorist': { min: 100, max: 220 }, // Cycle analysis
+    // New personas added with 280 char limits
+    'quantitative_quinn': { min: 120, max: 260 }, // Statistical analysis
+    'venture_vince': { min: 120, max: 280 }, // VC perspective, capped at 280
+    'security_sarah': { min: 120, max: 280 }, // Security audit, capped at 280
+    'dao_governance_dave': { min: 120, max: 280 }, // Governance analysis, capped at 280
+    'emerging_maya': { min: 120, max: 280 }, // Emerging markets, capped at 280
+    'privacy_pete': { min: 120, max: 280 }, // Privacy advocacy, capped at 280
+    'tokenomics_taylor': { min: 120, max: 280 }, // Token economics, capped at 280
+    'mev_mike': { min: 100, max: 220 }, // MEV analysis
+    'ai_aml_advisor': { min: 120, max: 260 }, // AI/ML analysis
+    'gamefi_grace': { min: 100, max: 220 }, // GameFi analysis
+    'liquidity_larry': { min: 100, max: 220 }, // Liquidity analysis
+    'traditional_tim': { min: 120, max: 280 }, // Traditional finance, capped at 280
+    'zk_zara': { min: 120, max: 280 }, // ZK-proof evangelist, capped at 280
+    'custody_carl': { min: 120, max: 280 }, // Custody solutions, capped at 280
   };
   
   return ranges[persona.id] ?? { min: 100, max: 250 };
