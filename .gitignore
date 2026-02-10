@@ -37,6 +37,10 @@ model-configs*.json
 *_security_*
 *.rotation
 api-keys.*
+*ENV_SETUP*.md
+*KEYS*.md
+*SECRETS*.md
+*CREDENTIALS*.md
 
 # vercel
 .vercel
