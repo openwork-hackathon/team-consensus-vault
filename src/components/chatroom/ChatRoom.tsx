@@ -224,7 +224,7 @@ export default function ChatRoom({
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="h-[350px] sm:h-[400px] md:h-[480px] overflow-y-auto overflow-x-hidden py-2 space-y-0.5 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent scrollable"
+        className="h-[350px] sm:h-[400px] md:h-[480px] overflow-y-auto overflow-x-hidden py-2 space-y-2 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent scrollable"
         role="log"
         aria-live="polite"
         aria-atomic="false"

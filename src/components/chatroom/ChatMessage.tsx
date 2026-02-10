@@ -11,10 +11,42 @@ interface ChatMessageProps {
 }
 
 function formatTime(timestamp: number): string {
-  return new Date(timestamp).toLocaleTimeString([], {
+  const now = new Date();
+  const messageDate = new Date(timestamp);
+  
+  // Reset time portions to compare dates
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const messageDay = new Date(messageDate.getFullYear(), messageDate.getMonth(), messageDate.getDate());
+  
+  // Calculate difference in days
+  const diffTime = today.getTime() - messageDay.getTime();
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  
+  // Format time portion
+  const timeStr = messageDate.toLocaleTimeString([], {
     hour: '2-digit',
     minute: '2-digit',
   });
+  
+  // Format based on when the message was sent
+  if (diffDays === 0) {
+    // Today - just show time
+    return timeStr;
+  } else if (diffDays === 1) {
+    // Yesterday - show "Yesterday time"
+    return `Yesterday ${timeStr}`;
+  } else if (diffDays < 7) {
+    // Within last week - show day of week
+    const dayOfWeek = messageDate.toLocaleDateString([], { weekday: 'long' });
+    return `${dayOfWeek} ${timeStr}`;
+  } else {
+    // Older - show date and time
+    const dateStr = messageDate.toLocaleDateString([], {
+      month: 'short',
+      day: 'numeric',
+    });
+    return `${dateStr}, ${timeStr}`;
+  }
 }
 
 function SentimentBadge({ sentiment, confidence }: { sentiment: string; confidence?: number }) {
@@ -68,7 +100,7 @@ export default function ChatMessage({ message, onQuote }: ChatMessageProps) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className={`flex gap-2.5 sm:gap-3 px-3 sm:px-4 py-2 sm:py-1.5 hover:bg-white/[0.02] active:bg-white/[0.05] group ${onQuote ? 'cursor-pointer hover:bg-accent/10' : ''}`}
+      className={`flex gap-2.5 sm:gap-3 px-3 sm:px-4 py-3 sm:py-2.5 hover:bg-white/[0.02] active:bg-white/[0.05] group ${onQuote ? 'cursor-pointer hover:bg-accent/10' : ''}`}
       role="article"
       aria-label={messageAriaLabel}
       onClick={handleClick}
@@ -104,7 +136,7 @@ export default function ChatMessage({ message, onQuote }: ChatMessageProps) {
               isAI={false}
             />
           )}
-          <span className="text-[11px] text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+          <span className="text-[11px] text-muted-foreground/70">
             {formatTime(message.timestamp)}
           </span>
           {message.sentiment && (

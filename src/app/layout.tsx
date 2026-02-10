@@ -110,13 +110,7 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://fonts.gstatic.com" key="dns-gstatic" />
         <link rel="dns-prefetch" href="https://api.coinbase.com" key="dns-coinbase" />
         <link rel="dns-prefetch" href="https://api.coingecko.com" key="dns-coingecko" />
-        {/* Preload critical resources */}
-        <link
-          rel="preload"
-          href="/_next/static/css/app/layout.css"
-          as="style"
-          key="critical-css"
-        />
+
         {/* Defer non-critical scripts */}
         <script
           dangerouslySetInnerHTML={{

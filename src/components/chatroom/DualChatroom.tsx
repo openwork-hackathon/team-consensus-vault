@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react';
 import { useChatroomStream } from '@/hooks/useChatroomStream';
 import ChatRoom from './ChatRoom';
 import PhaseIndicator from './PhaseIndicator';
+import ConsensusDirectionIndicator from './ConsensusDirectionIndicator';
 import { ChatMessage, MessageSentiment } from '@/lib/chatroom/types';
 import { PERSONAS } from '@/lib/chatroom/personas';
 
@@ -25,6 +26,46 @@ interface HumanMessage {
   timestamp: number;
   quotedMessageId?: string;
   quotedMessageContent?: string;
+}
+
+// Helper function to format timestamps with date context
+function formatMessageTime(timestamp: number): string {
+  const now = new Date();
+  const messageDate = new Date(timestamp);
+  
+  // Reset time portions to compare dates
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const messageDay = new Date(messageDate.getFullYear(), messageDate.getMonth(), messageDate.getDate());
+  
+  // Calculate difference in days
+  const diffTime = today.getTime() - messageDay.getTime();
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  
+  // Format time portion
+  const timeStr = messageDate.toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  
+  // Format based on when the message was sent
+  if (diffDays === 0) {
+    // Today - just show time
+    return timeStr;
+  } else if (diffDays === 1) {
+    // Yesterday - show "Yesterday time"
+    return `Yesterday ${timeStr}`;
+  } else if (diffDays < 7) {
+    // Within last week - show day of week
+    const dayOfWeek = messageDate.toLocaleDateString([], { weekday: 'long' });
+    return `${dayOfWeek} ${timeStr}`;
+  } else {
+    // Older - show date and time
+    const dateStr = messageDate.toLocaleDateString([], {
+      month: 'short',
+      day: 'numeric',
+    });
+    return `${dateStr}, ${timeStr}`;
+  }
 }
 
 export default function DualChatroom() {
@@ -158,18 +199,10 @@ export default function DualChatroom() {
 
               {/* Consensus info if in consensus phase */}
               {chatroomData.phase === 'CONSENSUS' && chatroomData.consensusDirection && (
-                <div className="px-4 py-2 bg-yellow-500/10 border-b border-yellow-500/20">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-yellow-400">
-                        Consensus: {chatroomData.consensusDirection.toUpperCase()}
-                      </span>
-                    </div>
-                    <span className="text-sm font-bold text-yellow-400">
-                      {Math.round(chatroomData.consensusStrength * 100)}%
-                    </span>
-                  </div>
-                </div>
+                <ConsensusDirectionIndicator
+                  direction={chatroomData.consensusDirection}
+                  strength={chatroomData.consensusStrength}
+                />
               )}
 
               {/* Chatroom with persistence */}
@@ -231,8 +264,8 @@ export default function DualChatroom() {
                       <div className="flex-1">
                         <div className="flex items-baseline gap-2">
                           <span className="font-semibold">{msg.handle}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          <span className="text-xs text-muted-foreground/70">
+                            {formatMessageTime(msg.timestamp)}
                           </span>
                         </div>
                         {msg.quotedMessageContent && (
@@ -318,18 +351,10 @@ export default function DualChatroom() {
 
         {/* Consensus info if in consensus phase */}
         {chatroomData.phase === 'CONSENSUS' && chatroomData.consensusDirection && (
-          <div className="px-4 py-2 bg-yellow-500/10 border-b border-yellow-500/20">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-yellow-400">
-                  Consensus: {chatroomData.consensusDirection.toUpperCase()}
-                </span>
-              </div>
-              <span className="text-sm font-bold text-yellow-400">
-                {Math.round(chatroomData.consensusStrength * 100)}%
-              </span>
-            </div>
-          </div>
+          <ConsensusDirectionIndicator
+            direction={chatroomData.consensusDirection}
+            strength={chatroomData.consensusStrength}
+          />
         )}
 
         {/* Chatroom with persistence */}
@@ -400,8 +425,8 @@ export default function DualChatroom() {
                 <div className="flex-1">
                   <div className="flex items-baseline gap-2">
                     <span className="font-semibold">{msg.handle}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    <span className="text-xs text-muted-foreground/70">
+                      {formatMessageTime(msg.timestamp)}
                     </span>
                   </div>
                   {msg.quotedMessageContent && (
