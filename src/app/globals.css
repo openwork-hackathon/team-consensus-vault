@@ -88,43 +88,40 @@
     scroll-margin: 0 !important;
   }
 
-  /* Prevent scroll anchoring for chat inputs */
+  /* CVAULT-218: Prevent scroll anchoring and scroll-into-view for chat inputs */
   textarea[aria-label="Message input"],
   #human-message-input,
   #arena-chat-input,
   .chat-input-container textarea,
   .chat-input-container input {
-    overflow-anchor: none;
-  }
-
-  /* Ensure chat input containers don't cause viewport scroll */
-  .chat-input-container {
-    position: relative;
-    z-index: 10;
-    overflow-anchor: none;
-    /* Prevent container from being scroll anchor */
     overflow-anchor: none !important;
-  }
-
-  /* Prevent any scroll-into-view behavior for bottom-anchored inputs */
-  textarea[aria-label="Message input"],
-  #human-message-input,
-  #arena-chat-input,
-  .chat-input-container textarea {
     scroll-behavior: auto !important;
     scroll-margin: 0 !important;
     scroll-margin-top: 0 !important;
     scroll-margin-bottom: 0 !important;
     transform: translateZ(0);
-    /* Prevent browser from scrolling input into view */
+  }
+
+  /* CVAULT-218: Ensure chat input containers don't cause viewport scroll */
+  .chat-input-container {
+    position: relative;
+    z-index: 10;
     overflow-anchor: none !important;
+    /* Additional properties to prevent scroll issues */
+    contain: layout style paint;
+    will-change: transform;
   }
 
   /* CVAULT-218: Fix for input field scrolling to center - prevent scroll-into-view */
   #human-message-input:focus,
   #arena-chat-input:focus,
   textarea[aria-label="Message input"]:focus {
-    scroll-into-view: none !important;
+    /* Use valid CSS properties to prevent scroll behavior */
+    scroll-behavior: auto !important;
+    scroll-margin: 0 !important;
+    scroll-margin-top: 0 !important;
+    scroll-margin-bottom: 0 !important;
+    overflow-anchor: none !important;
   }
 
   /* High contrast focus for better visibility */
