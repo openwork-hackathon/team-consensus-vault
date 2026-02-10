@@ -1,0 +1,78 @@
+{
+  "/human-chat": {
+    "mobile-414": {
+      "issues": [
+        {
+          "severity": "major",
+          "type": "missing_mobile_nav",
+          "description": "No mobile navigation menu detected",
+          "component": "Navigation"
+        }
+      ],
+      "screenshot": "/home/shazbot/team-consensus-vault/test-results/mobile-screenshots/human-chat-mobile-414-414x896.png",
+      "timestamp": "2026-02-10T02:37:53.472Z"
+    },
+    "tablet-768": {
+      "issues": [
+        {
+          "severity": "major",
+          "type": "missing_mobile_nav",
+          "description": "No mobile navigation menu detected",
+          "component": "Navigation"
+        }
+      ],
+      "screenshot": "/home/shazbot/team-consensus-vault/test-results/mobile-screenshots/human-chat-tablet-768-768x1024.png",
+      "timestamp": "2026-02-10T02:37:56.165Z"
+    }
+  },
+  "/enhanced-consensus": {
+    "mobile-320": {
+      "issues": [
+        {
+          "severity": "major",
+          "type": "missing_mobile_nav",
+          "description": "No mobile navigation menu detected",
+          "component": "Navigation"
+        }
+      ],
+      "screenshot": "/home/shazbot/team-consensus-vault/test-results/mobile-screenshots/enhanced-consensus-mobile-320-320x568.png",
+      "timestamp": "2026-02-10T02:37:58.873Z"
+    },
+    "mobile-375": {
+      "issues": [
+        {
+          "severity": "major",
+          "type": "missing_mobile_nav",
+          "description": "No mobile navigation menu detected",
+          "component": "Navigation"
+        }
+      ],
+      "screenshot": "/home/shazbot/team-consensus-vault/test-results/mobile-screenshots/enhanced-consensus-mobile-375-375x667.png",
+      "timestamp": "2026-02-10T02:38:01.701Z"
+    },
+    "mobile-414": {
+      "issues": [
+        {
+          "severity": "major",
+          "type": "missing_mobile_nav",
+          "description": "No mobile navigation menu detected",
+          "component": "Navigation"
+        }
+      ],
+      "screenshot": "/home/shazbot/team-consensus-vault/test-results/mobile-screenshots/enhanced-consensus-mobile-414-414x896.png",
+      "timestamp": "2026-02-10T02:38:04.361Z"
+    },
+    "tablet-768": {
+      "issues": [
+        {
+          "severity": "major",
+          "type": "missing_mobile_nav",
+          "description": "No mobile navigation menu detected",
+          "component": "Navigation"
+        }
+      ],
+      "screenshot": "/home/shazbot/team-consensus-vault/test-results/mobile-screenshots/enhanced-consensus-tablet-768-768x1024.png",
+      "timestamp": "2026-02-10T02:38:07.025Z"
+    }
+  }
+}
