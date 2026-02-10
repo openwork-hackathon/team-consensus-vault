@@ -128,7 +128,7 @@ export default function ChatMessage({ message, onQuote }: ChatMessageProps) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className={`flex gap-2.5 sm:gap-3 px-3 sm:px-4 py-6 sm:py-6 hover:bg-white/[0.02] active:bg-white/[0.05] group ${onQuote ? 'cursor-pointer hover:bg-accent/10' : ''}`}
+      className={`flex gap-2.5 sm:gap-3 px-3 sm:px-4 py-3 sm:py-3 hover:bg-white/[0.02] active:bg-white/[0.05] group ${onQuote ? 'cursor-pointer hover:bg-accent/10' : ''}`}
       role="article"
       aria-label={messageAriaLabel}
       onClick={handleClick}
