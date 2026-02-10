@@ -74,26 +74,24 @@ export default function ArenaPage() {
 
   // CVAULT-218: Prevent scroll on input focus
   const handleInputFocus = useCallback((e: React.FocusEvent<HTMLInputElement>) => {
-    // Store current scroll position
+    // Store current scroll position before any focus behavior
     const scrollX = window.scrollX || window.pageXOffset;
     const scrollY = window.scrollY || window.pageYOffset;
 
-    // Prevent any scroll-into-view behavior
-    e.target.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+    // DO NOT call scrollIntoView - this causes the input to scroll to center of viewport
+    // e.target.scrollIntoView({ block: 'nearest', behavior: 'auto' });
 
-    // Force the input to stay in place
-    setTimeout(() => {
-      const input = document.getElementById('arena-chat-input');
-      if (input) {
-        (input as HTMLInputElement).style.scrollBehavior = 'auto';
-        (input as HTMLInputElement).style.scrollMargin = '0px';
-        (input as HTMLInputElement).style.scrollMarginTop = '0px';
-        (input as HTMLInputElement).style.scrollMarginBottom = '0px';
-      }
+    // Force the input to stay in place with CSS
+    const target = e.target as HTMLInputElement;
+    target.style.scrollBehavior = 'auto';
+    target.style.scrollMargin = '0px';
+    target.style.scrollMarginTop = '0px';
+    target.style.scrollMarginBottom = '0px';
 
-      // Restore scroll position
+    // Restore scroll position immediately to prevent any viewport movement
+    requestAnimationFrame(() => {
       window.scrollTo(scrollX, scrollY);
-    }, 0);
+    });
   }, []);
 
 
