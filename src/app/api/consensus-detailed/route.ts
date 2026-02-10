@@ -12,7 +12,7 @@
  * - Response time logging for performance monitoring
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { runDetailedConsensusAnalysis } from '@/lib/consensus-engine';
 import { 
   checkRateLimit, 

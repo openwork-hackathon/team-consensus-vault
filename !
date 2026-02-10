@@ -1,3 +1,31 @@
 ⚠ Port 3000 is in use by an unknown process, using available port 3001 instead.
 Lit is in dev mode. Not recommended for production! See https://lit.dev/msg/dev-mode for more information.
 [gemini] Primary failed: PARSE_ERROR: No JSON found in response. Expected format: {"signal": "buy|sell|hold", "confidence": 0-100, "reasoning": "..."}. Trying fallbacks...
+[minimax] Primary failed: PARSE_ERROR: No JSON found in response. Expected format: {"signal": "buy|sell|hold", "confidence": 0-100, "reasoning": "..."}. Trying fallbacks...
+[gemini] Primary failed: PARSE_ERROR: No JSON found in response. Expected format: {"signal": "buy|sell|hold", "confidence": 0-100, "reasoning": "..."}. Trying fallbacks...
+[ModerationManager] Failed to load store: ReferenceError: localStorage is not defined
+    at ModerationManager.loadStore (src/lib/chatroom/moderation.ts:22:22)
+    at new ModerationManager (src/lib/chatroom/moderation.ts:12:23)
+    at module evaluation (src/lib/chatroom/moderation.ts:374:34)
+    at module evaluation (src/app/api/chatroom/moderate/route.ts:3:1)
+    at Object.<anonymous> (.next/dev/server/app/api/chatroom/moderate/route.js:5:3)
+  20 |   private loadStore(): ModerationStore {
+  21 |     try {
+> 22 |       const stored = localStorage.getItem(MODERATION_STORAGE_KEY);
+     |                      ^
+  23 |       if (stored) {
+  24 |         const parsed = JSON.parse(stored);
+  25 |         return {
+[ModerationManager] Failed to load actions log: ReferenceError: localStorage is not defined
+    at ModerationManager.loadActionsLog (src/lib/chatroom/moderation.ts:47:22)
+    at new ModerationManager (src/lib/chatroom/moderation.ts:13:28)
+    at module evaluation (src/lib/chatroom/moderation.ts:374:34)
+    at module evaluation (src/app/api/chatroom/moderate/route.ts:3:1)
+    at Object.<anonymous> (.next/dev/server/app/api/chatroom/moderate/route.js:5:3)
+  45 |   private loadActionsLog(): ModerationAction[] {
+  46 |     try {
+> 47 |       const stored = localStorage.getItem(MODERATION_ACTIONS_LOG_KEY);
+     |                      ^
+  48 |       if (stored) {
+  49 |         return JSON.parse(stored);
+  50 |       }

@@ -21,7 +21,7 @@ import { checkAndCleanupIfNeeded, getLastCleanupTimestamp } from '@/lib/stale-tr
  *
  * CVAULT-165: Enhanced with detailed cache metrics and response time tracking
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   const startTime = Date.now();
 
   try {

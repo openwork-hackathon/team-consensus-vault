@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
     const { combinedContext } = await prepareCouncilContext(userContext);
 
     // Step 3: Run trading council analysis with chatroom context
-    const { analysts, consensus, responseTimes, partialFailures } =
+    const { analysts, consensus, partialFailures } =
       await runConsensusAnalysis(asset, combinedContext || userContext);
 
     // Step 4: Calculate alignment between chatroom and council

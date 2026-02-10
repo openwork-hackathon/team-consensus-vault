@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
  * CVAULT-217: Get current status without performing cleanup
  * Useful for monitoring and debugging
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const status = await getRollingHistoryStatus();
     

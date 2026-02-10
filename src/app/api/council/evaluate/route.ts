@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Run the 5-agent consensus analysis
-    const { analysts, consensus, responseTimes, partialFailures } = await runConsensusAnalysis(
+    const { analysts, consensus, partialFailures } = await runConsensusAnalysis(
       asset,
       context
     );
