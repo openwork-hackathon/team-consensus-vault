@@ -23,7 +23,7 @@ export async function callModelRaw(
   modelId: string,
   systemPrompt: string,
   userPrompt: string,
-  maxTokens: number = 200,
+  maxTokens: number = 80,
   onProgress?: (progress: ProgressUpdate) => void
 ): Promise<string | null> {
   const config = ANALYST_MODELS.find(m => m.id === modelId);

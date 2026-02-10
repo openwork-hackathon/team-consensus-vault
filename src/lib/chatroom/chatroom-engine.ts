@@ -141,7 +141,7 @@ export async function generateNextMessage(
       persona.modelId,
       promptData.systemPrompt,
       promptData.userPrompt,
-      250
+      80
     );
   } catch (error) {
     // Log detailed error information for debugging (INTERNAL ONLY - not exposed to frontend)

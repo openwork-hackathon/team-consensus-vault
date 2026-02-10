@@ -235,7 +235,7 @@ export async function generateNextMessageEnhanced(
     persona.modelId,
     promptData.systemPrompt,
     promptData.userPrompt,
-    250
+    80
   );
 
   // If model call failed, silently skip this persona and return special result
