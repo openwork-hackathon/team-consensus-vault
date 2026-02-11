@@ -91,11 +91,9 @@ class ModelFactory {
     // Apply environment variable overrides (synchronous)
     this.applyEnvOverrides();
 
-    // Try to load config file asynchronously (optional enhancement)
-    // We don't await this - config file is optional enhancement
-    this.loadConfigFileAsync().catch(() => {
-      // Config file loading is optional
-    });
+    // Config file loading is optional and happens asynchronously
+    // We don't load it here to avoid Edge runtime issues
+    // It will be loaded on-demand via ensureInitialized() if needed
 
     this.initialized = true;
     console.log('[ModelFactory] Initialized with', this.configCache.size, 'model configurations');
@@ -128,11 +126,16 @@ class ModelFactory {
     // Load default models first
     this.loadDefaultModels();
 
-    // Try to load config file
-    await this.loadConfigFileAsync();
-
     // Apply environment variable overrides
     this.applyEnvOverrides();
+
+    // Try to load config file (optional)
+    try {
+      await this.loadConfigFileAsync();
+    } catch (error) {
+      // Config file loading is optional
+      console.log('[ModelFactory] Config file not loaded (optional):', error instanceof Error ? error.message : 'Unknown error');
+    }
 
     this.initialized = true;
     console.log('[ModelFactory] Initialized with', this.configCache.size, 'model configurations');
@@ -185,8 +188,9 @@ class ModelFactory {
           }
         }
       }
-    } catch {
+    } catch (error) {
       // fs/path not available (Edge runtime) - this is expected
+      console.log('[ModelFactory] Config file loading skipped (Edge runtime or fs not available)');
     }
   }
 
