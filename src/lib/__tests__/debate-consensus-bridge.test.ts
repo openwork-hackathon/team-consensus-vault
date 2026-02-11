@@ -3,7 +3,7 @@
  * CVAULT-190: Wire Debate Arguments into Consensus Round Prompts
  */
 
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect } from 'vitest';
 import {
   calculateArgumentQuality,
   extractScoredArguments,
