@@ -58,7 +58,7 @@ describe('Dynamic Model Selection', () => {
   describe('getSelectedModels', () => {
     it('should return default models when no env vars set', () => {
       const models = getSelectedModels();
-      expect(models).toEqual(['deepseek', 'kimi', 'minimax', 'glm', 'gemini']);
+      expect(models).toEqual(['deepseek', 'kimi', 'minimax', 'glm', 'gemini', 'gpt5']);
     });
 
     it('should return single model when ORCHESTRATOR_MODEL is set', () => {

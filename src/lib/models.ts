@@ -203,13 +203,15 @@ export function signalToSentiment(signal: Signal): 'bullish' | 'bearish' | 'neut
  * Each model can be substituted by any other — the role prompt stays the same.
  * 
  * CVAULT-236: This can now be overridden via model-config.json
+ * CVAULT-237: Added GPT-5.2 (gpt5) as fallback option for all models
  */
 const DEFAULT_FALLBACK_ORDER: Record<string, string[]> = {
-  deepseek: ['minimax', 'glm', 'kimi', 'gemini'],
-  kimi: ['deepseek', 'minimax', 'glm', 'gemini'],
-  minimax: ['deepseek', 'kimi', 'glm', 'gemini'],
-  glm: ['deepseek', 'minimax', 'kimi', 'gemini'],
-  gemini: ['deepseek', 'minimax', 'kimi', 'glm'],
+  deepseek: ['minimax', 'glm', 'kimi', 'gemini', 'gpt5'],
+  kimi: ['deepseek', 'minimax', 'glm', 'gemini', 'gpt5'],
+  minimax: ['deepseek', 'kimi', 'glm', 'gemini', 'gpt5'],
+  glm: ['deepseek', 'minimax', 'kimi', 'gemini', 'gpt5'],
+  gemini: ['deepseek', 'minimax', 'kimi', 'glm', 'gpt5'],
+  gpt5: ['deepseek', 'minimax', 'kimi', 'glm', 'gemini'],
 };
 
 /**
