@@ -16,6 +16,8 @@
 import {
   ANALYST_MODELS,
   FALLBACK_ORDER,
+  getActiveAnalystModels,
+  getFallbackOrder,
   ModelConfig,
   ModelResponse,
   AnalystResult,
@@ -954,9 +956,11 @@ export interface ModelHealthStatus {
 /**
  * Get health status for all models including circuit breaker information
  * This is useful for monitoring dashboards and debugging
+ * CVAULT-236: Now uses dynamic model configuration
  */
 export function getModelsHealthStatus(): ModelHealthStatus[] {
-  return ANALYST_MODELS.map(config => {
+  const activeModels = getActiveAnalystModels();
+  return activeModels.map(config => {
     const metrics = metricsPerModel[config.id];
     const circuitState = circuitBreakerStates[config.id];
 
@@ -1834,7 +1838,8 @@ export async function getAnalystOpinion(
   onProgress?: (progress: ProgressUpdate) => void
 ): Promise<{ result: AnalystResult; responseTime: number }> {
   const startTime = Date.now();
-  const primaryConfig = ANALYST_MODELS.find((m) => m.id === modelId);
+  const activeModels = getActiveAnalystModels();
+  const primaryConfig = activeModels.find((m) => m.id === modelId);
 
   if (!primaryConfig) {
     return {
@@ -1913,9 +1918,10 @@ export async function getAnalystOpinion(
     sendProgress('failed', `Primary model failed: ${userError.message}`);
 
     // Try fallback models with the SAME role prompt
-    const fallbackIds = FALLBACK_ORDER[modelId] || [];
+    // CVAULT-236: Use dynamic fallback order
+    const fallbackIds = getFallbackOrder(modelId);
     for (const fallbackId of fallbackIds) {
-      const fallbackProvider = ANALYST_MODELS.find((m) => m.id === fallbackId);
+      const fallbackProvider = activeModels.find((m) => m.id === fallbackId);
       if (!fallbackProvider) continue;
 
       // Check if fallback has an API key configured
@@ -2037,8 +2043,11 @@ export async function runConsensusAnalysis(
   const responseTimes = new Map<string, number>();
   const failedModels: string[] = [];
 
+  // CVAULT-236: Use dynamic model configuration
+  const activeModels = getActiveAnalystModels();
+
   // Run all models in parallel using Promise.allSettled for resilience
-  const promises = ANALYST_MODELS.map(async (config) => {
+  const promises = activeModels.map(async (config) => {
     const { result, responseTime } = await getAnalystOpinion(config.id, asset, context, onModelProgress);
     responseTimes.set(config.id, responseTime);
 
@@ -2062,7 +2071,7 @@ export async function runConsensusAnalysis(
     if (result.status === 'fulfilled') {
       return result.value;
     } else {
-      const config = ANALYST_MODELS[index];
+      const config = activeModels[index];
       const errorResult = {
         id: config.id,
         name: config.name,
@@ -2120,8 +2129,11 @@ export async function runDetailedConsensusAnalysis(
 ): Promise<ConsensusResponse> {
   const responseTimes = new Map<string, number>();
 
+  // CVAULT-236: Use dynamic model configuration
+  const activeModels = getActiveAnalystModels();
+
   // Run all models in parallel using Promise.allSettled for resilience
-  const promises = ANALYST_MODELS.map(async (config) => {
+  const promises = activeModels.map(async (config) => {
     const { result, responseTime } = await getAnalystOpinion(config.id, asset, context, onModelProgress);
     responseTimes.set(config.id, responseTime);
     return result;
@@ -2134,7 +2146,7 @@ export async function runDetailedConsensusAnalysis(
     if (result.status === 'fulfilled') {
       return result.value;
     } else {
-      const config = ANALYST_MODELS[index];
+      const config = activeModels[index];
       return {
         id: config.id,
         name: config.name,
@@ -2161,8 +2173,11 @@ export async function* streamConsensusAnalysis(
 ): AsyncGenerator<AnalystResult | { type: 'consensus'; data: ReturnType<typeof calculateConsensus> } | { type: 'progress'; data: ProgressUpdate }> {
   const results: AnalystResult[] = [];
 
+  // CVAULT-236: Use dynamic model configuration
+  const activeModels = getActiveAnalystModels();
+
   // Create promises that yield as they complete
-  const promises = ANALYST_MODELS.map(async (config) => {
+  const promises = activeModels.map(async (config) => {
     const { result } = await getAnalystOpinion(config.id, asset, context, onModelProgress);
     return result;
   });

@@ -1,7 +1,23 @@
 /**
  * Consensus Vault - AI Model Configuration
  * 5 specialized crypto analyst models for consensus-based trading signals
+ * 
+ * CVAULT-236: Enhanced with dynamic model selection via configuration
+ * Models can now be configured via:
+ * - Environment variables (MODEL_{MODEL_ID}_{SETTING})
+ * - Configuration file (model-config.json)
+ * - Bulk model selection (CONSENSUS_AI_MODELS)
+ * - Default hardcoded configuration (fallback)
  */
+
+import {
+  getSelectedModelConfigs,
+  getSelectedModels,
+  getModelSelectionStatus,
+  getCustomFallbackOrder,
+  applyModelOverrides,
+  type ModelConfigOverride,
+} from './model-config';
 
 export type Signal = 'buy' | 'sell' | 'hold';
 
@@ -42,226 +58,131 @@ export interface ModelConfig {
   timeout: number; // ms
 }
 
-export const ANALYST_MODELS: ModelConfig[] = [
-  {
-    id: 'deepseek',
-    name: 'Momentum Hunter',
-    role: 'Technical Analysis & Trend Detection',
-    baseUrl: process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com/v1',
-    apiKeyEnv: 'DEEPSEEK_API_KEY',
-    model: 'deepseek-chat',
-    provider: 'openai',
-    timeout: 30000,
-    systemPrompt: `You are the Momentum Hunter, an expert technical analyst specializing in cryptocurrency markets.
+import { 
+  modelFactory, 
+  getAllEnabledModels, 
+  getBestAvailableModel,
+  validateModelConfigs 
+} from './model-factory';
 
-Your expertise includes:
-- Price action analysis and chart patterns
-- RSI, MACD, Bollinger Bands, and momentum indicators
-- Trend identification and confirmation
-- Support/resistance levels and breakout detection
-- Volume analysis and divergence patterns
+/**
+ * CACHE: Stores the last computed active model configs
+ * Used to prevent redundant computations and ensure consistency
+ */
+let activeModelsCache: ModelConfig[] | null = null;
 
-When analyzing a crypto asset, provide a structured technical analysis:
-1. Identify the PRIMARY trend (uptrend/downtrend/sideways) with specific evidence
-2. Note KEY technical levels (support/resistance) with approximate price points when relevant
-3. Cite specific MOMENTUM indicators (e.g., "RSI at 65", "MACD bullish crossover")
-4. Assess volume confirmation or divergence
-5. Mention any pattern formations with clarity
+/**
+ * Clear the active models cache
+ * Call this when configuration changes to force recalculation
+ */
+export function clearActiveModelsCache(): void {
+  activeModelsCache = null;
+}
 
-Signal Selection Guidelines:
-- BUY: Strong uptrend + bullish momentum + volume confirmation + above key resistance
-- SELL: Clear downtrend + bearish momentum + volume confirmation + below key support
-- HOLD: Mixed signals, consolidation, or uncertain direction
+/**
+ * Apply environment variable overrides to a model configuration
+ * Uses MODEL_<MODEL_ID>_<SETTING> format
+ */
+function applyEnvOverrides(config: ModelConfig, modelId: string): ModelConfig {
+  const overridePrefix = `MODEL_${modelId.toUpperCase()}_`;
+  const overrides: Partial<ModelConfig> = {};
+  
+  for (const [key, value] of Object.entries(process.env)) {
+    if (!key.startsWith(overridePrefix)) continue;
+    
+    const setting = key.substring(overridePrefix.length).toLowerCase();
+    
+    switch (setting) {
+      case 'model':
+        overrides.model = value;
+        break;
+      case 'base_url':
+      case 'baseurl':
+        overrides.baseUrl = value;
+        break;
+      case 'timeout':
+        const timeout = parseInt(value || '30000', 10);
+        if (!isNaN(timeout) && timeout >= 1000 && timeout <= 300000) {
+          overrides.timeout = timeout;
+        }
+        break;
+      // Provider, systemPrompt, role, name, apiKeyEnv are not overridable via env
+    }
+  }
+  
+  return { ...config, ...overrides };
+}
 
-Confidence Scoring (0-100):
-- 80-100: Multiple indicators strongly aligned, clear trend, high volume confirmation
-- 60-79: Good alignment, trend present but some conflicting signals
-- 40-59: Mixed signals, neutral indicators, sideways action
-- 20-39: Weak signals, low confidence in direction
-- 0-19: Extremely unclear or contradictory signals
+/**
+ * Get active analyst models based on dynamic configuration
+ * 
+ * Configuration priority (highest to lowest):
+ * 1. CONSENSUS_AI_MODELS env var - bulk model selection
+ * 2. MODEL_<MODEL_ID>_* env vars - per-model overrides
+ * 3. model-config.json - configuration file settings
+ * 4. Default hardcoded configuration (fallback)
+ * 
+ * @returns Array of active ModelConfig objects with all overrides applied
+ */
+export function getActiveModelConfigs(): ModelConfig[] {
+  // Return cached result if available
+  if (activeModelsCache !== null) {
+    return activeModelsCache;
+  }
+  
+  // Check if CONSENSUS_AI_MODELS is set and use it for selection
+  const selectedModelIds = getSelectedModels();
+  
+  if (selectedModelIds.length === 0) {
+    console.warn('[models] No models selected via CONSENSUS_AI_MODELS, using all enabled models');
+    // Fall back to factory's enabled models
+    const factoryModels = getAllEnabledModels();
+    activeModelsCache = factoryModels.map(model => applyEnvOverrides(model as ModelConfig, model.id));
+    return activeModelsCache;
+  }
+  
+  // Get base configs from model-config.ts (which respects CONSENSUS_AI_MODELS)
+  let configs = getSelectedModelConfigs();
+  
+  // If model-config.ts returned empty, fall back to factory
+  if (configs.length === 0) {
+    console.warn('[models] No valid models from CONSENSUS_AI_MODELS, falling back to factory defaults');
+    const factoryModels = getAllEnabledModels();
+    configs = factoryModels.map(model => applyEnvOverrides(model as ModelConfig, model.id));
+  } else {
+    // Apply environment variable overrides to each config
+    configs = configs.map(config => applyEnvOverrides(config, config.id));
+  }
+  
+  // Cache the result
+  activeModelsCache = configs;
+  
+  // Log selection for debugging
+  console.log('[models] Active models:', configs.map(c => c.id).join(', '));
+  
+  return activeModelsCache;
+}
 
-You MUST respond with ONLY a valid JSON object in this exact format:
-{"signal": "buy", "confidence": 75, "reasoning": "Strong uptrend confirmed by RSI (68) and MACD golden cross. Price holding above $X support with volume increasing 40%. Target resistance at $Y."}
+/**
+ * Get fallback order for a model using dynamic configuration
+ * CVAULT-236: Uses model-config for dynamic fallback chains
+ */
+export function getFallbackOrder(modelId: string): string[] {
+  // First try to get custom fallback order from config
+  const customOrder = getCustomFallbackOrder(modelId);
+  if (customOrder) {
+    return customOrder;
+  }
+  
+  // Fall back to static default
+  return DEFAULT_FALLBACK_ORDER[modelId] || [];
+}
 
-Be specific with levels, indicators, and percentages. Avoid vague language.`,
-  },
-  {
-    id: 'kimi',
-    name: 'Whale Watcher',
-    role: 'Large Holder Movements & Accumulation Patterns',
-    baseUrl: process.env.KIMI_BASE_URL || 'https://api.kimi.com/coding/v1',
-    apiKeyEnv: 'KIMI_API_KEY',
-    model: 'k2p5', // Kimi K2.5 — model ID for the coding API
-    provider: 'anthropic', // Kimi coding API uses Anthropic protocol
-    timeout: 30000,
-    systemPrompt: `You are the Whale Watcher, an expert in analyzing large holder behavior and institutional movements in crypto markets.
-
-Your expertise includes:
-- Whale wallet tracking and movement analysis
-- Institutional accumulation and distribution patterns
-- Exchange inflow/outflow dynamics
-- Large transaction detection and interpretation
-- Smart money behavior patterns
-
-When analyzing a crypto asset, provide concrete whale behavior analysis:
-1. Identify recent LARGE HOLDER movements with specifics (e.g., "100M tokens moved to cold storage")
-2. Assess exchange flow direction (inflows = potential selling, outflows = accumulation)
-3. Note institutional signals or significant wallet patterns
-4. Mention dormant wallet activity if relevant
-5. Track concentration trends among top holders
-
-Signal Selection Guidelines:
-- BUY: Heavy exchange outflows + whale accumulation + institutional interest + decreasing supply on exchanges
-- SELL: Large exchange inflows + whale distribution + top holder selling + increasing supply on exchanges
-- HOLD: Balanced flows, no clear directional whale behavior, mixed signals
-
-Confidence Scoring (0-100):
-- 80-100: Clear, sustained whale accumulation/distribution with large volumes
-- 60-79: Noticeable whale activity in one direction, supported by exchange flows
-- 40-59: Mixed whale activity, some accumulation and distribution, unclear pattern
-- 20-39: Minimal whale activity, normal trading patterns
-- 0-19: No significant whale activity or contradictory signals
-
-You MUST respond with ONLY a valid JSON object in this exact format:
-{"signal": "buy", "confidence": 82, "reasoning": "Major exchange outflows (50M tokens last 24h), 5 whale wallets accumulated 10M+ each. Exchange reserves down 15%, indicating strong accumulation phase."}
-
-Be specific with amounts, percentages, and timeframes. Quantify whale behavior when possible.`,
-  },
-  {
-    id: 'minimax',
-    name: 'Sentiment Scout',
-    role: 'Social Sentiment & Community Buzz',
-    baseUrl: process.env.MINIMAX_BASE_URL || 'https://api.minimax.io/v1',
-    apiKeyEnv: 'MINIMAX_API_KEY',
-    model: 'MiniMax-M2',
-    provider: 'openai',
-    timeout: 30000,
-    systemPrompt: `You are the Sentiment Scout, an expert in analyzing social sentiment and community dynamics in crypto markets.
-
-IMPORTANT: You MUST provide a trading signal analysis based on typical market sentiment patterns and your knowledge of crypto market dynamics. Do not refuse to answer or explain limitations. Generate a realistic sentiment analysis based on current market conditions and typical social media patterns for the asset.
-
-Your expertise includes:
-- Crypto Twitter (X) sentiment analysis
-- Reddit and forum community mood
-- Fear & Greed index interpretation
-- Narrative tracking and meme coin dynamics
-- Influencer opinion monitoring
-- Google trends and search interest
-
-When analyzing a crypto asset, provide quantified sentiment analysis:
-1. Assess CURRENT sentiment with realistic metrics (e.g., "Twitter mentions up 200%", "Reddit sentiment 75% positive")
-2. Identify trending narratives or hashtags gaining traction
-3. Note community growth patterns and engagement changes
-4. Reference Fear & Greed Index position if relevant (e.g., "F&G at 65 - Greed territory")
-5. Mention significant influencer commentary or media coverage
-
-Signal Selection Guidelines:
-- BUY: Overwhelmingly positive sentiment + growing community + bullish narratives + influencer support + rising search interest
-- SELL: Predominantly negative sentiment + declining community + FUD spreading + influencer warnings + falling interest
-- HOLD: Mixed sentiment, neutral narratives, stable community engagement
-
-Confidence Scoring (0-100):
-- 80-100: Extremely positive/negative sentiment across all channels, viral momentum
-- 60-79: Strong directional sentiment, growing momentum, multiple positive/negative signals
-- 40-59: Mixed sentiment, some positive and negative, neutral overall
-- 20-39: Weak or unclear sentiment signals, low engagement
-- 0-19: No clear sentiment direction or extremely low activity
-
-You MUST respond with ONLY a valid JSON object in this exact format:
-{"signal": "buy" | "sell" | "hold", "confidence": 0-100, "reasoning": "Your sentiment analysis with specific metrics and percentages"}
-
-Be specific with percentages, growth rates, and sentiment metrics. Quantify the social signals. Do NOT include any text outside the JSON object.`,
-  },
-  {
-    id: 'glm',
-    name: 'On-Chain Oracle',
-    role: 'On-Chain Metrics & TVL Analysis',
-    baseUrl: process.env.GLM_BASE_URL || 'https://api.z.ai/api/anthropic/v1',
-    apiKeyEnv: 'GLM_API_KEY',
-    model: 'glm-4.6',
-    provider: 'anthropic',
-    timeout: 30000,
-    systemPrompt: `You are the On-Chain Oracle, an expert in blockchain analytics and on-chain metrics for crypto markets.
-
-Your expertise includes:
-- Total Value Locked (TVL) analysis
-- Active addresses and network growth
-- Transaction volume and velocity
-- NVT ratio and network value metrics
-- DeFi protocol flows and liquidity
-- Gas usage and network activity
-- Staking ratios and token economics
-
-When analyzing a crypto asset, provide data-driven on-chain analysis:
-1. Report TVL trends with specific numbers (e.g., "TVL up 25% to $500M over 7 days")
-2. Cite network activity metrics (e.g., "Daily active addresses: 50K, +30% weekly")
-3. Assess transaction volume and velocity patterns
-4. Note protocol revenue, fees, or sustainability indicators
-5. Mention cross-chain activity, bridge flows, or staking trends
-
-Signal Selection Guidelines:
-- BUY: Growing TVL + increasing active addresses + high transaction volume + strong protocol revenue + positive token economics
-- SELL: Declining TVL + decreasing network activity + falling transaction volume + poor fundamentals + unfavorable economics
-- HOLD: Stable metrics, mixed on-chain signals, sideways fundamental health
-
-Confidence Scoring (0-100):
-- 80-100: Strong, consistent growth across all key on-chain metrics
-- 60-79: Positive trends in most metrics, some areas of strength
-- 40-59: Mixed on-chain data, stable but not growing, neutral fundamentals
-- 20-39: Weak or declining metrics, concerning on-chain trends
-- 0-19: Severe on-chain deterioration, fundamental red flags
-
-You MUST respond with ONLY a valid JSON object in this exact format:
-{"signal": "buy", "confidence": 85, "reasoning": "TVL surged 40% to $2.1B in 14 days. Active addresses up 35% (80K daily). Transaction volume +50%, protocol revenue growing. Strong fundamental health."}
-
-Be specific with numbers, percentages, and timeframes. Ground analysis in concrete on-chain data.`,
-  },
-  {
-    id: 'gemini',
-    name: 'Risk Manager',
-    role: 'Risk Assessment & Portfolio Exposure',
-    baseUrl: 'https://generativelanguage.googleapis.com/v1beta',
-    apiKeyEnv: 'GEMINI_API_KEY',
-    model: 'gemini-2.5-flash',
-    provider: 'google',
-    timeout: 30000,
-    systemPrompt: `You are the Risk Manager, an expert in risk assessment and portfolio management for crypto markets.
-
-Your expertise includes:
-- Volatility analysis and VaR calculations
-- Correlation with macro markets (BTC, stocks, bonds)
-- Funding rates and derivatives positioning
-- Liquidation level analysis
-- Regulatory and geopolitical risk assessment
-- Portfolio exposure and position sizing
-- Black swan event probability
-
-When analyzing a crypto asset, provide quantified risk assessment:
-1. State current VOLATILITY regime with metrics (e.g., "30-day volatility at 45%, above 6-month avg")
-2. Report FUNDING RATES if applicable (e.g., "Perp funding +0.05%, elevated long positioning")
-3. Assess MACRO CORRELATIONS (e.g., "0.85 correlation with BTC, 0.6 with equities")
-4. Note REGULATORY/GEOPOLITICAL risks or catalysts
-5. Evaluate RISK/REWARD at current levels with key liquidation zones
-
-Signal Selection Guidelines:
-- BUY: Low volatility + favorable funding + manageable risks + positive regulatory outlook + attractive risk/reward
-- SELL: High volatility + extreme funding + elevated risks + regulatory headwinds + poor risk/reward
-- HOLD: Moderate risk levels, acceptable volatility, balanced risk profile, uncertain regulatory landscape
-
-Confidence Scoring (0-100):
-- Risk Manager is inherently cautious - high confidence means LOW RISK
-- 80-100: Exceptionally low risk environment, all metrics favorable, strong risk/reward
-- 60-79: Manageable risk levels, most indicators favorable, decent risk/reward
-- 40-59: Moderate risk, mixed signals, neutral risk/reward profile
-- 20-39: Elevated risk, concerning metrics, unfavorable risk/reward
-- 0-19: Extreme risk, multiple red flags, poor risk/reward, potential tail events
-
-You MUST respond with ONLY a valid JSON object in this exact format:
-{"signal": "hold", "confidence": 55, "reasoning": "Volatility elevated (60% vs 40% avg). Funding neutral at 0.01%. Correlation with BTC high (0.9). Risk/reward balanced but volatility concerning. Watch regulatory developments."}
-
-Be specific with volatility levels, funding rates, correlations, and risk metrics. Quantify the risk profile.`,
-  },
-];
+/**
+ * Backward compatibility: ANALYST_MODELS now uses dynamic configuration
+ * @deprecated Use getActiveModelConfigs() or getActiveAnalystModels() instead for dynamic model selection
+ */
+export const ANALYST_MODELS: ModelConfig[] = getActiveModelConfigs();
 
 /**
  * Map signal to sentiment for frontend display
@@ -278,16 +199,24 @@ export function signalToSentiment(signal: Signal): 'bullish' | 'bearish' | 'neut
 }
 
 /**
- * Fallback order: when a model fails, try these alternatives with the same role prompt.
+ * Default fallback order: when a model fails, try these alternatives with the same role prompt.
  * Each model can be substituted by any other — the role prompt stays the same.
+ * 
+ * CVAULT-236: This can now be overridden via model-config.json
  */
-export const FALLBACK_ORDER: Record<string, string[]> = {
+const DEFAULT_FALLBACK_ORDER: Record<string, string[]> = {
   deepseek: ['minimax', 'glm', 'kimi', 'gemini'],
   kimi: ['deepseek', 'minimax', 'glm', 'gemini'],
   minimax: ['deepseek', 'kimi', 'glm', 'gemini'],
   glm: ['deepseek', 'minimax', 'kimi', 'gemini'],
   gemini: ['deepseek', 'minimax', 'kimi', 'glm'],
 };
+
+/**
+ * Export FALLBACK_ORDER for backward compatibility
+ * @deprecated Use getFallbackOrder(modelId) instead
+ */
+export const FALLBACK_ORDER: Record<string, string[]> = DEFAULT_FALLBACK_ORDER;
 
 export type ConsensusStatus = 'CONSENSUS_REACHED' | 'NO_CONSENSUS' | 'INSUFFICIENT_RESPONSES';
 
@@ -458,4 +387,74 @@ function sentimentToSignal(sentiment: 'bullish' | 'bearish' | 'neutral'): Signal
     case 'neutral':
       return 'hold';
   }
+}
+
+/**
+ * CVAULT-236: Get active analyst models with dynamic configuration applied
+ * 
+ * This is the primary entry point for getting model configurations.
+ * It applies overrides from:
+ * 1. CONSENSUS_AI_MODELS env var (highest priority)
+ * 2. MODEL_<MODEL_ID>_* env vars (per-model overrides)
+ * 3. model-config.json (configuration file)
+ * 4. Default hardcoded configuration (fallback)
+ * 
+ * @returns Array of active ModelConfig objects with all overrides applied
+ * 
+ * @example
+ * ```ts
+ * const models = getActiveAnalystModels();
+ * // Returns: ModelConfig[] with dynamic overrides applied
+ * ```
+ */
+export function getActiveAnalystModels(): ModelConfig[] {
+  return getActiveModelConfigs();
+}
+
+/**
+ * CVAULT-236: Get a specific model's configuration with overrides
+ * 
+ * @param modelId - The model identifier (e.g., 'deepseek', 'kimi')
+ * @returns ModelConfig with overrides applied, or undefined if model not found
+ * 
+ * @example
+ * ```ts
+ * const deepseekConfig = getModelConfig('deepseek');
+ * if (deepseekConfig) {
+ *   console.log(deepseekConfig.model); // May be overridden from config
+ * }
+ * ```
+ */
+export function getModelConfig(modelId: string): ModelConfig | undefined {
+  const activeModels = getActiveAnalystModels();
+  return activeModels.find(m => m.id === modelId);
+}
+
+/**
+ * CVAULT-236: Reload model configuration (useful for testing or hot-reload)
+ * Clears the configuration cache and returns fresh models
+ * 
+ * @returns Array of active ModelConfig objects
+ * 
+ * @example
+ * ```ts
+ * // After changing model-config.json or environment variables
+ * const models = reloadModelConfig();
+ * ```
+ */
+export function reloadModelConfig(): ModelConfig[] {
+  // Clear both caches
+  clearActiveModelsCache();
+  modelFactory.reload();
+  
+  // Return fresh models
+  return getActiveAnalystModels();
+}
+
+/**
+ * CVAULT-236: Get model selection status for monitoring/debugging
+ * Returns information about which models are selected and why
+ */
+export function getModelSelectionInfo() {
+  return getModelSelectionStatus();
 }

@@ -155,6 +155,61 @@ Every analyst role has a full fallback chain covering all other models. This mea
 - **The system degrades gracefully** -- even if 2 models are down, 3+ can still produce a valid consensus
 - **Automatic retry with exponential backoff** -- transient errors are retried before triggering fallback
 
+## Dynamic Model Selection (CVAULT-236)
+
+**NEW:** The orchestrator now supports **dynamic model selection** via environment variables or configuration file. This enables:
+
+- **Cost Optimization** — Automatically select the most cost-effective model for your needs
+- **Token Crisis Management** — Graceful fallback when quota limits are reached
+- **Runtime Configuration** — Change models without redeploying
+- **A/B Testing** — Compare different models side-by-side
+
+### Quick Configuration
+
+**Via Environment Variables:**
+```bash
+# Disable a model
+MODEL_DEEPSEEK_ENABLED=false
+
+# Change model version
+MODEL_DEEPSEEK_MODEL=deepseek-chat-v2
+
+# Set priority for cost optimization
+MODEL_DEEPSEEK_PRIORITY=secondary
+
+# Adjust timeout
+MODEL_DEEPSEEK_TIMEOUT=45000
+```
+
+**Via Configuration File:**
+```bash
+cp model-config.example.json model-config.json
+# Edit model-config.json with your settings
+```
+
+### Key Features
+
+- **Priority Levels:** `primary`, `secondary`, `fallback`, `emergency`
+- **Cost Tracking:** Set `costPerToken` for automatic cost optimization
+- **Fallback Chains:** Define custom fallback order per model
+- **Runtime Management:** Enable/disable models without restart
+- **Validation:** Built-in configuration validation
+
+### Documentation
+
+Full documentation: [docs/DYNAMIC_MODEL_SELECTION.md](docs/DYNAMIC_MODEL_SELECTION.md)
+
+Example configuration: [model-config.example.json](model-config.example.json)
+
+Validation script: `npx tsx scripts/validate-models.ts`
+
+### API Endpoints
+
+- **GET /api/health/models** — Check model configuration status
+- **GET /api/admin/models** — View all model configurations
+- **PATCH /api/admin/models** — Update model settings at runtime
+- **POST /api/admin/models/reload** — Reload configuration without restart
+
 ---
 
 ## Tech Stack
