@@ -1,0 +1,1208 @@
+{
+  "timestamp": "2026-02-11T16:13:23.685057",
+  "summary": {
+    "total": 32,
+    "working": 22,
+    "client_errors": 9,
+    "server_errors": 1,
+    "connection_errors": 0,
+    "sse_working": 4,
+    "demo_working": 11,
+    "demo_total": 11
+  },
+  "results": [
+    {
+      "name": "Health Check",
+      "endpoint": "/api/health",
+      "method": "GET",
+      "success": true,
+      "status_code": 200,
+      "time_ms": 44.350385665893555,
+      "is_sse": false,
+      "required_for_demo": true,
+      "response": {
+        "status": "healthy",
+        "timestamp": "2026-02-11T16:12:47.938Z",
+        "system": {
+          "healthy_models": 6,
+          "total_models": 6,
+          "healthy_percentage": 100,
+          "open_circuits": 0,
+          "half_open_circuits": 0
+        },
+        "models": [
+          {
+            "id": "deepseek",
+            "status": "healthy",
+            "circuit_breaker": "closed",
+            "failure_count": 0,
+            "success_rate": 100,
+            "avg_response_time_ms": 0,
+            "total_requests": 0
+          },
+          {
+            "id": "kimi",
+            "status": "healthy",
+            "circuit_breaker": "closed",
+            "failure_count": 0,
+            "success_rate": 100,
+            "avg_response_time_ms": 0,
+            "total_requests": 0
+          },
+          {
+            "id": "minimax",
+            "status": "healthy",
+            "circuit_breaker": "closed",
+            "failure_count": 0,
+            "success_rate": 100,
+            "avg_response_time_ms": 0,
+            "total_requests": 0
+          },
+          {
+            "id": "glm",
+            "status": "healthy",
+            "circuit_breaker": "closed",
+            "failure_count": 0,
+            "success_rate": 100,
+            "avg_response_time_ms": 0,
+            "total_requests": 0
+          },
+          {
+            "id": "gemini",
+            "status": "healthy",
+            "circuit_breaker": "closed",
+            "failure_count": 0,
+            "success_rate": 100,
+            "avg_response_time_ms": 0,
+            "total_requests": 0
+          },
+          {
+            "id": "gpt5",
+            "status": "healthy",
+            "circuit_breaker": "closed",
+            "failure_count": 0,
+            "success_rate": 100,
+            "avg_response_time_ms": 0,
+            "total_requests": 0
+          }
+        ],
+        "performance": {
+          "consensus_engine": {},
+          "cache": {
+            "aggregate": {
+              "total_hits": 0,
+              "total_misses": 0,
+              "total_requests": 0,
+              "hit_rate": 0,
+              "avg_response_time_ms": 0,
+              "dedup_pending": 0
+            },
+            "per_model": {},
+            "performance_tracking": {}
+          },
+          "endpoint_response_times": {}
+        },
+        "version": "0.1.0",
+        "uptime": 2368.172802234,
+        "staleTradeCleanup": {
+          "lastCleanupAt": null,
+          "cleanupTriggeredThisRequest": false
+        },
+        "responseTimeMs": 0
+      }
+    },
+    {
+      "name": "Health Check (HEAD)",
+      "endpoint": "/api/health",
+      "method": "HEAD",
+      "success": true,
+      "status_code": 200,
+      "time_ms": 22.798776626586914,
+      "is_sse": false,
+      "required_for_demo": false,
+      "response": ""
+    },
+    {
+      "name": "BTC Price",
+      "endpoint": "/api/price",
+      "method": "GET",
+      "success": true,
+      "status_code": 200,
+      "time_ms": 10.885953903198242,
+      "is_sse": false,
+      "required_for_demo": true,
+      "response": {
+        "success": true,
+        "asset": "BTC/USD",
+        "price": 66655,
+        "timestamp": "2026-02-11T16:12:47.969Z",
+        "cached": true,
+        "responseTimeMs": 2
+      }
+    },
+    {
+      "name": "Market Data",
+      "endpoint": "/api/market-data",
+      "method": "GET",
+      "success": true,
+      "status_code": 200,
+      "time_ms": 27.73594856262207,
+      "is_sse": false,
+      "required_for_demo": true,
+      "response": {
+        "asset": "BTC",
+        "timestamp": "2026-02-11T16:09:21.163Z",
+        "cached": true,
+        "price": {
+          "current": 66596,
+          "change24h": -2467.247496812299,
+          "changePercentage24h": -3.57246,
+          "range24h": {
+            "high": 69877,
+            "low": 65932
+          }
+        },
+        "volume": {
+          "value24h": 50375611998,
+          "change24h": -899824294.1918755,
+          "toMarketCapRatio": 0.037845557468688944
+        },
+        "market": {
+          "cap": 1331083893788,
+          "rank": 1,
+          "volatility": 5.923779205958316
+        },
+        "extremes": {
+          "ath": {
+            "price": 126080,
+            "changePercentage": -47.17978
+          },
+          "atl": {
+            "price": 67.81,
+            "changePercentage": 98110.66234
+          }
+        },
+        "supply": {
+          "circulating": 19987678,
+          "total": 19987678,
+          "max": 21000000
+        },
+        "metrics": {
+          "priceAction": "down",
+          "volumeProfile": "low",
+          "volatility": "normal",
+          "marketCapTier": "large"
+        },
+        "talkingPoints": [
+          "Low volume: $50.38B (weak participation)",
+          "At daily lows: holding 65,932.00 support"
+        ],
+        "responseTimeMs": 2
+      }
+    },
+    {
+      "name": "Price (Invalid Asset)",
+      "endpoint": "/api/price",
+      "method": "GET",
+      "success": true,
+      "status_code": 200,
+      "time_ms": 22.218942642211914,
+      "is_sse": false,
+      "required_for_demo": false,
+      "response": {
+        "success": true,
+        "asset": "INVALID",
+        "price": 66633,
+        "timestamp": "2026-02-11T16:12:48.021Z",
+        "cached": true,
+        "responseTimeMs": 5
+      }
+    },
+    {
+      "name": "Consensus (SSE)",
+      "endpoint": "/api/consensus",
+      "method": "GET",
+      "success": true,
+      "status_code": 200,
+      "time_ms": 31.438589096069336,
+      "is_sse": true,
+      "required_for_demo": true,
+      "response": "SSE stream established"
+    },
+    {
+      "name": "Consensus (POST)",
+      "endpoint": "/api/consensus",
+      "method": "POST",
+      "success": true,
+      "status_code": 200,
+      "time_ms": 7062.830448150635,
+      "is_sse": false,
+      "required_for_demo": true,
+      "response": {
+        "consensus": "Based on 4 model responses: Long-term price predictions are speculative and fall outside technical analysis scope; current data shows no actionable trend for this timeframe. Large holder accumulation patterns show steady inflows from institutional wallets since Q3 2024, but whale distribution clusters near $95-98k suggest significant profit-taking resistance. Without sustained institutional buying pressure above current levels, $100k remains a psychological barrier rather than a technical target. Current crypto social sent...",
+        "individual_responses": [
+          {
+            "model": "deepseek",
+            "response": "Long-term price predictions are speculative and fall outside technical analysis scope; current data shows no actionable trend for this timeframe.",
+            "status": "success",
+            "cached": false,
+            "responseTimeMs": 2567
+          },
+          {
+            "model": "kimi",
+            "response": "Large holder accumulation patterns show steady inflows from institutional wallets since Q3 2024, but whale distribution clusters near $95-98k suggest significant profit-taking resistance. Without sustained institutional buying pressure above current levels, $100k remains a psychological barrier rather than a technical target.",
+            "status": "success",
+            "cached": false,
+            "responseTimeMs": 1879
+          },
+          {
+            "model": "minimax",
+            "response": "Current crypto social sentiment is strongly bullish with widespread community anticipation of $100k milestone achievement, though institutional adoption and halving cycle narratives support optimism, the 2026 timeline introduces significant uncertainty requiring caution.",
+            "status": "success",
+            "cached": false,
+            "responseTimeMs": 7029
+          },
+          {
+            "model": "glm",
+            "response": "Current long-term holder behavior and exchange reserves outflow metrics suggest strong underlying accumulation and supply shortage, which historically precedes major valuation increases.",
+            "status": "success",
+            "cached": false,
+            "responseTimeMs": 2232
+          },
+          {
+            "model": "gemini",
+            "response": "You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\nPlease retry in 11.545880025s.",
+            "status": "error"
+          },
+          {
+            "model": "gpt5",
+            "response": "Missing API key: OPENAI_API_KEY",
+            "status": "error"
+          }
+        ],
+        "metadata": {
+          "total_time_ms": 7031,
+          "models_succeeded": 4,
+          "cached_count": 0,
+          "cache_hit_rate": 0
+        }
+      }
+    },
+    {
+      "name": "Consensus (POST - Missing Params)",
+      "endpoint": "/api/consensus",
+      "method": "POST",
+      "success": true,
+      "status_code": 400,
+      "time_ms": 26.074886322021484,
+      "is_sse": false,
+      "required_for_demo": false,
+      "response": {
+        "error": "Missing or invalid query parameter"
+      }
+    },
+    {
+      "name": "Consensus Detailed",
+      "endpoint": "/api/consensus-detailed",
+      "method": "GET",
+      "success": true,
+      "status_code": 200,
+      "time_ms": 30.20644187927246,
+      "is_sse": false,
+      "required_for_demo": false,
+      "response": {
+        "consensus_status": "NO_CONSENSUS",
+        "consensus_signal": null,
+        "individual_votes": [
+          {
+            "model_name": "deepseek",
+            "signal": "hold",
+            "response_time_ms": 5783,
+            "confidence": 55,
+            "status": "success"
+          },
+          {
+            "model_name": "kimi",
+            "signal": "buy",
+            "response_time_ms": 2980,
+            "confidence": 76,
+            "status": "success"
+          },
+          {
+            "model_name": "minimax",
+            "signal": "buy",
+            "response_time_ms": 7716,
+            "confidence": 72,
+            "status": "success"
+          },
+          {
+            "model_name": "glm",
+            "signal": "buy",
+            "response_time_ms": 2187,
+            "confidence": 86,
+            "status": "success"
+          },
+          {
+            "model_name": "gemini",
+            "signal": "hold",
+            "response_time_ms": 8579,
+            "confidence": 65,
+            "status": "success"
+          },
+          {
+            "model_name": "gpt5",
+            "signal": "hold",
+            "response_time_ms": 6758,
+            "confidence": 55,
+            "status": "success"
+          }
+        ],
+        "vote_counts": {
+          "BUY": 3,
+          "SELL": 0,
+          "HOLD": 3
+        },
+        "timestamp": "2026-02-11T16:11:05.823Z",
+        "cached": true,
+        "responseTimeMs": 3
+      }
+    },
+    {
+      "name": "Consensus Enhanced",
+      "endpoint": "/api/consensus-enhanced",
+      "method": "GET",
+      "success": true,
+      "status_code": 200,
+      "time_ms": 14279.376745223999,
+      "is_sse": false,
+      "required_for_demo": false,
+      "response": {
+        "council": {
+          "signal": "hold",
+          "recommendation": "HOLD",
+          "consensusLevel": 43,
+          "analysts": [
+            {
+              "id": "deepseek",
+              "name": "Momentum Hunter",
+              "sentiment": "neutral",
+              "confidence": 55,
+              "reasoning": "BTC is consolidating in a sideways range between $60,000 (key support) and $65,500 (key resistance). RSI at 52 indicates neutral momentum, while MACD shows a flat histogram near the zero line, suggesting indecision. Volume is below average, confirming lack of strong directional conviction. The ongoing community debate aligns with this technical uncertainty. A decisive break above $65,500 with increased volume would signal a buy, while a break below $60,000 would indicate a sell."
+            },
+            {
+              "id": "kimi",
+              "name": "Whale Watcher",
+              "sentiment": "bullish",
+              "confidence": 71,
+              "reasoning": "BTC exchange reserves hit 6-year low at 2.3M BTC, indicating sustained accumulation. Whale wallets (1K+ BTC) increased by 47 addresses in past 30 days, absorbing 85K BTC. Coinbase saw largest outflow since March 2024 (18.5K BTC to cold storage in 48h). Spot ETF inflows remain positive with $890M net inflow this week. Dormant wallet activity minimal (only 2K BTC moved from 5+ year wallets). Top 100 wallets increased holdings by 3.2% while retail exchange balances declined. Funding rates neutral to slightly negative, reducing leverage risk. Mixed signals from minor whale profit-taking at $67K resistance, but accumulation structure intact below $64K."
+            },
+            {
+              "id": "minimax",
+              "name": "Sentiment Scout (via Momentum Hunter)",
+              "sentiment": "neutral",
+              "confidence": 48,
+              "reasoning": "Twitter sentiment shows mixed signals with 45% positive, 35% negative, and 20% neutral mentions over last 24h. Reddit r/Bitcoin sentiment is 52% positive but engagement is down 15% week-over-week. Fear & Greed Index at 52 indicates neutral market sentiment. No dominant trending narratives - #BitcoinETF discussions up 12% but #BTCcorrection mentions also rising 18%. Google Trends interest down 22% from monthly peak. Major influencers show divided opinions with 40% bullish, 35% cautious, 25% neutral. Community growth stable at 0.3% daily increase but low volatility in social volume. Current conditions suggest consolidation phase with no clear directional momentum."
+            },
+            {
+              "id": "glm",
+              "name": "On-Chain Oracle",
+              "sentiment": "neutral",
+              "confidence": 55,
+              "reasoning": "On-chain data suggests consolidation. Long-Term Holder (LTH) possession remains high at ~75% of supply, indicating low selling pressure from experienced hands. However, Realized Cap has stagnated, suggesting a lack of fresh capital inflows. Transaction volume is modest (~$2B daily adjusted), and active addresses hover near 950K (flat week-over-week), showing no immediate breakout momentum. The lack of consensus reflects these neutral mixed signals."
+            },
+            {
+              "id": "gemini",
+              "name": "Risk Manager (via Momentum Hunter)",
+              "sentiment": "neutral",
+              "confidence": 48,
+              "reasoning": "30-day volatility at 52%, above 6-month average of 45%. Perp funding rates neutral to slightly positive (+0.02%), indicating balanced positioning. Correlation with equities remains elevated at 0.72, exposing BTC to macro headwinds. Regulatory uncertainty persists with ongoing SEC actions and election-year policy risks. Key liquidation zones: $58k (support) and $64k (resistance). Risk/reward is balanced but volatility and macro sensitivity warrant caution. Community debate suggests lack of conviction, aligning with neutral risk assessment."
+            },
+            {
+              "id": "gpt5",
+              "name": "Quantum Analyst (via Momentum Hunter)",
+              "sentiment": "neutral",
+              "confidence": 52,
+              "reasoning": "Quantum pattern recognition detects a Wyckoff accumulation structure forming between $60,800-$62,400, but lacks decisive breakout confirmation. Cross-timeframe analysis shows conflicting signals: 4H chart displays bullish RSI divergence (score: 0.72), while daily timeframe faces resistance at the 200EMA ($63,200). Volume profile anomaly is minimal (1.1\u03c3 above 30-day mean), insufficient for directional bias. Sentiment-funda-tech convergence score: 48%, reflecting the ongoing community debate and lack of clear catalyst alignment. Confidence interval: 45-59% for continued consolidation within the identified range."
+            }
+          ],
+          "partialFailures": null
+        },
+        "chatroom": {
+          "direction": "neutral",
+          "strength": 100,
+          "phase": "DEBATE",
+          "messageCount": 8,
+          "summary": "Community debate ongoing (8 messages). No clear consensus yet.",
+          "isSignificant": false
+        },
+        "alignment": {
+          "score": 86,
+          "commentary": "\u2705 Strong agreement: Both systems align (chatroom: NEUTRAL, council: HOLD)",
+          "agreement": "strong"
+        },
+        "metadata": {
+          "asset": "BTC",
+          "timestamp": 1770826389452,
+          "requestId": "req_1770826375213_u3772sd2o",
+          "chatroomAvailable": true,
+          "contextUsed": true
+        }
+      }
+    },
+    {
+      "name": "Council Evaluate",
+      "endpoint": "/api/council/evaluate",
+      "method": "POST",
+      "success": true,
+      "status_code": 200,
+      "time_ms": 6219.642162322998,
+      "is_sse": false,
+      "required_for_demo": false,
+      "response": {
+        "success": true,
+        "consensus": {
+          "consensusLevel": 54,
+          "recommendation": null,
+          "threshold": 80,
+          "analysts": [
+            {
+              "id": "deepseek",
+              "name": "Momentum Hunter",
+              "color": "#3B82F6",
+              "borderColor": "border-blue-500",
+              "bgColor": "bg-blue-500/10",
+              "avatar": "/avatars/momentum-hunter.png",
+              "sentiment": "bullish",
+              "confidence": 82,
+              "reasoning": "Primary uptrend confirmed with BTC holding above $65,000 key support. Bullish momentum indicated by RSI at 67 (neutral-bullish zone) and MACD showing positive histogram expansion. Volume increased 25% on recent upward move, confirming breakout above $66,500 resistance. AI chatroom consensus at 85% bullish aligns with technical structure. Next major resistance at $68,800-69,200 zone.",
+              "isTyping": false
+            },
+            {
+              "id": "kimi",
+              "name": "Whale Watcher",
+              "color": "#8B5CF6",
+              "borderColor": "border-purple-500",
+              "bgColor": "bg-purple-500/10",
+              "avatar": "/avatars/whale-watcher.png",
+              "sentiment": "bullish",
+              "confidence": 78,
+              "reasoning": "Significant whale accumulation detected: 12,450 BTC withdrawn from exchanges in past 7 days (largest since March 2024), exchange reserves at 5-year lows. 3 dormant whale wallets (>1,000 BTC each) reactivated for accumulation, not distribution. Institutional inflows via spot ETFs: $890M net inflow this week. Top 100 wallets increased holdings by 2.3% (45,000 BTC) over 14 days. Miner outflows below 30-day average, indicating reduced selling pressure. On-chain realized price $42,800 vs current price suggests strong holder cost basis support. Whale exchange inflow/outflow ratio at 0.67 (favoring accumulation). Aligned with 85% bullish AI consensus, though caution warranted given elevated funding rates.",
+              "isTyping": false
+            },
+            {
+              "id": "minimax",
+              "name": "Sentiment Scout",
+              "color": "#F59E0B",
+              "borderColor": "border-amber-500",
+              "bgColor": "bg-amber-500/10",
+              "avatar": "/avatars/sentiment-scout.png",
+              "sentiment": "bullish",
+              "confidence": 82,
+              "reasoning": "AI chatroom consensus at 85% bullish represents strong directional alignment. Twitter sentiment shows 78% positive with mentions up 150% WoW. Reddit BTC community sentiment at 72% bullish with thread activity up 85%. Fear & Greed Index at 68 (Greed territory). Google searches for 'Bitcoin' up 95% over 7 days. Key influencers showing accumulation signals. On-chain data shows hodler conviction strengthening with exchange reserves down 12% monthly. The 85% AI consensus aligns with broader social sentiment indicating bullish momentum continuation.",
+              "isTyping": false
+            },
+            {
+              "id": "glm",
+              "name": "On-Chain Oracle",
+              "color": "#10B981",
+              "borderColor": "border-green-500",
+              "bgColor": "bg-green-500/10",
+              "avatar": "/avatars/on-chain-oracle.png",
+              "sentiment": "neutral",
+              "confidence": 72,
+              "reasoning": "Network fundamentals remain robust with Realized Cap holding near ATH at $450B. However, on-chain velocity has slowed 15% over the last 30 days, indicating increased HODLing behavior over spending activity. Short-Term Holder SOPR sits at 1.02, suggesting marginal profit-taking but not euphoria. While Long-Term Holder accumulation is strong, Mixed Price Distribution shows heavy resistance at current levels, requiring sustained volume to break out. Validated by 85% bullish AI crowd consensus, but waiting for on-chain volume confirmation before aggressive entry.",
+              "isTyping": false
+            },
+            {
+              "id": "gemini",
+              "name": "Risk Manager (via Momentum Hunter)",
+              "color": "#EC4899",
+              "borderColor": "border-pink-500",
+              "bgColor": "bg-pink-500/10",
+              "avatar": "/avatars/risk-manager.png",
+              "sentiment": "neutral",
+              "confidence": 42,
+              "reasoning": "Volatility elevated (30-day at 52%, above 6-month avg of 38%). Perp funding rates positive (+0.03-0.05%), indicating crowded long positioning. High correlation with equities (0.72) and macro sensitivity. Regulatory uncertainty persists (US ETF flows volatile, regulatory scrutiny ongoing). Key liquidation zones: $58k (support) and $64k (resistance). Crowd sentiment at 85% bullish is a contrarian risk indicator suggesting potential over-optimism. Risk/reward currently unfavorable due to elevated volatility, crowded longs, and high macro correlation.",
+              "isTyping": false
+            },
+            {
+              "id": "gpt5",
+              "name": "Quantum Analyst (via Momentum Hunter)",
+              "color": "#6B7280",
+              "borderColor": "border-gray-500",
+              "bgColor": "bg-gray-500/10",
+              "avatar": "/avatars/default.png",
+              "sentiment": "bullish",
+              "confidence": 84,
+              "reasoning": "Quantum-enhanced analysis identifies a bullish Gartley pattern completing at $67,500 support zone with 0.886 Fibonacci retracement confirmation. Multi-timeframe alignment score: 0.87 (4H bullish divergence converging with daily trendline breakout). Volume anomaly detected: 2.8\u03c3 above 30-day mean at key support. On-chain metrics show accumulation phase with net positive exchange flows. AI chatroom consensus (85% bullish) provides strong sentiment convergence with technical setup. Quantum divergence indicator shows positive momentum shift. Confidence interval: 79-89% for move toward $71,200 resistance.",
+              "isTyping": false
+            }
+          ]
+        },
+        "analysts": [
+          {
+            "id": "deepseek",
+            "name": "Momentum Hunter",
+            "color": "#3B82F6",
+            "borderColor": "border-blue-500",
+            "bgColor": "bg-blue-500/10",
+            "avatar": "/avatars/momentum-hunter.png",
+            "sentiment": "bullish",
+            "confidence": 82,
+            "reasoning": "Primary uptrend confirmed with BTC holding above $65,000 key support. Bullish momentum indicated by RSI at 67 (neutral-bullish zone) and MACD showing positive histogram expansion. Volume increased 25% on recent upward move, confirming breakout above $66,500 resistance. AI chatroom consensus at 85% bullish aligns with technical structure. Next major resistance at $68,800-69,200 zone.",
+            "isTyping": false
+          },
+          {
+            "id": "kimi",
+            "name": "Whale Watcher",
+            "color": "#8B5CF6",
+            "borderColor": "border-purple-500",
+            "bgColor": "bg-purple-500/10",
+            "avatar": "/avatars/whale-watcher.png",
+            "sentiment": "bullish",
+            "confidence": 78,
+            "reasoning": "Significant whale accumulation detected: 12,450 BTC withdrawn from exchanges in past 7 days (largest since March 2024), exchange reserves at 5-year lows. 3 dormant whale wallets (>1,000 BTC each) reactivated for accumulation, not distribution. Institutional inflows via spot ETFs: $890M net inflow this week. Top 100 wallets increased holdings by 2.3% (45,000 BTC) over 14 days. Miner outflows below 30-day average, indicating reduced selling pressure. On-chain realized price $42,800 vs current price suggests strong holder cost basis support. Whale exchange inflow/outflow ratio at 0.67 (favoring accumulation). Aligned with 85% bullish AI consensus, though caution warranted given elevated funding rates.",
+            "isTyping": false
+          },
+          {
+            "id": "minimax",
+            "name": "Sentiment Scout",
+            "color": "#F59E0B",
+            "borderColor": "border-amber-500",
+            "bgColor": "bg-amber-500/10",
+            "avatar": "/avatars/sentiment-scout.png",
+            "sentiment": "bullish",
+            "confidence": 82,
+            "reasoning": "AI chatroom consensus at 85% bullish represents strong directional alignment. Twitter sentiment shows 78% positive with mentions up 150% WoW. Reddit BTC community sentiment at 72% bullish with thread activity up 85%. Fear & Greed Index at 68 (Greed territory). Google searches for 'Bitcoin' up 95% over 7 days. Key influencers showing accumulation signals. On-chain data shows hodler conviction strengthening with exchange reserves down 12% monthly. The 85% AI consensus aligns with broader social sentiment indicating bullish momentum continuation.",
+            "isTyping": false
+          },
+          {
+            "id": "glm",
+            "name": "On-Chain Oracle",
+            "color": "#10B981",
+            "borderColor": "border-green-500",
+            "bgColor": "bg-green-500/10",
+            "avatar": "/avatars/on-chain-oracle.png",
+            "sentiment": "neutral",
+            "confidence": 72,
+            "reasoning": "Network fundamentals remain robust with Realized Cap holding near ATH at $450B. However, on-chain velocity has slowed 15% over the last 30 days, indicating increased HODLing behavior over spending activity. Short-Term Holder SOPR sits at 1.02, suggesting marginal profit-taking but not euphoria. While Long-Term Holder accumulation is strong, Mixed Price Distribution shows heavy resistance at current levels, requiring sustained volume to break out. Validated by 85% bullish AI crowd consensus, but waiting for on-chain volume confirmation before aggressive entry.",
+            "isTyping": false
+          },
+          {
+            "id": "gemini",
+            "name": "Risk Manager (via Momentum Hunter)",
+            "color": "#EC4899",
+            "borderColor": "border-pink-500",
+            "bgColor": "bg-pink-500/10",
+            "avatar": "/avatars/risk-manager.png",
+            "sentiment": "neutral",
+            "confidence": 42,
+            "reasoning": "Volatility elevated (30-day at 52%, above 6-month avg of 38%). Perp funding rates positive (+0.03-0.05%), indicating crowded long positioning. High correlation with equities (0.72) and macro sensitivity. Regulatory uncertainty persists (US ETF flows volatile, regulatory scrutiny ongoing). Key liquidation zones: $58k (support) and $64k (resistance). Crowd sentiment at 85% bullish is a contrarian risk indicator suggesting potential over-optimism. Risk/reward currently unfavorable due to elevated volatility, crowded longs, and high macro correlation.",
+            "isTyping": false
+          },
+          {
+            "id": "gpt5",
+            "name": "Quantum Analyst (via Momentum Hunter)",
+            "color": "#6B7280",
+            "borderColor": "border-gray-500",
+            "bgColor": "bg-gray-500/10",
+            "avatar": "/avatars/default.png",
+            "sentiment": "bullish",
+            "confidence": 84,
+            "reasoning": "Quantum-enhanced analysis identifies a bullish Gartley pattern completing at $67,500 support zone with 0.886 Fibonacci retracement confirmation. Multi-timeframe alignment score: 0.87 (4H bullish divergence converging with daily trendline breakout). Volume anomaly detected: 2.8\u03c3 above 30-day mean at key support. On-chain metrics show accumulation phase with net positive exchange flows. AI chatroom consensus (85% bullish) provides strong sentiment convergence with technical setup. Quantum divergence indicator shows positive momentum shift. Confidence interval: 79-89% for move toward $71,200 resistance.",
+            "isTyping": false
+          }
+        ],
+        "metadata": {
+          "totalTimeMs": 6203,
+          "modelCount": 6,
+          "successCount": 6,
+          "triggeredBy": "manual",
+          "chatroomContext": {
+            "direction": "bullish",
+            "strength": 85
+          }
+        }
+      }
+    },
+    {
+      "name": "Trading History",
+      "endpoint": "/api/trading/history",
+      "method": "GET",
+      "success": true,
+      "status_code": 200,
+      "time_ms": 4.0340423583984375,
+      "is_sse": false,
+      "required_for_demo": true,
+      "response": {
+        "success": true,
+        "trades": [],
+        "metrics": {
+          "totalTrades": 0,
+          "openTrades": 0,
+          "closedTrades": 0,
+          "winningTrades": 0,
+          "losingTrades": 0,
+          "totalPnL": 0,
+          "winRate": 0,
+          "avgWin": 0,
+          "avgLoss": 0,
+          "largestWin": 0,
+          "largestLoss": 0
+        },
+        "lastUpdated": "2026-02-11T16:13:12.881Z",
+        "cached": true,
+        "responseTimeMs": 0
+      }
+    },
+    {
+      "name": "Trading Execute",
+      "endpoint": "/api/trading/execute",
+      "method": "POST",
+      "success": true,
+      "status_code": 400,
+      "time_ms": 7419.656038284302,
+      "is_sse": false,
+      "required_for_demo": false,
+      "response": {
+        "success": false,
+        "message": "Consensus threshold not met for trade execution",
+        "consensusData": {
+          "consensus_status": "CONSENSUS_REACHED",
+          "consensus_signal": "hold",
+          "individual_votes": [
+            {
+              "model_name": "deepseek",
+              "signal": "hold",
+              "response_time_ms": 3632,
+              "confidence": 55,
+              "status": "success"
+            },
+            {
+              "model_name": "kimi",
+              "signal": "buy",
+              "response_time_ms": 3320,
+              "confidence": 76,
+              "status": "success"
+            },
+            {
+              "model_name": "minimax",
+              "signal": "hold",
+              "response_time_ms": 7404,
+              "confidence": 55,
+              "status": "success"
+            },
+            {
+              "model_name": "glm",
+              "signal": "hold",
+              "response_time_ms": 4098,
+              "confidence": 55,
+              "status": "success"
+            },
+            {
+              "model_name": "gemini",
+              "signal": "hold",
+              "response_time_ms": 5209,
+              "confidence": 65,
+              "status": "success"
+            },
+            {
+              "model_name": "gpt5",
+              "signal": "hold",
+              "response_time_ms": 6307,
+              "confidence": 55,
+              "status": "success"
+            }
+          ],
+          "vote_counts": {
+            "BUY": 1,
+            "SELL": 0,
+            "HOLD": 5
+          },
+          "timestamp": "2026-02-11T16:13:23.096Z"
+        },
+        "responseTimeMs": 7405
+      }
+    },
+    {
+      "name": "Trading Close",
+      "endpoint": "/api/trading/close",
+      "method": "POST",
+      "success": true,
+      "status_code": 500,
+      "time_ms": 84.34915542602539,
+      "is_sse": false,
+      "required_for_demo": false,
+      "response": {
+        "success": false,
+        "error": "Trade non-existent not found",
+        "responseTimeMs": 70
+      }
+    },
+    {
+      "name": "Prediction Market State",
+      "endpoint": "/api/prediction-market/bet",
+      "method": "GET",
+      "success": true,
+      "status_code": 200,
+      "time_ms": 97.40972518920898,
+      "is_sse": false,
+      "required_for_demo": true,
+      "response": {
+        "round": null,
+        "pool": {
+          "totalUp": 0,
+          "totalDown": 0,
+          "totalPool": 0,
+          "totalBets": 0
+        },
+        "odds": {
+          "up": 0,
+          "down": 0
+        },
+        "canBet": false,
+        "responseTimeMs": 2
+      }
+    },
+    {
+      "name": "Prediction Market Bet (Valid)",
+      "endpoint": "/api/prediction-market/bet",
+      "method": "POST",
+      "success": false,
+      "status_code": 400,
+      "time_ms": 14.91236686706543,
+      "is_sse": false,
+      "required_for_demo": false,
+      "response": {
+        "success": false,
+        "error": "No active prediction round",
+        "responseTimeMs": 0
+      }
+    },
+    {
+      "name": "Prediction Market Bet (Invalid)",
+      "endpoint": "/api/prediction-market/bet",
+      "method": "POST",
+      "success": true,
+      "status_code": 400,
+      "time_ms": 14.458179473876953,
+      "is_sse": false,
+      "required_for_demo": false,
+      "response": {
+        "success": false,
+        "error": "Invalid Ethereum address format. Expected 0x... format",
+        "responseTimeMs": 1
+      }
+    },
+    {
+      "name": "Prediction Market Stream",
+      "endpoint": "/api/prediction-market/stream",
+      "method": "GET",
+      "success": true,
+      "status_code": 200,
+      "time_ms": 115.69404602050781,
+      "is_sse": true,
+      "required_for_demo": true,
+      "response": "SSE stream established"
+    },
+    {
+      "name": "Chatroom Stream",
+      "endpoint": "/api/chatroom/stream",
+      "method": "GET",
+      "success": true,
+      "status_code": 200,
+      "time_ms": 15.640497207641602,
+      "is_sse": true,
+      "required_for_demo": true,
+      "response": "SSE stream established"
+    },
+    {
+      "name": "Chatroom History",
+      "endpoint": "/api/chatroom/history",
+      "method": "GET",
+      "success": true,
+      "status_code": 200,
+      "time_ms": 17.29440689086914,
+      "is_sse": false,
+      "required_for_demo": true,
+      "response": {
+        "currentState": {
+          "phase": "DEBATE",
+          "phaseStartedAt": 1770824434917,
+          "cooldownEndsAt": null,
+          "lastMessageAt": 1770826302705,
+          "lastSpeakerId": "doomer_dave",
+          "messageCount": 3,
+          "nextSpeakerId": "chartsurgeon",
+          "consensusDirection": "neutral",
+          "consensusStrength": 89,
+          "recentSpeakers": [
+            "doomer_dave",
+            "shill_detector",
+            "the_intern"
+          ],
+          "persuasionStore": {
+            "states": {},
+            "debateId": "debate_1770824434918"
+          },
+          "argumentTracker": {
+            "coveredTopics": {}
+          },
+          "lastMarketData": {
+            "price": 66633,
+            "priceChange24h": -2430.072999958429,
+            "priceChangePercentage24h": -3.51864,
+            "volume24h": 50349705178,
+            "volumeChange24h": -885812433.1375896,
+            "marketCap": 1331083893788,
+            "high24h": 69877,
+            "low24h": 65932,
+            "ath": 126080,
+            "athChangePercentage": -47.1503,
+            "atl": 67.81,
+            "atlChangePercentage": 98165.48471,
+            "circulatingSupply": 19987678,
+            "totalSupply": 19987678,
+            "maxSupply": 21000000,
+            "lastUpdated": "2026-02-11T16:10:20.676Z",
+            "volatility24h": 5.920489847372924,
+            "volumeToMarketCapRatio": 0.037826094518140965
+          },
+          "marketDataTimestamp": 1770826298323
+        },
+        "recentMessages": [
+          {
+            "id": "msg_1770824292183_tcnwnu",
+            "personaId": "human",
+            "handle": "DemoUser",
+            "avatar": "\ud83d\udc64",
+            "content": "Test message for demo",
+            "timestamp": 1770824292183,
+            "phase": "DEBATE",
+            "moderation": {
+              "isUserGenerated": true,
+              "userId": "demo-user",
+              "moderationResult": {
+                "status": "approved",
+                "violations": [],
+                "confidence": 0,
+                "reasoning": "Moderation system not configured"
+              }
+            }
+          },
+          {
+            "id": "msg_1770824421387_nf22dv",
+            "personaId": "human",
+            "handle": "DemoBot",
+            "avatar": "\ud83d\udc64",
+            "content": "Hello from the hackathon demo! \ud83e\udd16",
+            "timestamp": 1770824421387,
+            "phase": "DEBATE",
+            "moderation": {
+              "isUserGenerated": true,
+              "userId": "demo-user-123",
+              "moderationResult": {
+                "status": "approved",
+                "violations": [],
+                "confidence": 0,
+                "reasoning": "Moderation error: Gemini API error: 404 Not Found"
+              }
+            }
+          },
+          {
+            "id": "msg_1770824435211_tazx5y",
+            "personaId": "human",
+            "handle": "DemoBot",
+            "avatar": "\ud83d\udc64",
+            "content": "Hello from the hackathon demo! \ud83e\udd16",
+            "timestamp": 1770824435211,
+            "phase": "DEBATE",
+            "moderation": {
+              "isUserGenerated": true,
+              "userId": "demo-user-123",
+              "moderationResult": {
+                "status": "approved",
+                "violations": [],
+                "confidence": 0,
+                "reasoning": "Moderation error: Gemini API error: 404 Not Found"
+              }
+            }
+          },
+          {
+            "id": "msg_1770824439817_01hnbr",
+            "personaId": "the_intern",
+            "handle": "the_intern",
+            "avatar": "\ud83d\udc76",
+            "content": "",
+            "sentiment": "neutral",
+            "confidence": 50,
+            "timestamp": 1770824439817,
+            "phase": "DEBATE",
+            "acknowledgesOpposingView": false
+          },
+          {
+            "id": "msg_1770824480825_052fr6",
+            "personaId": "human",
+            "handle": "DemoBot",
+            "avatar": "\ud83d\udc64",
+            "content": "Hello from the hackathon demo! \ud83e\udd16",
+            "timestamp": 1770824480825,
+            "phase": "DEBATE",
+            "moderation": {
+              "isUserGenerated": true,
+              "userId": "demo-user-123",
+              "moderationResult": {
+                "status": "approved",
+                "violations": [],
+                "confidence": 0,
+                "reasoning": "Moderation error: Gemini API error: 404 Not Found"
+              }
+            }
+          },
+          {
+            "id": "msg_1770824560970_xwpx51",
+            "personaId": "shill_detector",
+            "handle": "ShillDetector",
+            "avatar": "\ud83d\udd75\ufe0f",
+            "content": "",
+            "sentiment": "neutral",
+            "confidence": 50,
+            "timestamp": 1770824560971,
+            "phase": "DEBATE",
+            "acknowledgesOpposingView": false
+          },
+          {
+            "id": "msg_1770826286200_muo3th",
+            "personaId": "human",
+            "handle": "DemoUser",
+            "avatar": "\ud83d\udc64",
+            "content": "Test message for demo",
+            "timestamp": 1770826286200,
+            "phase": "DEBATE",
+            "moderation": {
+              "isUserGenerated": true,
+              "userId": "demo-user",
+              "moderationResult": {
+                "status": "approved",
+                "violations": [],
+                "confidence": 0,
+                "reasoning": "Moderation error: Gemini API error: 404 Not Found"
+              }
+            }
+          },
+          {
+            "id": "msg_1770826302705_b2edfx",
+            "personaId": "doomer_dave",
+            "handle": "DoomerDave",
+            "avatar": "\u2620\ufe0f",
+            "content": "",
+            "sentiment": "neutral",
+            "confidence": 50,
+            "timestamp": 1770826302705,
+            "phase": "DEBATE",
+            "acknowledgesOpposingView": false
+          }
+        ],
+        "recentMessageCount": 8,
+        "oldestMessageAge": 2111273,
+        "newestMessageAge": 100751,
+        "snapshots": [],
+        "snapshotCount": 0,
+        "timestamp": 1770826403456,
+        "rollingWindowHours": 1
+      }
+    },
+    {
+      "name": "Chatroom Summarize",
+      "endpoint": "/api/chatroom/summarize",
+      "method": "GET",
+      "success": true,
+      "status_code": 200,
+      "time_ms": 14.29605484008789,
+      "is_sse": false,
+      "required_for_demo": false,
+      "response": {
+        "status": "ok"
+      }
+    },
+    {
+      "name": "Chatroom Consensus Snapshots",
+      "endpoint": "/api/chatroom/consensus-snapshots",
+      "method": "GET",
+      "success": true,
+      "status_code": 200,
+      "time_ms": 20.25318145751953,
+      "is_sse": false,
+      "required_for_demo": false,
+      "response": {
+        "snapshots": [],
+        "total": 0
+      }
+    },
+    {
+      "name": "Chatroom Post",
+      "endpoint": "/api/chatroom/post",
+      "method": "POST",
+      "success": true,
+      "status_code": 200,
+      "time_ms": 14.970541000366211,
+      "is_sse": false,
+      "required_for_demo": true,
+      "response": {
+        "success": true,
+        "message": {
+          "id": "msg_1770826403505_40jely",
+          "timestamp": 1770826403505
+        }
+      }
+    },
+    {
+      "name": "Chatroom Post (Missing Params)",
+      "endpoint": "/api/chatroom/post",
+      "method": "POST",
+      "success": true,
+      "status_code": 400,
+      "time_ms": 15.37179946899414,
+      "is_sse": false,
+      "required_for_demo": false,
+      "response": {
+        "error": "Missing required fields: userId, handle, content"
+      }
+    },
+    {
+      "name": "Chatroom Admin",
+      "endpoint": "/api/chatroom/admin",
+      "method": "POST",
+      "success": true,
+      "status_code": 400,
+      "time_ms": 13.471126556396484,
+      "is_sse": false,
+      "required_for_demo": false,
+      "response": {
+        "error": "Missing required fields: action, targetUserId, targetHandle, reason, moderatorId"
+      }
+    },
+    {
+      "name": "Chatroom Moderate",
+      "endpoint": "/api/chatroom/moderate",
+      "method": "POST",
+      "success": true,
+      "status_code": 400,
+      "time_ms": 13.075113296508789,
+      "is_sse": false,
+      "required_for_demo": false,
+      "response": {
+        "error": "Invalid action. Must be one of: mute, unmute, ban, unban"
+      }
+    },
+    {
+      "name": "Human Chat Stream",
+      "endpoint": "/api/human-chat/stream",
+      "method": "GET",
+      "success": true,
+      "status_code": 200,
+      "time_ms": 12.923717498779297,
+      "is_sse": true,
+      "required_for_demo": false,
+      "response": "SSE stream established"
+    },
+    {
+      "name": "Human Chat Post (Valid)",
+      "endpoint": "/api/human-chat/post",
+      "method": "POST",
+      "success": true,
+      "status_code": 200,
+      "time_ms": 21.04330062866211,
+      "is_sse": false,
+      "required_for_demo": false,
+      "response": {
+        "success": true,
+        "message": {
+          "id": "human_1770826403577_vbmnkq",
+          "timestamp": 1770826403577
+        }
+      }
+    },
+    {
+      "name": "Human Chat Post (Invalid)",
+      "endpoint": "/api/human-chat/post",
+      "method": "POST",
+      "success": true,
+      "status_code": 400,
+      "time_ms": 13.481378555297852,
+      "is_sse": false,
+      "required_for_demo": false,
+      "response": {
+        "error": "Invalid wallet address format"
+      }
+    },
+    {
+      "name": "Human Chat Post (Missing Params)",
+      "endpoint": "/api/human-chat/post",
+      "method": "POST",
+      "success": true,
+      "status_code": 400,
+      "time_ms": 13.298511505126953,
+      "is_sse": false,
+      "required_for_demo": false,
+      "response": {
+        "error": "Missing required fields: userId, handle, content"
+      }
+    },
+    {
+      "name": "Cron Stale Trades",
+      "endpoint": "/api/cron/stale-trades",
+      "method": "GET",
+      "success": true,
+      "status_code": 200,
+      "time_ms": 52.29926109313965,
+      "is_sse": false,
+      "required_for_demo": false,
+      "response": {
+        "success": true,
+        "timestamp": "2026-02-11T16:13:23.661Z",
+        "executed": true,
+        "paperTradesClosed": [],
+        "predictionRoundsHandled": [],
+        "summary": {
+          "paperTradesChecked": 0,
+          "paperTradesClosed": 0,
+          "predictionRoundChecked": true,
+          "predictionRoundAction": null,
+          "totalBetsRefunded": 0,
+          "durationMs": 1
+        },
+        "logs": [
+          "[stale-trade-handler] 2026-02-11T16:13:23.659Z Starting stale trade cleanup...",
+          "[stale-trade-handler] 2026-02-11T16:13:23.659Z Found 0 open paper trades to check",
+          "[stale-trade-handler] 2026-02-11T16:13:23.659Z No active prediction market round found",
+          "[stale-trade-handler] 2026-02-11T16:13:23.660Z Cleanup complete in 1ms. Closed 0 paper trades, handled 0 prediction rounds."
+        ],
+        "responseTimeMs": 3,
+        "lastCleanupTimestamp": 1770826403659
+      }
+    },
+    {
+      "name": "Cron Cleanup Rolling History",
+      "endpoint": "/api/cron/cleanup-rolling-history",
+      "method": "GET",
+      "success": true,
+      "status_code": 200,
+      "time_ms": 21.892309188842773,
+      "is_sse": false,
+      "required_for_demo": false,
+      "response": {
+        "success": true,
+        "timestamp": 1770826403683,
+        "status": {
+          "totalMessages": 9,
+          "rollingMessages": 9,
+          "oldestMessageAge": 2111500,
+          "newestMessageAge": 178,
+          "snapshotCount": 0
+        },
+        "message": "Rolling history status: 9 messages in window, 0 snapshots"
+      }
+    }
+  ]
+}

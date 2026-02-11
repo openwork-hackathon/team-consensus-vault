@@ -1,301 +1,379 @@
 /**
- * Prediction Market Shared State Module
+ * Prediction Market State Management
  * 
- * Provides module-level state management for the prediction market feature.
- * This state is shared between the SSE streaming route and the bet API route.
+ * In-memory state management for prediction market rounds and betting pools.
+ * This module provides functions to manage the current round state and pool.
  * 
- * Uses a singleton pattern with module-level variables since Next.js API routes
- * may share memory in development mode.
- * 
- * @module prediction-market/state
+ * Note: This is designed for demo/hackathon use. For production, this should
+ * be replaced with a persistent database (PostgreSQL, Redis, etc.).
  */
 
-import { RoundState, BettingPool, Bet, RoundPhase } from './types';
+import { 
+  RoundState, 
+  RoundPhase, 
+  Bet, 
+  BettingPool,
+  PredictionMarketConfig,
+  calculateBettingPool
+} from './types';
 
 // ============================================================================
-// MODULE-LEVEL STATE
+// IN-MEMORY STATE
 // ============================================================================
 
-/**
- * Current prediction round state
- * Shared between SSE stream and bet route
- */
+/** Current active round (null if no round is active) */
 let currentRound: RoundState | null = null;
 
-/**
- * Current betting pool state
- * Includes totalUp/totalDown and all placed bets
- */
+/** Current betting pool for the active round */
 let currentPool: {
+  bets: Bet[];
   totalUp: number;
   totalDown: number;
-  bets: Bet[];
 } = {
+  bets: [],
   totalUp: 0,
   totalDown: 0,
-  bets: [],
 };
 
+/** Track which users have placed bets (prevents duplicate bets) */
+const userBets: Map<string, Bet> = new Map();
+
 // ============================================================================
-// ROUND STATE ACCESSORS
+// ROUND STATE MANAGEMENT
 // ============================================================================
 
 /**
- * Get the current round state
- * @returns Current round data or null if no round is active
+ * Get the current active round
+ * @returns The current round or null if no round is active
  */
 export function getCurrentRound(): RoundState | null {
   return currentRound;
 }
 
 /**
- * Set the current round state
- * @param round - The new round state to set
+ * Set the current active round
+ * Resets the pool if the round ID changes
+ * @param round - The round to set as current, or null to clear
  */
 export function setCurrentRound(round: RoundState | null): void {
+  // Reset pool if starting a new round
+  if (round && (!currentRound || currentRound.id !== round.id)) {
+    resetPool();
+  }
   currentRound = round;
-  
-  // Reset pool when starting a new round
-  if (round && round.id !== currentRound?.id) {
-    currentPool = {
-      totalUp: 0,
-      totalDown: 0,
-      bets: [],
-    };
-  }
 }
 
 /**
- * Update the current round's phase
- * @param phase - The new phase to transition to
+ * Update the phase of the current round
+ * @param phase - The new phase to set
+ * @returns true if updated successfully, false if no round is active
  */
-export function updateRoundPhase(phase: RoundPhase): void {
-  if (currentRound) {
-    currentRound.phase = phase;
+export function updateRoundPhase(phase: RoundPhase): boolean {
+  if (!currentRound) {
+    return false;
   }
-}
-
-/**
- * Update the current round's betting pool
- * @param pool - The new betting pool state
- */
-export function updateBettingPool(pool: BettingPool): void {
-  if (currentRound) {
-    currentRound.bettingPool = pool;
-  }
+  currentRound.phase = phase;
+  return true;
 }
 
 // ============================================================================
-// BETTING POOL ACCESSORS
+// POOL STATE MANAGEMENT
 // ============================================================================
 
 /**
- * Get the current betting pool state
- * @returns Current pool state with totals and bets
+ * Get the current betting pool
+ * @returns The current pool state
  */
-export function getCurrentPool(): {
-  totalUp: number;
-  totalDown: number;
-  bets: Bet[];
-} {
+export function getCurrentPool(): typeof currentPool {
   return currentPool;
 }
 
 /**
- * Set the current betting pool state
- * @param pool - The new pool state
+ * Update the betting pool with new totals
+ * @param updates - Partial pool updates to apply
+ * @returns The updated pool state
  */
-export function setCurrentPool(pool: {
-  totalUp: number;
-  totalDown: number;
-  bets: Bet[];
-}): void {
-  currentPool = pool;
-}
-
-/**
- * Add a bet to the current pool
- * @param bet - The bet to add
- */
-export function addBetToPool(bet: Bet): void {
-  currentPool.bets.push(bet);
-  
-  // Update totals based on bet direction
-  if (bet.direction === 'long') {
-    currentPool.totalUp += bet.amount;
-  } else {
-    currentPool.totalDown += bet.amount;
-  }
-  
-  // Sync with round's betting pool if round exists
-  if (currentRound) {
-    currentRound.bettingPool = {
-      totalLong: currentPool.totalUp,
-      totalShort: currentPool.totalDown,
-      totalPool: currentPool.totalUp + currentPool.totalDown,
-      longBetCount: currentPool.bets.filter(b => b.direction === 'long').length,
-      shortBetCount: currentPool.bets.filter(b => b.direction === 'short').length,
-      totalBetCount: currentPool.bets.length,
-      avgLongBet: currentPool.totalUp > 0 
-        ? currentPool.totalUp / Math.max(1, currentPool.bets.filter(b => b.direction === 'long').length)
-        : 0,
-      avgShortBet: currentPool.totalDown > 0
-        ? currentPool.totalDown / Math.max(1, currentPool.bets.filter(b => b.direction === 'short').length)
-        : 0,
-      longOdds: currentPool.totalUp > 0
-        ? (currentPool.totalUp + currentPool.totalDown) / currentPool.totalUp
-        : 0,
-      shortOdds: currentPool.totalDown > 0
-        ? (currentPool.totalUp + currentPool.totalDown) / currentPool.totalDown
-        : 0,
-    };
-  }
-}
-
-/**
- * Get all bets for a specific user address
- * @param address - The user's wallet address
- * @returns Array of bets placed by the user
- */
-export function getUserBets(address: string): Bet[] {
-  return currentPool.bets.filter(bet => 
-    bet.userAddress.toLowerCase() === address.toLowerCase()
-  );
-}
-
-/**
- * Check if a user has already bet in the current round
- * @param address - The user's wallet address
- * @returns True if the user has placed a bet
- */
-export function hasUserBet(address: string): boolean {
-  return currentPool.bets.some(bet => 
-    bet.userAddress.toLowerCase() === address.toLowerCase()
-  );
-}
-
-/**
- * Get the total amount bet by a user in the current round
- * @param address - The user's wallet address
- * @returns Total amount bet by the user
- */
-export function getUserTotalBet(address: string): number {
-  return currentPool.bets
-    .filter(bet => bet.userAddress.toLowerCase() === address.toLowerCase())
-    .reduce((sum, bet) => sum + bet.amount, 0);
-}
-
-/**
- * Calculate current odds for both sides
- * @returns Object with up and down odds
- */
-export function getCurrentOdds(): {
-  up: number;
-  down: number;
-} {
-  const totalPool = currentPool.totalUp + currentPool.totalDown;
-  
-  return {
-    up: currentPool.totalUp > 0 ? totalPool / currentPool.totalUp : 0,
-    down: currentPool.totalDown > 0 ? totalPool / currentPool.totalDown : 0,
+export function updateBettingPool(updates: Partial<typeof currentPool>): typeof currentPool {
+  currentPool = {
+    ...currentPool,
+    ...updates,
   };
+  return currentPool;
 }
 
 /**
- * Reset the betting pool (typically when starting a new round)
+ * Reset the betting pool to empty state
  */
 export function resetPool(): void {
   currentPool = {
+    bets: [],
     totalUp: 0,
     totalDown: 0,
-    bets: [],
   };
-}
-
-// ============================================================================
-// UTILITY FUNCTIONS
-// ============================================================================
-
-/**
- * Validate if a bet can be placed
- * @param address - User's wallet address
- * @param amount - Bet amount
- * @param side - Bet side ('up' or 'down')
- * @returns Object with isValid flag and error message if invalid
- */
-export function validateBet(
-  address: string,
-  amount: number,
-  side: 'up' | 'down'
-): { isValid: boolean; error?: string } {
-  // Validate address format (basic Ethereum address check)
-  if (!address || typeof address !== 'string') {
-    return { isValid: false, error: 'Invalid address' };
-  }
-  
-  if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
-    return { isValid: false, error: 'Invalid Ethereum address format' };
-  }
-  
-  // Validate amount
-  if (!amount || typeof amount !== 'number' || isNaN(amount)) {
-    return { isValid: false, error: 'Invalid amount' };
-  }
-  
-  if (amount <= 0) {
-    return { isValid: false, error: 'Amount must be greater than 0' };
-  }
-  
-  // Validate side
-  if (side !== 'up' && side !== 'down') {
-    return { isValid: false, error: 'Side must be "up" or "down"' };
-  }
-  
-  // Check if round is in betting phase
-  if (currentRound && currentRound.phase !== RoundPhase.BETTING_WINDOW) {
-    return { isValid: false, error: 'Betting window is not open' };
-  }
-  
-  // Check if user has already bet (optional - remove if multiple bets allowed)
-  if (hasUserBet(address)) {
-    return { isValid: false, error: 'You have already placed a bet in this round' };
-  }
-  
-  return { isValid: true };
+  userBets.clear();
 }
 
 /**
  * Place a bet in the current pool
- * @param address - User's wallet address
- * @param amount - Bet amount
- * @param side - Bet side ('up' or 'down')
+ * @param userAddress - The address of the user placing the bet
+ * @param amount - The bet amount
+ * @param direction - 'up' (long) or 'down' (short)
  * @returns The created bet object
  * @throws Error if bet validation fails
  */
 export function placeBet(
-  address: string,
-  amount: number,
-  side: 'up' | 'down'
+  userAddress: string, 
+  amount: number, 
+  direction: 'up' | 'down'
 ): Bet {
-  // Validate the bet
-  const validation = validateBet(address, amount, side);
+  // Validate bet
+  const validation = validateBet(userAddress, amount, direction);
   if (!validation.isValid) {
     throw new Error(validation.error);
   }
-  
-  // Create the bet
+
   const bet: Bet = {
-    id: `bet_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    id: `bet_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     roundId: currentRound?.id || 'unknown',
-    userAddress: address,
+    userAddress: userAddress.toLowerCase(),
     amount,
-    direction: side === 'up' ? 'long' : 'short',
+    direction: direction === 'up' ? 'long' : 'short',
     timestamp: new Date().toISOString(),
     status: 'confirmed',
   };
-  
-  // Add to pool
-  addBetToPool(bet);
-  
+
+  currentPool.bets.push(bet);
+  userBets.set(userAddress.toLowerCase(), bet);
+
+  if (direction === 'up') {
+    currentPool.totalUp += amount;
+  } else {
+    currentPool.totalDown += amount;
+  }
+
   return bet;
+}
+
+// ============================================================================
+// VALIDATION
+// ============================================================================
+
+export interface BetValidationResult {
+  isValid: boolean;
+  error?: string;
+}
+
+/**
+ * Validate a bet before placing it
+ * @param userAddress - The user's wallet address
+ * @param amount - The bet amount
+ * @param direction - 'up' or 'down'
+ * @returns Validation result with error message if invalid
+ */
+export function validateBet(
+  userAddress: string,
+  amount: number,
+  direction: 'up' | 'down'
+): BetValidationResult {
+  // Check if betting window is open
+  if (!currentRound || currentRound.phase !== RoundPhase.BETTING_WINDOW) {
+    return {
+      isValid: false,
+      error: 'Betting window is not open',
+    };
+  }
+
+  // Validate address
+  if (!userAddress || typeof userAddress !== 'string') {
+    return {
+      isValid: false,
+      error: 'Invalid address',
+    };
+  }
+
+  if (!userAddress.match(/^0x[a-fA-F0-9]{40}$/)) {
+    return {
+      isValid: false,
+      error: 'Invalid address format',
+    };
+  }
+
+  // Validate amount
+  if (typeof amount !== 'number' || isNaN(amount)) {
+    return {
+      isValid: false,
+      error: 'Invalid amount',
+    };
+  }
+
+  if (amount <= 0) {
+    return {
+      isValid: false,
+      error: 'Amount must be greater than 0',
+    };
+  }
+
+  if (amount < PredictionMarketConfig.MIN_BET) {
+    return {
+      isValid: false,
+      error: `Minimum bet is ${PredictionMarketConfig.MIN_BET}`,
+    };
+  }
+
+  // Validate direction
+  if (direction !== 'up' && direction !== 'down') {
+    return {
+      isValid: false,
+      error: 'Side must be "up" or "down"',
+    };
+  }
+
+  // Check for duplicate bets
+  if (userBets.has(userAddress.toLowerCase())) {
+    return {
+      isValid: false,
+      error: 'You have already placed a bet in this round',
+    };
+  }
+
+  return { isValid: true };
+}
+
+// ============================================================================
+// USER BET QUERIES
+// ============================================================================
+
+/**
+ * Check if a user has placed a bet in the current round
+ * @param userAddress - The user's wallet address
+ * @returns true if the user has placed a bet
+ */
+export function hasUserBet(userAddress: string): boolean {
+  return userBets.has(userAddress.toLowerCase());
+}
+
+/**
+ * Get the total bet amount for a user
+ * @param userAddress - The user's wallet address
+ * @returns The total bet amount (0 if no bet placed)
+ */
+export function getUserTotalBet(userAddress: string): number {
+  const bet = userBets.get(userAddress.toLowerCase());
+  return bet?.amount || 0;
+}
+
+/**
+ * Get all bets placed by a user
+ * @param userAddress - The user's wallet address
+ * @returns Array of bets placed by the user
+ */
+export function getUserBets(userAddress: string): Bet[] {
+  const bet = userBets.get(userAddress.toLowerCase());
+  return bet ? [bet] : [];
+}
+
+// ============================================================================
+// ODDS CALCULATION
+// ============================================================================
+
+export interface OddsResult {
+  up: number;
+  down: number;
+}
+
+/**
+ * Calculate current odds based on the pool
+ * @returns Object with up and down odds
+ */
+export function getCurrentOdds(): OddsResult {
+  const totalPool = currentPool.totalUp + currentPool.totalDown;
+  
+  if (totalPool === 0) {
+    return { up: 0, down: 0 };
+  }
+
+  const upOdds = currentPool.totalUp > 0 ? totalPool / currentPool.totalUp : 0;
+  const downOdds = currentPool.totalDown > 0 ? totalPool / currentPool.totalDown : 0;
+
+  return {
+    up: Math.round(upOdds * 100) / 100,
+    down: Math.round(downOdds * 100) / 100,
+  };
+}
+
+// ============================================================================
+// POOL STATISTICS
+// ============================================================================
+
+/**
+ * Get comprehensive pool statistics
+ * @returns BettingPool object with all statistics
+ */
+export function getPoolStats(): BettingPool {
+  return calculateBettingPool(currentPool.bets);
+}
+
+// ============================================================================
+// PHASE HELPERS
+// ============================================================================
+
+/**
+ * Check if the current phase allows betting
+ * @returns true if betting is allowed
+ */
+export function isBettingPhase(): boolean {
+  return currentRound?.phase === RoundPhase.BETTING_WINDOW;
+}
+
+/**
+ * Check if a round is currently active
+ * @returns true if a round is active and not settled
+ */
+export function isRoundActive(): boolean {
+  if (!currentRound) return false;
+  return [
+    RoundPhase.SCANNING,
+    RoundPhase.ENTRY_SIGNAL,
+    RoundPhase.BETTING_WINDOW,
+    RoundPhase.POSITION_OPEN,
+    RoundPhase.EXIT_SIGNAL,
+  ].includes(currentRound.phase);
+}
+
+/**
+ * Check if the current round is completed
+ * @returns true if the round is in SETTLEMENT phase
+ */
+export function isRoundCompleted(): boolean {
+  return currentRound?.phase === RoundPhase.SETTLEMENT;
+}
+
+// ============================================================================
+// DEBUG HELPERS
+// ============================================================================
+
+/**
+ * Get full state dump for debugging
+ * @returns Complete state snapshot
+ */
+export function getStateDump(): {
+  currentRound: RoundState | null;
+  pool: typeof currentPool;
+  userCount: number;
+  odds: OddsResult;
+} {
+  return {
+    currentRound,
+    pool: currentPool,
+    userCount: userBets.size,
+    odds: getCurrentOdds(),
+  };
+}
+
+/**
+ * Reset all state (useful for testing)
+ */
+export function resetAllState(): void {
+  currentRound = null;
+  resetPool();
 }

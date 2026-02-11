@@ -24,7 +24,12 @@ import {
   getCurrentPool,
   resetPool,
   placeBet,
-  validateBet as validateBetInState
+  validateBet as validateBetInState,
+  updateRoundPhase,
+  hasUserBet,
+  getUserTotalBet,
+  getUserBets,
+  getCurrentOdds
 } from '@/lib/prediction-market/state';
 
 // ============================================================================
@@ -185,7 +190,7 @@ describe('Bet Validation', () => {
     it('should reject zero amount', () => {
       const result = validateBetInState('0x1234567890123456789012345678901234567890', 0, 'up');
       expect(result.isValid).toBe(false);
-      expect(result.error).toContain('greater than 0');
+      expect(result.error).toContain('Amount must be greater than 0');
     });
 
     it('should reject negative amount', () => {
@@ -208,7 +213,7 @@ describe('Bet Validation', () => {
     it('should reject invalid side', () => {
       const result = validateBetInState('0x1234567890123456789012345678901234567890', 100, 'invalid' as 'up');
       expect(result.isValid).toBe(false);
-      expect(result.error).toContain('up or down');
+      expect(result.error).toContain('up" or "down"');
     });
 
     it('should reject empty side', () => {
@@ -409,23 +414,25 @@ describe('State Management', () => {
       setCurrentRound(round);
       
       // Update phase
-      const { updateRoundPhase } = require('@/lib/prediction-market/state');
       updateRoundPhase(RoundPhase.BETTING_WINDOW);
       
       expect(getCurrentRound()?.phase).toBe(RoundPhase.BETTING_WINDOW);
     });
 
     it('should reset pool when starting new round', () => {
+      // First set up a round with betting window open
+      setCurrentRound(createMockRound(RoundPhase.BETTING_WINDOW));
+      
       // Add a bet to current pool
       placeBet('0x1234567890123456789012345678901234567890', 100, 'up');
       expect(getCurrentPool().bets.length).toBe(1);
       
-      // Start new round
-      const newRound = createMockRound();
-      newRound.id = 'different_id';
+      // Start new round with different ID
+      const newRound = createMockRound(RoundPhase.BETTING_WINDOW);
+      newRound.id = 'different_id_' + Date.now();
       setCurrentRound(newRound);
       
-      // Pool should be reset
+      // Pool should be reset for new round
       expect(getCurrentPool().bets.length).toBe(0);
     });
   });
@@ -579,7 +586,9 @@ describe('Edge Cases', () => {
 
   it('should handle very small bet amounts', () => {
     const result = validateBetInState('0x1234567890123456789012345678901234567890', 0.01, 'up');
+    // Amount is > 0 but < MIN_BET (10), so it should be invalid due to minimum bet
     expect(result.isValid).toBe(false);
+    expect(result.error).toContain('Minimum bet');
   });
 
   it('should handle address with mixed case', () => {
@@ -599,7 +608,8 @@ describe('Edge Cases', () => {
     });
     
     expect(getCurrentPool().bets.length).toBe(3);
-    expect(getCurrentPool().totalUp).toBe(300); // 100 + 300
+    // Bets: addr0=100 up, addr1=200 down, addr2=300 up
+    expect(getCurrentPool().totalUp).toBe(400); // 100 + 300
     expect(getCurrentPool().totalDown).toBe(200); // 200
   });
 
@@ -621,23 +631,4 @@ describe('Edge Cases', () => {
   });
 });
 
-// Helper functions that need to be imported for tests
-function hasUserBet(address: string): boolean {
-  const { hasUserBet: checkUserBet } = require('@/lib/prediction-market/state');
-  return checkUserBet(address);
-}
-
-function getUserTotalBet(address: string): number {
-  const { getUserTotalBet: getTotal } = require('@/lib/prediction-market/state');
-  return getTotal(address);
-}
-
-function getUserBets(address: string) {
-  const { getUserBets: getBets } = require('@/lib/prediction-market/state');
-  return getBets(address);
-}
-
-function getCurrentOdds() {
-  const { getCurrentOdds: getOdds } = require('@/lib/prediction-market/state');
-  return getOdds();
-}
+// Helper functions are now imported directly from '@/lib/prediction-market/state'
