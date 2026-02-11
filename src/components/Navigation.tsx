@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import CustomConnectButton from './CustomConnectButton';
+import GuestModeBanner from './GuestModeBanner';
 import { useState, useRef, useEffect } from 'react';
 
 interface NavigationProps {

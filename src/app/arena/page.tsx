@@ -7,9 +7,10 @@ import ChatRoom from '@/components/chatroom/ChatRoom';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount } from 'wagmi';
 import { useVault } from '@/contexts/VaultContext';
+import { useGuest } from '@/contexts/GuestContext';
 import ToastContainer, { ToastData } from '@/components/ToastContainer';
-
-
+import GuestModeBanner from '@/components/GuestModeBanner';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface HumanMessage {
   id: string;
@@ -17,12 +18,14 @@ interface HumanMessage {
   username: string;
   content: string;
   timestamp: number;
+  isGuest?: boolean;
 }
 
 export default function ArenaPage() {
   const chatroomData = useChatroomStream();
   const { address, isConnected } = useAccount();
   const { getDepositsByAddress } = useVault();
+  const { guestUser, isGuestMode, createGuestUser, getStoredUsername } = useGuest();
   const [toasts, setToasts] = useState<ToastData[]>([]);
   const [isClient, setIsClient] = useState(false);
   
@@ -30,10 +33,11 @@ export default function ArenaPage() {
   const [humanMessages, setHumanMessages] = useState<HumanMessage[]>([]);
   const [messageInput, setMessageInput] = useState('');
   const [username, setUsername] = useState('');
+  const [showGuestPrompt, setShowGuestPrompt] = useState(false);
+  const [showWalletPrompt, setShowWalletPrompt] = useState(false);
 
   // CVAULT-218: Prevent scroll-into-view behavior for chat input
   useEffect(() => {
-    // Prevent default scroll-into-view behavior
     const preventScrollIntoView = (e: Event) => {
       const target = e.target as HTMLElement;
       if (target && (target.id === 'arena-chat-input' || target.id === 'human-message-input')) {
@@ -41,14 +45,12 @@ export default function ArenaPage() {
         e.stopPropagation();
         e.stopImmediatePropagation();
 
-        // Ensure scroll position doesn't change
         requestAnimationFrame(() => {
           window.scrollTo(window.scrollX, window.scrollY);
         });
       }
     };
 
-    // Add event listeners to prevent scroll behavior
     document.addEventListener('focusin', preventScrollIntoView, true);
     document.addEventListener('focus', preventScrollIntoView, true);
 
@@ -62,11 +64,9 @@ export default function ArenaPage() {
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setMessageInput(e.target.value);
 
-    // Store scroll position before input update
     const scrollX = window.scrollX || window.pageXOffset;
     const scrollY = window.scrollY || window.pageYOffset;
 
-    // Restore scroll position after React state update
     requestAnimationFrame(() => {
       window.scrollTo(scrollX, scrollY);
     });
@@ -74,39 +74,37 @@ export default function ArenaPage() {
 
   // CVAULT-218: Prevent scroll on input focus
   const handleInputFocus = useCallback((e: React.FocusEvent<HTMLInputElement>) => {
-    // Store current scroll position before any focus behavior
     const scrollX = window.scrollX || window.pageXOffset;
     const scrollY = window.scrollY || window.pageYOffset;
 
-    // DO NOT call scrollIntoView - this causes the input to scroll to center of viewport
-    // e.target.scrollIntoView({ block: 'nearest', behavior: 'auto' });
-
-    // Force the input to stay in place with CSS
     const target = e.target as HTMLInputElement;
     target.style.scrollBehavior = 'auto';
     target.style.scrollMargin = '0px';
     target.style.scrollMarginTop = '0px';
     target.style.scrollMarginBottom = '0px';
 
-    // Restore scroll position immediately to prevent any viewport movement
     requestAnimationFrame(() => {
       window.scrollTo(scrollX, scrollY);
     });
   }, []);
 
-
-
-  // Mark as client-side rendered
+  // Mark as client-side rendered and initialize guest mode
   useEffect(() => {
     setIsClient(true);
-    // Load username from localStorage
+    
+    // Load username from localStorage or guest user
     const savedUsername = localStorage.getItem('arena-username');
     if (savedUsername) {
       setUsername(savedUsername);
     }
-  }, []);
+    
+    // If user is not connected and no guest user exists, show guest prompt
+    if (!isConnected && !guestUser && !savedUsername) {
+      setShowGuestPrompt(true);
+    }
+  }, [isConnected, guestUser]);
 
-  // Auto-scroll human chat to bottom (scroll container only, not entire page)
+  // Auto-scroll human chat to bottom
   const humanChatContainerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (humanChatContainerRef.current) {
@@ -124,11 +122,21 @@ export default function ArenaPage() {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
   };
 
+  // CVAULT-243: Handle guest user creation
+  const handleCreateGuestUser = () => {
+    const defaultUsername = `Guest${Math.floor(Math.random() * 10000)}`;
+    createGuestUser(defaultUsername);
+    setUsername(defaultUsername);
+    setShowGuestPrompt(false);
+    addToast('Welcome! You can now chat as a guest.', 'success');
+  };
+
+  // CVAULT-243: Handle sending messages (works for both guest and authenticated)
   const handleSendMessage = () => {
     if (!messageInput.trim()) return;
     
     if (!username.trim()) {
-      addToast('Please set a username first', 'error');
+      setShowGuestPrompt(true);
       return;
     }
 
@@ -138,6 +146,7 @@ export default function ArenaPage() {
       username: username.trim(),
       content: messageInput.trim(),
       timestamp: Date.now(),
+      isGuest: !isConnected && isGuestMode,
     };
 
     setHumanMessages((prev) => [...prev, newMessage]);
@@ -152,15 +161,178 @@ export default function ArenaPage() {
       e.preventDefault();
       handleSendMessage();
     }
+    if (e.key === 'Enter' && e.shiftKey) {
+      return;
+    }
   };
 
-  const userDeposits = address ? getDepositsByAddress(address) : [];
-  const userTotalDeposited = userDeposits.reduce((sum, d) => sum + parseFloat(d.amount), 0).toFixed(6);
+  // Check if current user can send messages
+  const canSendMessages = username.trim().length > 0;
+  const isCurrentUserGuest = !isConnected && isGuestMode;
 
   return (
     <main className="min-h-screen bg-background" role="main" aria-label="Dual Arena - Agent Debate and Human Discussion">
       {/* Toast Notifications */}
       <ToastContainer toasts={toasts} onRemove={removeToast} />
+
+      {/* CVAULT-243: Guest Mode Banner */}
+      <GuestModeBanner onConnectWallet={() => setShowWalletPrompt(true)} />
+
+      {/* CVAULT-243: Wallet Required Prompt Modal */}
+      <AnimatePresence>
+        {showWalletPrompt && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowWalletPrompt(false)}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+              aria-hidden="true"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md mx-4 z-50"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="wallet-prompt-title"
+            >
+              <div className="bg-card border border-border rounded-xl p-6 shadow-xl">
+                <div className="text-center">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+                    <span className="text-3xl">👛</span>
+                  </div>
+                  <h3 id="wallet-prompt-title" className="text-lg font-bold mb-2">
+                    Connect Your Wallet
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-6">
+                    Connect your wallet to unlock premium features like trading, 
+                    deposits, and verified identity. Your chat messages will be preserved.
+                  </p>
+                  <div className="flex gap-3 justify-center">
+                    <ConnectButton.Custom>
+                      {({ openConnectModal }) => (
+                        <button
+                          onClick={() => {
+                            openConnectModal();
+                            setShowWalletPrompt(false);
+                          }}
+                          className="px-6 py-2.5 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors touch-manipulation min-h-[44px]"
+                        >
+                          Connect Wallet
+                        </button>
+                      )}
+                    </ConnectButton.Custom>
+                    <button
+                      onClick={() => setShowWalletPrompt(false)}
+                      className="px-6 py-2.5 bg-secondary text-secondary-foreground font-medium rounded-lg hover:bg-secondary/80 transition-colors touch-manipulation min-h-[44px]"
+                    >
+                      Continue as Guest
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* CVAULT-243: Guest Username Prompt Modal */}
+      <AnimatePresence>
+        {showGuestPrompt && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowGuestPrompt(false)}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+              aria-hidden="true"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md mx-4 z-50"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="guest-prompt-title"
+            >
+              <div className="bg-card border border-border rounded-xl p-6 shadow-xl">
+                <div className="text-center">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-500/10 flex items-center justify-center">
+                    <span className="text-3xl">👤</span>
+                  </div>
+                  <h3 id="guest-prompt-title" className="text-lg font-bold mb-2">
+                    Join the Discussion
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-6">
+                    You can participate in the chat as a guest without connecting a wallet. 
+                    Connect later to unlock premium features.
+                  </p>
+                  
+                  {/* Username Input */}
+                  <div className="mb-4">
+                    <input
+                      type="text"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      placeholder="Enter a username..."
+                      className="w-full px-4 py-3 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
+                      maxLength={20}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter' && username.trim()) {
+                          createGuestUser(username.trim());
+                          setShowGuestPrompt(false);
+                          addToast('Welcome! You can now chat as a guest.', 'success');
+                        }
+                      }}
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-3">
+                    <button
+                      onClick={() => {
+                        if (username.trim()) {
+                          createGuestUser(username.trim());
+                        } else {
+                          handleCreateGuestUser();
+                        }
+                        setShowGuestPrompt(false);
+                        addToast('Welcome! You can now chat as a guest.', 'success');
+                      }}
+                      className="w-full px-6 py-2.5 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 transition-colors touch-manipulation min-h-[44px]"
+                    >
+                      {username.trim() ? 'Join as Guest' : 'Join with Random Name'}
+                    </button>
+                    <ConnectButton.Custom>
+                      {({ openConnectModal }) => (
+                        <button
+                          onClick={() => {
+                            openConnectModal();
+                            setShowGuestPrompt(false);
+                          }}
+                          className="w-full px-6 py-2.5 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors touch-manipulation min-h-[44px]"
+                        >
+                          Connect Wallet
+                        </button>
+                      )}
+                    </ConnectButton.Custom>
+                    <button
+                      onClick={() => setShowGuestPrompt(false)}
+                      className="px-6 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Just Browse
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       <div id="main-content" className="container mx-auto px-4 py-6 lg:py-8 max-w-[1800px]">
         {/* Page Header */}
@@ -247,7 +419,7 @@ export default function ArenaPage() {
           </section>
 
           {/* RIGHT PANEL: Human Discussion (Interactive) */}
-          <section 
+          <section
             className="bg-card/50 rounded-xl border border-border p-4 flex flex-col"
             aria-labelledby="human-discussion-heading"
           >
@@ -261,38 +433,63 @@ export default function ArenaPage() {
               </span>
             </div>
 
-            {/* Username Input (if not set) */}
+            {/* CVAULT-243: Username Setup Banner (shown if no username set) */}
             {!username && (
-              <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                <label htmlFor="username-input" className="block text-sm font-medium mb-2">
-                  Set your username to participate:
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    id="username-input"
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="Enter username..."
-                    className="flex-1 px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                    maxLength={20}
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        localStorage.setItem('arena-username', username.trim());
-                        addToast('Username saved!', 'success');
-                      }
-                    }}
-                  />
-                  <button
-                    onClick={() => {
-                      localStorage.setItem('arena-username', username.trim());
-                      addToast('Username saved!', 'success');
-                    }}
-                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                  >
-                    Save
-                  </button>
+              <div className="mb-4 p-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-lg">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div>
+                    <h4 className="font-medium text-sm">Join the conversation</h4>
+                    <p className="text-xs text-muted-foreground">
+                      Set a username to start chatting. No wallet required!
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setShowGuestPrompt(true)}
+                      className="px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition-colors"
+                    >
+                      Join as Guest
+                    </button>
+                    <ConnectButton.Custom>
+                      {({ openConnectModal }) => (
+                        <button
+                          onClick={openConnectModal}
+                          className="px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors"
+                        >
+                          Connect Wallet
+                        </button>
+                      )}
+                    </ConnectButton.Custom>
+                  </div>
                 </div>
+              </div>
+            )}
+
+            {/* CVAULT-243: User Status Indicator */}
+            {username && (
+              <div className="mb-4 p-3 bg-muted/50 rounded-lg flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-blue-500'}`} />
+                  <span className="text-sm font-medium">{username}</span>
+                  {isCurrentUserGuest && (
+                    <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full">
+                      Guest
+                    </span>
+                  )}
+                  {isConnected && (
+                    <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">
+                      Verified
+                    </span>
+                  )}
+                </div>
+                {isCurrentUserGuest && (
+                  <button
+                    onClick={() => setShowWalletPrompt(true)}
+                    className="text-xs text-primary hover:text-primary/80 underline"
+                  >
+                    Connect wallet for full access
+                  </button>
+                )}
               </div>
             )}
 
@@ -312,16 +509,26 @@ export default function ArenaPage() {
                 {humanMessages.map((msg) => (
                   <div
                     key={msg.id}
-                    className={`flex flex-col ${msg.address === address ? 'items-end' : 'items-start'}`}
+                    className={`flex flex-col ${msg.username === username ? 'items-end' : 'items-start'}`}
                   >
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-xs font-medium text-muted-foreground">
                         {msg.username}
                       </span>
+                      {msg.isGuest && (
+                        <span className="text-xs bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded">
+                          Guest
+                        </span>
+                      )}
+                      {msg.address && (
+                        <span className="text-xs bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded">
+                          Verified
+                        </span>
+                      )}
                       <span className="text-xs text-muted-foreground">
                         {new Date(msg.timestamp).toLocaleTimeString()}
                       </span>
-                      {msg.address === address && (
+                      {msg.username === username && (
                         <span className="text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded">
                           You
                         </span>
@@ -329,8 +536,10 @@ export default function ArenaPage() {
                     </div>
                     <div
                       className={`max-w-[80%] px-3 py-2 rounded-lg ${
-                        msg.address === address
+                        msg.username === username
                           ? 'bg-primary text-primary-foreground'
+                          : msg.isGuest
+                          ? 'bg-blue-500/10 border border-blue-500/20'
                           : 'bg-muted'
                       }`}
                     >
@@ -350,7 +559,7 @@ export default function ArenaPage() {
                     onChange={handleInputChange}
                     onKeyPress={handleKeyPress}
                     onFocus={handleInputFocus}
-                    placeholder={username ? "Share your thoughts..." : "Set username above to chat..."}
+                    placeholder={username ? "Share your thoughts..." : "Set username to chat..."}
                     disabled={!username}
                     className="flex-1 px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     maxLength={500}
@@ -371,6 +580,11 @@ export default function ArenaPage() {
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   Press Enter to send, Shift+Enter for new line
+                  {isCurrentUserGuest && (
+                    <span className="ml-2 text-blue-400">
+                      • Guest messages are public
+                    </span>
+                  )}
                 </p>
               </div>
             </div>
@@ -402,8 +616,8 @@ export default function ArenaPage() {
               <h4 className="font-semibold mb-2 text-sm">💬 Human Chat</h4>
               <ul className="text-xs text-muted-foreground space-y-1">
                 <li>• Real-time discussion</li>
-                <li>• Local username storage</li>
-                <li>• Share your analysis</li>
+                <li>• Guest mode available</li>
+                <li>• Connect wallet for verified status</li>
               </ul>
             </div>
             <div>
@@ -411,7 +625,7 @@ export default function ArenaPage() {
               <ul className="text-xs text-muted-foreground space-y-1">
                 <li>• {chatroomData.messages.length} agent messages</li>
                 <li>• {humanMessages.length} human messages</li>
-                <li>• DeepSeek, Kimi, MiniMax, GLM, Gemini</li>
+                <li>• {isConnected ? 'Verified user' : isGuestMode ? 'Guest user' : 'Browsing mode'}</li>
               </ul>
             </div>
           </div>
@@ -423,7 +637,7 @@ export default function ArenaPage() {
             Dual Arena: AI-powered debate + human discussion
           </p>
           <p className="mt-1 text-xs">
-            Agent messages stream via SSE • Human chat is local-only
+            Agent messages stream via SSE • Human chat is local-only • Guest mode supported
           </p>
         </footer>
       </div>

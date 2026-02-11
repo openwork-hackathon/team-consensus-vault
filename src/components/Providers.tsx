@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { VaultProvider } from '@/contexts/VaultContext';
+import { GuestProvider } from '@/contexts/GuestContext';
 import ErrorBoundary from './ErrorBoundary';
 import dynamic from 'next/dynamic';
 import { darkTheme } from '@rainbow-me/rainbowkit';
@@ -66,7 +67,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
             })}
           >
             <VaultProvider>
-              {children}
+              <GuestProvider>
+                {children}
+              </GuestProvider>
             </VaultProvider>
           </RainbowKitProvider>
         </QueryClientProvider>

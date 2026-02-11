@@ -70,10 +70,33 @@ export default function HumanChatInput({
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit(e);
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter') {
+      if (e.shiftKey) {
+        // Shift+Enter: Insert newline at cursor position
+        e.preventDefault();
+        const target = e.currentTarget;
+        const start = target.selectionStart;
+        const end = target.selectionEnd;
+        const value = target.value;
+        
+        // Insert newline at cursor position
+        const newValue = value.substring(0, start) + '\n' + value.substring(end);
+        setMessage(newValue);
+        setCharCount(newValue.length);
+        
+        // Set cursor position after the inserted newline
+        requestAnimationFrame(() => {
+          target.selectionStart = target.selectionEnd = start + 1;
+          // Trigger resize to accommodate new line
+          target.style.height = 'auto';
+          target.style.height = `${Math.min(target.scrollHeight, 120)}px`;
+        });
+      } else {
+        // Enter alone submits the form
+        e.preventDefault();
+        handleSubmit(e);
+      }
     }
   };
 
