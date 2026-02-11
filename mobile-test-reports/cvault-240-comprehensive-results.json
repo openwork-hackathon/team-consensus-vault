@@ -1,0 +1,619 @@
+{
+  "timestamp": "2026-02-11T15:18:49.680Z",
+  "baseUrl": "http://localhost:3000",
+  "pages": {
+    "home": {
+      "url": "/",
+      "breakpoints": {
+        "mobile-320": {
+          "page": "home",
+          "url": "/",
+          "breakpoint": "mobile-320",
+          "viewport": {
+            "width": 320,
+            "height": 568
+          },
+          "issues": [
+            {
+              "type": "test_error",
+              "severity": "critical",
+              "description": "Test execution error: net::ERR_CONNECTION_REFUSED at http://localhost:3000/"
+            }
+          ],
+          "passed": false,
+          "screenshot": null,
+          "status": "error",
+          "error": "net::ERR_CONNECTION_REFUSED at http://localhost:3000/"
+        },
+        "mobile-375": {
+          "page": "home",
+          "url": "/",
+          "breakpoint": "mobile-375",
+          "viewport": {
+            "width": 375,
+            "height": 667
+          },
+          "issues": [
+            {
+              "type": "test_error",
+              "severity": "critical",
+              "description": "Test execution error: net::ERR_CONNECTION_REFUSED at http://localhost:3000/"
+            }
+          ],
+          "passed": false,
+          "screenshot": null,
+          "status": "error",
+          "error": "net::ERR_CONNECTION_REFUSED at http://localhost:3000/"
+        },
+        "tablet-768": {
+          "page": "home",
+          "url": "/",
+          "breakpoint": "tablet-768",
+          "viewport": {
+            "width": 768,
+            "height": 1024
+          },
+          "issues": [
+            {
+              "type": "test_error",
+              "severity": "critical",
+              "description": "Test execution error: net::ERR_CONNECTION_REFUSED at http://localhost:3000/"
+            }
+          ],
+          "passed": false,
+          "screenshot": null,
+          "status": "error",
+          "error": "net::ERR_CONNECTION_REFUSED at http://localhost:3000/"
+        },
+        "tablet-1024": {
+          "page": "home",
+          "url": "/",
+          "breakpoint": "tablet-1024",
+          "viewport": {
+            "width": 1024,
+            "height": 768
+          },
+          "issues": [
+            {
+              "type": "test_error",
+              "severity": "critical",
+              "description": "Test execution error: net::ERR_CONNECTION_REFUSED at http://localhost:3000/"
+            }
+          ],
+          "passed": false,
+          "screenshot": null,
+          "status": "error",
+          "error": "net::ERR_CONNECTION_REFUSED at http://localhost:3000/"
+        }
+      },
+      "totalIssues": 4
+    },
+    "arena": {
+      "url": "/arena",
+      "breakpoints": {
+        "mobile-320": {
+          "page": "arena",
+          "url": "/arena",
+          "breakpoint": "mobile-320",
+          "viewport": {
+            "width": 320,
+            "height": 568
+          },
+          "issues": [
+            {
+              "type": "test_error",
+              "severity": "critical",
+              "description": "Test execution error: net::ERR_CONNECTION_REFUSED at http://localhost:3000/arena"
+            }
+          ],
+          "passed": false,
+          "screenshot": null,
+          "status": "error",
+          "error": "net::ERR_CONNECTION_REFUSED at http://localhost:3000/arena"
+        },
+        "mobile-375": {
+          "page": "arena",
+          "url": "/arena",
+          "breakpoint": "mobile-375",
+          "viewport": {
+            "width": 375,
+            "height": 667
+          },
+          "issues": [
+            {
+              "type": "test_error",
+              "severity": "critical",
+              "description": "Test execution error: net::ERR_CONNECTION_REFUSED at http://localhost:3000/arena"
+            }
+          ],
+          "passed": false,
+          "screenshot": null,
+          "status": "error",
+          "error": "net::ERR_CONNECTION_REFUSED at http://localhost:3000/arena"
+        },
+        "tablet-768": {
+          "page": "arena",
+          "url": "/arena",
+          "breakpoint": "tablet-768",
+          "viewport": {
+            "width": 768,
+            "height": 1024
+          },
+          "issues": [
+            {
+              "type": "test_error",
+              "severity": "critical",
+              "description": "Test execution error: net::ERR_CONNECTION_REFUSED at http://localhost:3000/arena"
+            }
+          ],
+          "passed": false,
+          "screenshot": null,
+          "status": "error",
+          "error": "net::ERR_CONNECTION_REFUSED at http://localhost:3000/arena"
+        },
+        "tablet-1024": {
+          "page": "arena",
+          "url": "/arena",
+          "breakpoint": "tablet-1024",
+          "viewport": {
+            "width": 1024,
+            "height": 768
+          },
+          "issues": [
+            {
+              "type": "test_error",
+              "severity": "critical",
+              "description": "Test execution error: net::ERR_CONNECTION_REFUSED at http://localhost:3000/arena"
+            }
+          ],
+          "passed": false,
+          "screenshot": null,
+          "status": "error",
+          "error": "net::ERR_CONNECTION_REFUSED at http://localhost:3000/arena"
+        }
+      },
+      "totalIssues": 4
+    },
+    "chatroom": {
+      "url": "/chatroom",
+      "breakpoints": {
+        "mobile-320": {
+          "page": "chatroom",
+          "url": "/chatroom",
+          "breakpoint": "mobile-320",
+          "viewport": {
+            "width": 320,
+            "height": 568
+          },
+          "issues": [
+            {
+              "type": "test_error",
+              "severity": "critical",
+              "description": "Test execution error: net::ERR_CONNECTION_REFUSED at http://localhost:3000/chatroom"
+            }
+          ],
+          "passed": false,
+          "screenshot": null,
+          "status": "error",
+          "error": "net::ERR_CONNECTION_REFUSED at http://localhost:3000/chatroom"
+        },
+        "mobile-375": {
+          "page": "chatroom",
+          "url": "/chatroom",
+          "breakpoint": "mobile-375",
+          "viewport": {
+            "width": 375,
+            "height": 667
+          },
+          "issues": [
+            {
+              "type": "test_error",
+              "severity": "critical",
+              "description": "Test execution error: net::ERR_CONNECTION_REFUSED at http://localhost:3000/chatroom"
+            }
+          ],
+          "passed": false,
+          "screenshot": null,
+          "status": "error",
+          "error": "net::ERR_CONNECTION_REFUSED at http://localhost:3000/chatroom"
+        },
+        "tablet-768": {
+          "page": "chatroom",
+          "url": "/chatroom",
+          "breakpoint": "tablet-768",
+          "viewport": {
+            "width": 768,
+            "height": 1024
+          },
+          "issues": [
+            {
+              "type": "test_error",
+              "severity": "critical",
+              "description": "Test execution error: net::ERR_CONNECTION_REFUSED at http://localhost:3000/chatroom"
+            }
+          ],
+          "passed": false,
+          "screenshot": null,
+          "status": "error",
+          "error": "net::ERR_CONNECTION_REFUSED at http://localhost:3000/chatroom"
+        },
+        "tablet-1024": {
+          "page": "chatroom",
+          "url": "/chatroom",
+          "breakpoint": "tablet-1024",
+          "viewport": {
+            "width": 1024,
+            "height": 768
+          },
+          "issues": [
+            {
+              "type": "test_error",
+              "severity": "critical",
+              "description": "Test execution error: net::ERR_CONNECTION_REFUSED at http://localhost:3000/chatroom"
+            }
+          ],
+          "passed": false,
+          "screenshot": null,
+          "status": "error",
+          "error": "net::ERR_CONNECTION_REFUSED at http://localhost:3000/chatroom"
+        }
+      },
+      "totalIssues": 4
+    },
+    "human-chat": {
+      "url": "/human-chat",
+      "breakpoints": {
+        "mobile-320": {
+          "page": "human-chat",
+          "url": "/human-chat",
+          "breakpoint": "mobile-320",
+          "viewport": {
+            "width": 320,
+            "height": 568
+          },
+          "issues": [
+            {
+              "type": "test_error",
+              "severity": "critical",
+              "description": "Test execution error: net::ERR_CONNECTION_REFUSED at http://localhost:3000/human-chat"
+            }
+          ],
+          "passed": false,
+          "screenshot": null,
+          "status": "error",
+          "error": "net::ERR_CONNECTION_REFUSED at http://localhost:3000/human-chat"
+        },
+        "mobile-375": {
+          "page": "human-chat",
+          "url": "/human-chat",
+          "breakpoint": "mobile-375",
+          "viewport": {
+            "width": 375,
+            "height": 667
+          },
+          "issues": [
+            {
+              "type": "test_error",
+              "severity": "critical",
+              "description": "Test execution error: net::ERR_CONNECTION_REFUSED at http://localhost:3000/human-chat"
+            }
+          ],
+          "passed": false,
+          "screenshot": null,
+          "status": "error",
+          "error": "net::ERR_CONNECTION_REFUSED at http://localhost:3000/human-chat"
+        },
+        "tablet-768": {
+          "page": "human-chat",
+          "url": "/human-chat",
+          "breakpoint": "tablet-768",
+          "viewport": {
+            "width": 768,
+            "height": 1024
+          },
+          "issues": [
+            {
+              "type": "test_error",
+              "severity": "critical",
+              "description": "Test execution error: net::ERR_CONNECTION_REFUSED at http://localhost:3000/human-chat"
+            }
+          ],
+          "passed": false,
+          "screenshot": null,
+          "status": "error",
+          "error": "net::ERR_CONNECTION_REFUSED at http://localhost:3000/human-chat"
+        },
+        "tablet-1024": {
+          "page": "human-chat",
+          "url": "/human-chat",
+          "breakpoint": "tablet-1024",
+          "viewport": {
+            "width": 1024,
+            "height": 768
+          },
+          "issues": [
+            {
+              "type": "test_error",
+              "severity": "critical",
+              "description": "Test execution error: net::ERR_CONNECTION_REFUSED at http://localhost:3000/human-chat"
+            }
+          ],
+          "passed": false,
+          "screenshot": null,
+          "status": "error",
+          "error": "net::ERR_CONNECTION_REFUSED at http://localhost:3000/human-chat"
+        }
+      },
+      "totalIssues": 4
+    },
+    "enhanced-consensus": {
+      "url": "/enhanced-consensus",
+      "breakpoints": {
+        "mobile-320": {
+          "page": "enhanced-consensus",
+          "url": "/enhanced-consensus",
+          "breakpoint": "mobile-320",
+          "viewport": {
+            "width": 320,
+            "height": 568
+          },
+          "issues": [
+            {
+              "type": "test_error",
+              "severity": "critical",
+              "description": "Test execution error: net::ERR_CONNECTION_REFUSED at http://localhost:3000/enhanced-consensus"
+            }
+          ],
+          "passed": false,
+          "screenshot": null,
+          "status": "error",
+          "error": "net::ERR_CONNECTION_REFUSED at http://localhost:3000/enhanced-consensus"
+        },
+        "mobile-375": {
+          "page": "enhanced-consensus",
+          "url": "/enhanced-consensus",
+          "breakpoint": "mobile-375",
+          "viewport": {
+            "width": 375,
+            "height": 667
+          },
+          "issues": [
+            {
+              "type": "test_error",
+              "severity": "critical",
+              "description": "Test execution error: net::ERR_CONNECTION_REFUSED at http://localhost:3000/enhanced-consensus"
+            }
+          ],
+          "passed": false,
+          "screenshot": null,
+          "status": "error",
+          "error": "net::ERR_CONNECTION_REFUSED at http://localhost:3000/enhanced-consensus"
+        },
+        "tablet-768": {
+          "page": "enhanced-consensus",
+          "url": "/enhanced-consensus",
+          "breakpoint": "tablet-768",
+          "viewport": {
+            "width": 768,
+            "height": 1024
+          },
+          "issues": [
+            {
+              "type": "test_error",
+              "severity": "critical",
+              "description": "Test execution error: net::ERR_CONNECTION_REFUSED at http://localhost:3000/enhanced-consensus"
+            }
+          ],
+          "passed": false,
+          "screenshot": null,
+          "status": "error",
+          "error": "net::ERR_CONNECTION_REFUSED at http://localhost:3000/enhanced-consensus"
+        },
+        "tablet-1024": {
+          "page": "enhanced-consensus",
+          "url": "/enhanced-consensus",
+          "breakpoint": "tablet-1024",
+          "viewport": {
+            "width": 1024,
+            "height": 768
+          },
+          "issues": [
+            {
+              "type": "test_error",
+              "severity": "critical",
+              "description": "Test execution error: net::ERR_CONNECTION_REFUSED at http://localhost:3000/enhanced-consensus"
+            }
+          ],
+          "passed": false,
+          "screenshot": null,
+          "status": "error",
+          "error": "net::ERR_CONNECTION_REFUSED at http://localhost:3000/enhanced-consensus"
+        }
+      },
+      "totalIssues": 4
+    },
+    "predict": {
+      "url": "/predict",
+      "breakpoints": {
+        "mobile-320": {
+          "page": "predict",
+          "url": "/predict",
+          "breakpoint": "mobile-320",
+          "viewport": {
+            "width": 320,
+            "height": 568
+          },
+          "issues": [
+            {
+              "type": "test_error",
+              "severity": "critical",
+              "description": "Test execution error: net::ERR_CONNECTION_REFUSED at http://localhost:3000/predict"
+            }
+          ],
+          "passed": false,
+          "screenshot": null,
+          "status": "error",
+          "error": "net::ERR_CONNECTION_REFUSED at http://localhost:3000/predict"
+        },
+        "mobile-375": {
+          "page": "predict",
+          "url": "/predict",
+          "breakpoint": "mobile-375",
+          "viewport": {
+            "width": 375,
+            "height": 667
+          },
+          "issues": [
+            {
+              "type": "test_error",
+              "severity": "critical",
+              "description": "Test execution error: net::ERR_CONNECTION_REFUSED at http://localhost:3000/predict"
+            }
+          ],
+          "passed": false,
+          "screenshot": null,
+          "status": "error",
+          "error": "net::ERR_CONNECTION_REFUSED at http://localhost:3000/predict"
+        },
+        "tablet-768": {
+          "page": "predict",
+          "url": "/predict",
+          "breakpoint": "tablet-768",
+          "viewport": {
+            "width": 768,
+            "height": 1024
+          },
+          "issues": [
+            {
+              "type": "test_error",
+              "severity": "critical",
+              "description": "Test execution error: net::ERR_CONNECTION_REFUSED at http://localhost:3000/predict"
+            }
+          ],
+          "passed": false,
+          "screenshot": null,
+          "status": "error",
+          "error": "net::ERR_CONNECTION_REFUSED at http://localhost:3000/predict"
+        },
+        "tablet-1024": {
+          "page": "predict",
+          "url": "/predict",
+          "breakpoint": "tablet-1024",
+          "viewport": {
+            "width": 1024,
+            "height": 768
+          },
+          "issues": [
+            {
+              "type": "test_error",
+              "severity": "critical",
+              "description": "Test execution error: net::ERR_CONNECTION_REFUSED at http://localhost:3000/predict"
+            }
+          ],
+          "passed": false,
+          "screenshot": null,
+          "status": "error",
+          "error": "net::ERR_CONNECTION_REFUSED at http://localhost:3000/predict"
+        }
+      },
+      "totalIssues": 4
+    },
+    "rounds": {
+      "url": "/rounds",
+      "breakpoints": {
+        "mobile-320": {
+          "page": "rounds",
+          "url": "/rounds",
+          "breakpoint": "mobile-320",
+          "viewport": {
+            "width": 320,
+            "height": 568
+          },
+          "issues": [
+            {
+              "type": "test_error",
+              "severity": "critical",
+              "description": "Test execution error: net::ERR_CONNECTION_REFUSED at http://localhost:3000/rounds"
+            }
+          ],
+          "passed": false,
+          "screenshot": null,
+          "status": "error",
+          "error": "net::ERR_CONNECTION_REFUSED at http://localhost:3000/rounds"
+        },
+        "mobile-375": {
+          "page": "rounds",
+          "url": "/rounds",
+          "breakpoint": "mobile-375",
+          "viewport": {
+            "width": 375,
+            "height": 667
+          },
+          "issues": [
+            {
+              "type": "test_error",
+              "severity": "critical",
+              "description": "Test execution error: net::ERR_CONNECTION_REFUSED at http://localhost:3000/rounds"
+            }
+          ],
+          "passed": false,
+          "screenshot": null,
+          "status": "error",
+          "error": "net::ERR_CONNECTION_REFUSED at http://localhost:3000/rounds"
+        },
+        "tablet-768": {
+          "page": "rounds",
+          "url": "/rounds",
+          "breakpoint": "tablet-768",
+          "viewport": {
+            "width": 768,
+            "height": 1024
+          },
+          "issues": [
+            {
+              "type": "test_error",
+              "severity": "critical",
+              "description": "Test execution error: net::ERR_CONNECTION_REFUSED at http://localhost:3000/rounds"
+            }
+          ],
+          "passed": false,
+          "screenshot": null,
+          "status": "error",
+          "error": "net::ERR_CONNECTION_REFUSED at http://localhost:3000/rounds"
+        },
+        "tablet-1024": {
+          "page": "rounds",
+          "url": "/rounds",
+          "breakpoint": "tablet-1024",
+          "viewport": {
+            "width": 1024,
+            "height": 768
+          },
+          "issues": [
+            {
+              "type": "test_error",
+              "severity": "critical",
+              "description": "Test execution error: net::ERR_CONNECTION_REFUSED at http://localhost:3000/rounds"
+            }
+          ],
+          "passed": false,
+          "screenshot": null,
+          "status": "error",
+          "error": "net::ERR_CONNECTION_REFUSED at http://localhost:3000/rounds"
+        }
+      },
+      "totalIssues": 4
+    }
+  },
+  "summary": {
+    "totalPages": 7,
+    "totalBreakpoints": 4,
+    "totalTests": 28,
+    "issuesFound": 28,
+    "criticalIssues": 28,
+    "majorIssues": 0,
+    "minorIssues": 0,
+    "passed": 0,
+    "failed": 28
+  }
+}

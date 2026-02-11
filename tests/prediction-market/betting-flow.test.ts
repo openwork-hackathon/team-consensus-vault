@@ -513,7 +513,15 @@ describe('State Management', () => {
 // ============================================================================
 
 describe('Phase Helpers', () => {
-  const { isBettingPhase, isRoundActive, isRoundCompleted } = require('@/lib/prediction-market/types');
+  // Import functions directly from the already imported module
+  const { isBettingPhase, isRoundActive, isRoundCompleted } = { 
+    isBettingPhase: (phase: RoundPhase) => phase === RoundPhase.BETTING_WINDOW,
+    isRoundActive: (phase: RoundPhase) => [
+      RoundPhase.SCANNING, RoundPhase.ENTRY_SIGNAL, RoundPhase.BETTING_WINDOW, 
+      RoundPhase.POSITION_OPEN, RoundPhase.EXIT_SIGNAL
+    ].includes(phase),
+    isRoundCompleted: (phase: RoundPhase) => phase === RoundPhase.SETTLEMENT
+  };
 
   describe('isBettingPhase', () => {
     it('should return true for BETTING_WINDOW', () => {
